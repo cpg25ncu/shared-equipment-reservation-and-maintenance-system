@@ -17,7 +17,7 @@
       <resource><directory>../../app/src/main/resources/db/migration</directory><targetPath>db/migration</targetPath></resource>
     </resources>
     <plugins>
-      <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.1</version>
+      <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.2</version>
         <executions>
           <execution><id>compile-against-upstream-contract</id><phase>generate-sources</phase><goals><goal>add-source</goal></goals>
             <configuration><sources><source>src/contract/java</source></sources></configuration></execution>
