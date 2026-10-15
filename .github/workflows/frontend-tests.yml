@@ -21,7 +21,7 @@ jobs:
       - name: Generate OpenAPI from backend tests
         run: ./mvnw -B verify
         working-directory: app
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
       - uses: pnpm/action-setup@v4
