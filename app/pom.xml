@@ -23,7 +23,7 @@
  <build><resources>
   <resource><directory>src/main/resources</directory></resource>
  </resources><plugins>
-  <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.1</version><executions><execution><id>notification-postgres-adapters</id><phase>generate-sources</phase><goals><goal>add-source</goal></goals><configuration><sources><source>../integration/notifications/src/main/java</source></sources></configuration></execution></executions></plugin>
+  <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.2</version><executions><execution><id>notification-postgres-adapters</id><phase>generate-sources</phase><goals><goal>add-source</goal></goals><configuration><sources><source>../integration/notifications/src/main/java</source></sources></configuration></execution></executions></plugin>
   <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin>
   <plugin><groupId>org.jacoco</groupId><artifactId>jacoco-maven-plugin</artifactId><version>0.8.14</version><executions><execution><goals><goal>prepare-agent</goal></goals></execution><execution><id>report</id><phase>verify</phase><goals><goal>report</goal></goals></execution></executions></plugin>
  </plugins></build>
