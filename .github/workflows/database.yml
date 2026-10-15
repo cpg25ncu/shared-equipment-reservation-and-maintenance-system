@@ -52,7 +52,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f database/src/test/resources/v4-upgrade-fixture.sql
           psql -v ON_ERROR_STOP=1 -f app/src/main/resources/db/migration/V004__loan_operations.sql
           psql -v ON_ERROR_STOP=1 -f database/src/test/resources/v4-upgrade-assertions.sql
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: sprint1-database-tests

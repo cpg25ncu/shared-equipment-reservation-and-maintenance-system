@@ -18,7 +18,7 @@ jobs:
           cache-dependency-path: app/pom.xml
       - name: Application regression and full PostgreSQL UC03 integration
         run: mvn -B -f app/pom.xml -Puc03-postgres-it verify
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: zhoufanhao-uc03-tests

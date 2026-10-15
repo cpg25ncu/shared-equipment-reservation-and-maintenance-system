@@ -21,7 +21,7 @@ jobs:
       - name: Test actual upstream services with PostgreSQL
         shell: pwsh
         run: ./scripts/test-notification-integration.ps1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: notification-postgres-contract

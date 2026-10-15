@@ -20,7 +20,7 @@ jobs:
         timeout-minutes: 10
       - name: Regression and default PostgreSQL 18 application integration
         run: mvn -B -f app/pom.xml -Puc03-postgres-it clean verify
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: notification-test-evidence
