@@ -36,7 +36,7 @@ jobs:
           HOST_FINGERPRINT: ${{ secrets.DEPLOY_HOST_FINGERPRINT }}
         run: test -n "$HOST_FINGERPRINT"
       - name: Deploy verified main over SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         env:
           RELEASE_SHA: ${{ github.sha }}
         with:
