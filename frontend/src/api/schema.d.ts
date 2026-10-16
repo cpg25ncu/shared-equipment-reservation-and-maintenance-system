@@ -1,4 +1,20 @@
 export interface paths {
+    "/api/v1/equipment/manage/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateManagedEquipment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reservations": {
         parameters: {
             query?: never;
@@ -209,6 +225,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/equipment/manage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listManagedEquipment"];
+        put?: never;
+        post: operations["registerEquipment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/equipment/manage/{id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retireEquipment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/equipment/manage/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listEquipmentCategories"];
+        put?: never;
+        post: operations["createEquipmentCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -287,6 +351,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/equipment/manage/categories/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["renameEquipmentCategory"];
         trace?: never;
     };
     "/api/v1/admin/users/{userId}/status": {
@@ -731,6 +811,35 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        EquipmentInput: {
+            assetTag: string;
+            serialNumber?: string;
+            name: string;
+            description?: string;
+            category: string;
+            location: string;
+            condition: string;
+            requiresApproval?: boolean;
+            maxBorrowDuration?: string;
+            /** Format: int64 */
+            expectedVersion?: number;
+        };
+        ManagedEquipment: {
+            /** Format: uuid */
+            equipmentId?: string;
+            assetTag?: string;
+            serialNumber?: string;
+            name?: string;
+            description?: string;
+            category?: string;
+            location?: string;
+            condition?: string;
+            status?: string;
+            requiresApproval?: boolean;
+            maxBorrowDuration?: string;
+            /** Format: int64 */
+            version?: number;
+        };
         CreateReservationRequest: {
             /** Format: uuid */
             equipmentId: string;
@@ -842,6 +951,7 @@ export interface components {
             /** Format: uuid */
             equipmentId?: string;
             equipmentName?: string;
+            assetTag?: string;
             /** Format: uuid */
             borrowerId?: string;
             borrowerName?: string;
@@ -867,6 +977,13 @@ export interface components {
             expectedVersion: number;
             condition: string;
             note?: string;
+        };
+        RetireInput: {
+            /** Format: int64 */
+            expectedVersion: number;
+        };
+        CategoryInput: {
+            name: string;
         };
         LoginRequest: {
             /** Format: email */
@@ -951,6 +1068,9 @@ export interface components {
             newPassword: string;
             /** Format: int64 */
             expectedVersion: number;
+        };
+        CategoryRename: {
+            name: string;
         };
         UpdateStatusRequest: {
             active: boolean;
@@ -1183,6 +1303,7 @@ export interface components {
             /** Format: uuid */
             equipmentId?: string;
             equipmentName?: string;
+            assetTag?: string;
             /** Format: uuid */
             borrowerId?: string;
             borrowerName?: string;
@@ -1319,6 +1440,32 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    updateManagedEquipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EquipmentInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedEquipment"];
+                };
+            };
+        };
+    };
     createReservation: {
         parameters: {
             query?: never;
@@ -1593,6 +1740,7 @@ export interface operations {
                 activeOnly?: boolean;
                 page?: number;
                 size?: number;
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -1657,6 +1805,123 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["LoanView"];
+                };
+            };
+        };
+    };
+    listManagedEquipment: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedEquipment"][];
+                };
+            };
+        };
+    };
+    registerEquipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EquipmentInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedEquipment"];
+                };
+            };
+        };
+    };
+    retireEquipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetireInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedEquipment"];
+                };
+            };
+        };
+    };
+    listEquipmentCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    createEquipmentCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
                 };
             };
         };
@@ -1799,6 +2064,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+        };
+    };
+    renameEquipmentCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryRename"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
                 };
             };
         };
@@ -2216,6 +2507,7 @@ export interface operations {
             query?: {
                 page?: number;
                 size?: number;
+                q?: string;
             };
             header?: never;
             path?: never;
