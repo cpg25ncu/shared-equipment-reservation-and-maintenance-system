@@ -1,13 +1,12 @@
 package sg.edu.nus.serms.equipment.service;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.jdbc.core.JdbcTemplate;
+import sg.edu.nus.serms.equipment.repository.EquipmentManagementRepository;
+import sg.edu.nus.serms.equipment.repository.EquipmentManagementRepository.EquipmentRow;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,9 +23,8 @@ public class EquipmentManagementService {
       String name, String description, String category, String location, String condition,
       String status, boolean requiresApproval, String maxBorrowDuration, long version) {}
 
-  private static final String COLUMNS = "equipment_id,asset_tag,serial_number,name,description,category,location,condition,status,requires_approval,EXTRACT(EPOCH FROM max_borrow_duration)::bigint AS max_seconds,version";
-  private final JdbcTemplate jdbc;
-  public EquipmentManagementService(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+  private final EquipmentManagementRepository repository;
+  public EquipmentManagementService(EquipmentManagementRepository repository) { this.repository = repository; }
 
   @Transactional(readOnly = true)
   @PreAuthorize("hasAnyRole('CUSTODIAN','ADMIN')")
@@ -34,8 +32,8 @@ public class EquipmentManagementService {
     actor();
     if (page < 0 || page > 100000 || size < 1 || size > 100)
       throw new EquipmentManagementException(400, "page", "Choose a valid page and size.");
-    return jdbc.query("SELECT " + COLUMNS + " FROM serms.equipment ORDER BY lower(name),asset_tag LIMIT ? OFFSET ?",
-        (rs, row) -> map(rs), size, (long) page * size);
+    return repository.list(page, size).stream().map(EquipmentManagementService::view)
+        .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
   }
 
   @PreAuthorize("hasAnyRole('CUSTODIAN','ADMIN')")
@@ -44,11 +42,7 @@ public class EquipmentManagementService {
     checkCategory(input.category());
     UUID id = UUID.randomUUID();
     try {
-      jdbc.update("""
-          INSERT INTO serms.equipment(equipment_id,asset_tag,serial_number,name,description,category,
-              location,condition,requires_approval,max_borrow_duration)
-          VALUES (?,?,?,?,?,?,?,?,?,CAST(? AS bigint) * interval '1 second')
-          """, id, input.assetTag().strip(), optional(input.serialNumber()), input.name().strip(),
+      repository.register(id, input.assetTag().strip(), optional(input.serialNumber()), input.name().strip(),
           optional(input.description()), input.category().strip(), input.location().strip(),
           input.condition(), input.requiresApproval(), seconds(input.maxBorrowDuration()));
     } catch (DataIntegrityViolationException e) { throw uniqueConflict(e); }
@@ -66,14 +60,9 @@ public class EquipmentManagementService {
       throw new EquipmentManagementException(409, null, "Retired equipment cannot be changed.");
     checkCategory(input.category());
     try {
-      int count = jdbc.update("""
-          UPDATE serms.equipment SET asset_tag=?,serial_number=?,name=?,description=?,category=?,
-              location=?,condition=?,requires_approval=?,max_borrow_duration=CAST(? AS bigint) * interval '1 second'
-          WHERE equipment_id=? AND version=?
-          """, input.assetTag().strip(), optional(input.serialNumber()), input.name().strip(),
+      int count = repository.update(id, input.assetTag().strip(), optional(input.serialNumber()), input.name().strip(),
           optional(input.description()), input.category().strip(), input.location().strip(),
-          input.condition(), input.requiresApproval(), seconds(input.maxBorrowDuration()), id,
-          input.expectedVersion());
+          input.condition(), input.requiresApproval(), seconds(input.maxBorrowDuration()), input.expectedVersion());
       if (count != 1) throw new EquipmentManagementException(409, "expectedVersion", "Equipment changed. Refresh before saving.");
     } catch (DataIntegrityViolationException e) { throw uniqueConflict(e); }
     audit(actor, "EQUIPMENT_UPDATE", id,
@@ -88,13 +77,9 @@ public class EquipmentManagementService {
     var before = locked(id);
     if (before.status().equals("RETIRED"))
       throw new EquipmentManagementException(409, null, "Equipment is already retired.");
-    if (before.status().equals("ON_LOAN") || Boolean.TRUE.equals(jdbc.queryForObject("""
-        SELECT EXISTS(SELECT 1 FROM serms.loan l JOIN serms.reservation r USING(reservation_id)
-          WHERE r.equipment_id=? AND l.status='ACTIVE')
-        """, Boolean.class, id)))
+    if (before.status().equals("ON_LOAN") || repository.activeLoan(id))
       throw new EquipmentManagementException(409, null, "Return the active loan before retiring this equipment.");
-    if (jdbc.update("UPDATE serms.equipment SET status='RETIRED' WHERE equipment_id=? AND version=?",
-        id, expectedVersion) != 1)
+    if (repository.retire(id, expectedVersion) != 1)
       throw new EquipmentManagementException(409, "expectedVersion", "Equipment changed. Refresh before retiring.");
     audit(actor, "EQUIPMENT_RETIRE", id, "status=" + before.status() + " -> RETIRED");
     return get(id);
@@ -104,14 +89,14 @@ public class EquipmentManagementService {
   @PreAuthorize("hasAnyRole('CUSTODIAN','ADMIN')")
   public List<String> categories() {
     actor();
-    return jdbc.queryForList("SELECT name FROM serms.equipment_category ORDER BY lower(name),name", String.class);
+    return repository.categories();
   }
 
   @PreAuthorize("hasAnyRole('CUSTODIAN','ADMIN')")
   public List<String> createCategory(String name) {
     UUID actor = actor();
     name = categoryName(name);
-    try { jdbc.update("INSERT INTO serms.equipment_category(name) VALUES (?)", name); }
+    try { repository.createCategory(name); }
     catch (DataIntegrityViolationException e) {
       throw new EquipmentManagementException(409, "name", "This category already exists.");
     }
@@ -125,7 +110,7 @@ public class EquipmentManagementService {
     newName = categoryName(newName);
     if (oldName.equals(newName)) return categories();
     try {
-      if (jdbc.update("UPDATE serms.equipment_category SET name=? WHERE name=?", newName, oldName) != 1)
+      if (repository.renameCategory(oldName, newName) != 1)
         throw new RecordNotFoundException();
     } catch (DataIntegrityViolationException e) {
       throw new EquipmentManagementException(409, "name", "This category already exists.");
@@ -135,22 +120,17 @@ public class EquipmentManagementService {
   }
 
   private ManagedEquipment locked(UUID id) {
-    return jdbc.query("SELECT " + COLUMNS + " FROM serms.equipment WHERE equipment_id=? FOR UPDATE",
-        (rs, row) -> map(rs), id).stream().findFirst().orElseThrow(RecordNotFoundException::new);
+    return view(repository.locked(id));
   }
 
   private ManagedEquipment get(UUID id) {
-    return jdbc.query("SELECT " + COLUMNS + " FROM serms.equipment WHERE equipment_id=?",
-        (rs, row) -> map(rs), id).stream().findFirst().orElseThrow(RecordNotFoundException::new);
+    return view(repository.get(id));
   }
 
-  private static ManagedEquipment map(ResultSet rs) throws SQLException {
-    long seconds = rs.getLong("max_seconds");
-    String duration = rs.wasNull() ? null : Duration.ofSeconds(seconds).toString();
-    return new ManagedEquipment(rs.getObject("equipment_id", UUID.class), rs.getString("asset_tag"),
-        rs.getString("serial_number"), rs.getString("name"), rs.getString("description"),
-        rs.getString("category"), rs.getString("location"), rs.getString("condition"),
-        rs.getString("status"), rs.getBoolean("requires_approval"), duration, rs.getLong("version"));
+  private static ManagedEquipment view(EquipmentRow row) {
+    return new ManagedEquipment(row.equipmentId(), row.assetTag(), row.serialNumber(), row.name(),
+        row.description(), row.category(), row.location(), row.condition(), row.status(),
+        row.requiresApproval(), row.maxBorrowDuration(), row.version());
   }
 
   private UUID actor() {
@@ -158,18 +138,13 @@ public class EquipmentManagementService {
     if (authentication == null || !(authentication.getPrincipal() instanceof SermsUserPrincipal principal))
       throw new AccessDeniedException("Authenticated management account required");
     UUID id = principal.getUserId();
-    Boolean allowed = jdbc.queryForObject("""
-        SELECT EXISTS(SELECT 1 FROM serms.app_user u JOIN serms.user_role ur USING(user_id)
-          JOIN serms.role r USING(role_id) WHERE u.user_id=? AND u.account_status='ACTIVE'
-          AND r.code IN ('CUSTODIAN','ADMIN'))
-        """, Boolean.class, id);
+    Boolean allowed = repository.activeManagementAccount(id);
     if (!Boolean.TRUE.equals(allowed)) throw new AccessDeniedException("Active management account required");
     return id;
   }
 
   private void checkCategory(String name) {
-    if (!Boolean.TRUE.equals(jdbc.queryForObject(
-        "SELECT EXISTS(SELECT 1 FROM serms.equipment_category WHERE name=?)", Boolean.class, name.strip())))
+    if (!repository.categoryExists(name.strip()))
       throw new EquipmentManagementException(400, "category", "Choose an existing category.");
   }
 
@@ -213,11 +188,7 @@ public class EquipmentManagementService {
   }
 
   private void audit(UUID actor, String action, UUID id, String summary) {
-    jdbc.update("""
-        INSERT INTO serms.audit_log(audit_id,actor_id,action,entity_type,entity_id,outcome,request_id,change_summary)
-        VALUES (?,?,?,?,?,'SUCCESS',?,?)
-        """, UUID.randomUUID(), actor, action,
-        action.startsWith("EQUIPMENT_CATEGORY") ? "EquipmentCategory" : "Equipment",
-        id, "equipment:" + UUID.randomUUID(), summary);
+    repository.audit(actor, action, action.startsWith("EQUIPMENT_CATEGORY") ? "EquipmentCategory" : "Equipment",
+        id, summary);
   }
 }
