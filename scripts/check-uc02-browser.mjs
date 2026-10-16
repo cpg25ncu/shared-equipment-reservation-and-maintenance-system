@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { repo, runtime, baseURL, demoPassword, state } from './lib/local-demo-client.mjs';
+import { workflowMenus as roles } from './lib/role-access.mjs';
 
 // Live browser acceptance only: no page.route(), fake clocks, mocked APIs or history rewrites.
 assert.equal(state.data, path.join(runtime, 'pg18'), 'Use this checkout’s isolated demo cluster');
@@ -32,13 +33,6 @@ function fixtureSql(file, variables = {}) {
       '-f', path.join(repo, 'scripts', file)],
     { env: { ...process.env, PGPASSWORD: access.databasePassword }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
-const roles = {
-  borrower: ['Overview', 'Find equipment', 'Loans and returns', 'My reservations', 'Maintenance', 'Notifications'],
-  approver: ['Overview', 'Find equipment', 'Approvals', 'Notifications'],
-  custodian: ['Overview', 'Find equipment', 'Loans and returns', 'Maintenance', 'Notifications', 'Overdue'],
-  maintainer: ['Overview', 'Find equipment', 'Maintenance', 'Notifications'],
-  admin: ['Overview', 'Find equipment', 'Maintenance', 'Notifications', 'Overdue', 'Reports', 'Users and roles', 'Audit log'],
-};
 const localTime = ms => new Date(ms + 8 * 3600000).toISOString().slice(0, 16);
 async function signIn(context, account) {
   const page = await context.newPage();
