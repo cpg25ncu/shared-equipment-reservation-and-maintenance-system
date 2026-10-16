@@ -951,6 +951,7 @@ export interface components {
             /** Format: uuid */
             equipmentId?: string;
             equipmentName?: string;
+            assetTag?: string;
             /** Format: uuid */
             borrowerId?: string;
             borrowerName?: string;
@@ -1302,6 +1303,7 @@ export interface components {
             /** Format: uuid */
             equipmentId?: string;
             equipmentName?: string;
+            assetTag?: string;
             /** Format: uuid */
             borrowerId?: string;
             borrowerName?: string;
@@ -1738,6 +1740,7 @@ export interface operations {
                 activeOnly?: boolean;
                 page?: number;
                 size?: number;
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -2504,6 +2507,7 @@ export interface operations {
             query?: {
                 page?: number;
                 size?: number;
+                q?: string;
             };
             header?: never;
             path?: never;
