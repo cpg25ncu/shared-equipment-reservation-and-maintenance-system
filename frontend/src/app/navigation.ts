@@ -104,7 +104,7 @@ export const navigation: NavItem[] = [
     group: 'manage',
     available: true,
   },
-  // Reserved for Issue #17.
+  // Issue #17.
   {
     to: '/manage/equipment',
     label: 'Manage equipment',
@@ -112,7 +112,7 @@ export const navigation: NavItem[] = [
     icon: PackagePlus,
     roles: ['CUSTODIAN', 'ADMIN'],
     group: 'manage',
-    available: false,
+    available: true,
   },
   // Issue #23.
   {

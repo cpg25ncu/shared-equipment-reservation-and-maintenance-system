@@ -182,7 +182,7 @@ class LoanPostgresIT {
     checkout();
     var other=fixtures.user("BORROWER");
     authenticate(new SermsUserPrincipal(other,"other@example.invalid","Other",Set.of("BORROWER")));
-    assertThat(service.list(true,0,100)).isEmpty();
+    assertThat(service.list(true,0,100,null)).isEmpty();
     assertThatThrownBy(this::checkout).isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
     mvc.perform(get("/api/v1/loans").with(anonymous())).andExpect(status().isUnauthorized());
     mvc.perform(post("/api/v1/loans").with(user(operator)).contentType("application/json").content("{}"))
@@ -210,7 +210,40 @@ class LoanPostgresIT {
     assertThat(environment.getProperty("serms.approval.enabled")).isEqualTo("true");
     assertThat(jdbc.queryForObject("SELECT max(version) FROM serms.schema_version",Integer.class)).isEqualTo(7);
     assertThat(jdbc.queryForObject("SELECT notification_principal FROM serms.app_user WHERE user_id=?",String.class,custodian)).isEqualTo(custodian.toString());
-    assertThat(service.checkoutQueue(0,100)).anyMatch(r -> r.reservationId().equals(reservation));
+    assertThat(service.checkoutQueue(0,100,null)).anyMatch(r -> r.reservationId().equals(reservation));
+  }
+  @Test void custodianCanFindCheckoutAndActiveLoanByReservationBorrowerAndAssetTag() throws Exception {
+    String tag = jdbc.queryForObject("SELECT asset_tag FROM serms.equipment WHERE equipment_id=?", String.class, equipment);
+    jdbc.update("UPDATE serms.app_user SET display_name='Searchable Borrower' WHERE user_id=?", borrower);
+    for (String q : List.of(reservation.toString().substring(0, 8), "searchable borrower",
+        borrower + "@example.invalid", tag.toLowerCase())) {
+      authenticate(operator);
+      assertThat(service.checkoutQueue(0, 20, q)).extracting(CheckoutCandidate::reservationId).contains(reservation);
+      mvc.perform(get("/api/v1/loans/checkouts").with(user(operator)).param("q", q))
+          .andExpect(status().isOk()).andExpect(jsonPath("$[0].assetTag").value(tag));
+    }
+    authenticate(operator);
+    assertThat(service.checkoutQueue(0, 20, "%" )).isEmpty();
+    assertThatThrownBy(() -> service.checkoutQueue(0, 20, "x".repeat(101)))
+        .isInstanceOf(IllegalArgumentException.class);
+    var loan = checkout();
+    for (String q : List.of(reservation.toString().substring(0, 8), "SEARCHABLE BORROWER",
+        borrower + "@example.invalid", tag.toLowerCase())) {
+      authenticate(operator);
+      assertThat(service.list(true, 0, 20, q)).extracting(LoanView::loanId).contains(loan.loanId());
+    }
+    authenticate(operator);
+    assertThat(service.list(true, 0, 20, "%")).isEmpty();
+    mvc.perform(get("/api/v1/loans").with(user(operator)).param("q", tag))
+        .andExpect(status().isOk()).andExpect(jsonPath("$[0].assetTag").value(tag));
+    UUID other = fixtures.user("BORROWER");
+    var reader = new SermsUserPrincipal(other, other + "@example.invalid", "Other", Set.of("BORROWER"));
+    authenticate(reader);
+    assertThat(service.list(true, 0, 20, tag)).isEmpty();
+    mvc.perform(get("/api/v1/loans/checkouts").with(user(reader)).param("q", tag))
+        .andExpect(status().isForbidden());
+    authenticate(operator);
+    service.receive(loan.loanId(), 0, "GOOD", null);
   }
   @Test void expiryBoundaryRejectsCheckoutAndLateDamagedReceiptPreservesBothFacts() {
     when(clock.instant()).thenReturn(end);
