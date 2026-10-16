@@ -92,6 +92,7 @@ function fieldErrors(cause: unknown): Record<string, string> {
 }
 /** The API allows up to 100 rows per page; one page holds a team's whole inventory. */
 const BLOCK = 100;
+const PAGE_SIZE = 20;
 const column = createColumnHelper<ManagedEquipment>();
 /** Columns shown from 1280px; narrower screens read them under the equipment name. */
 const secondary = 'hidden xl:table-cell';
@@ -356,6 +357,8 @@ export function EquipmentManagementPage() {
               caption="Equipment records"
               loading={equipment.isPending}
               getRowId={(item) => item.equipmentId}
+              // Twenty per page, as the API pages and as this page showed before #26.
+              pageSize={PAGE_SIZE}
               empty={
                 <EmptyState
                   icon={<PackagePlus size={26} />}

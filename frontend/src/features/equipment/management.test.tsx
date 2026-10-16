@@ -114,4 +114,24 @@ describe('equipment management', () => {
     expect(await screen.findByText('Category renamed.')).toBeInTheDocument();
     expect(writes).toEqual(['Tripod', 'Support']);
   });
+
+  it('shows twenty records per page and sorts them from the headers', async () => {
+    const records = Array.from({ length: 21 }, (_, index) => ({
+      ...item, equipmentId: 'id-' + index, assetTag: 'TAG-' + String(index).padStart(2, '0'),
+      name: 'Item ' + String(index).padStart(2, '0'),
+    }));
+    server.use(
+      http.get('/api/v1/equipment/manage', () => HttpResponse.json(records)),
+      http.get('/api/v1/equipment/manage/categories', () => HttpResponse.json(['Camera'])),
+    );
+    mount();
+    const user = userEvent.setup();
+    expect(await screen.findByText('Item 19')).toBeInTheDocument();
+    expect(screen.queryByText('Item 20')).not.toBeInTheDocument();
+    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+    await user.click(within(screen.getByRole('columnheader', { name: /Equipment/ })).getByRole('button'));
+    await user.click(within(screen.getByRole('columnheader', { name: /Equipment/ })).getByRole('button'));
+    expect(screen.getByText('Item 20')).toBeInTheDocument();
+    expect(screen.queryByText('Item 00')).not.toBeInTheDocument();
+  });
 });
