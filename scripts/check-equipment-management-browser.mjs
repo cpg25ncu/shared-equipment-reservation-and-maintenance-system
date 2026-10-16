@@ -94,7 +94,8 @@ try {
           () => page.getByRole('button', { name: 'Rename category', exact: true }).click());
         assert.equal(rename.status(), 200);
         await expect(page.getByText('Category renamed.', { exact: true })).toBeVisible();
-        const card = page.getByRole('article').filter({ hasText: item.assetTag });
+        // Records are table rows since the #26 visual pass, with the status shown by its display name.
+        const card = page.getByRole('row').filter({ hasText: item.assetTag });
         await expect(card).toContainText(renamedCategory);
         pass(device + ' ' + account + ': ordinary category rename cascades to existing equipment');
         await page.getByRole('button', { name: 'Retire ' + name, exact: true }).click();
@@ -103,7 +104,7 @@ try {
         assert.equal(retirement.status(), 200);
         assert.equal((await retirement.json()).status, 'RETIRED');
         await expect(page.getByText('Equipment retired.', { exact: true })).toBeVisible();
-        await expect(card).toContainText('RETIRED');
+        await expect(card).toContainText('Retired');
         await expect(card.getByRole('button')).toHaveCount(0);
         const catalogue = await page.request.get(baseURL + '/api/v1/equipment?' + new URLSearchParams({ q: item.assetTag }));
         assert.equal(catalogue.status(), 200);
