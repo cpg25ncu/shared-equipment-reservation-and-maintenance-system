@@ -27,9 +27,21 @@ try {
     # Trust is for throw-away localhost fixtures only. No system service or existing data is used.
     & (Join-Path $taskPostgresBin 'initdb.exe') -D (Join-Path $taskDirectory 'pg') -U serms_test -A trust --encoding=UTF8 --locale=C
     if ($LASTEXITCODE -ne 0) { throw 'Could not initialize the disposable PostgreSQL cluster' }
-    & (Join-Path $taskPostgresBin 'pg_ctl.exe') -D (Join-Path $taskDirectory 'pg') -l (Join-Path $taskDirectory 'postgres.log') -o "-h 127.0.0.1 -p $taskPort" -w start
-    if ($LASTEXITCODE -ne 0) { throw 'Could not start the disposable PostgreSQL cluster' }
-    $taskStarted = $true; $taskPassword = ''
+    # Do not let the long-running server inherit PowerShell's captured output handles.
+    # Otherwise pg_ctl can exit while the calling pipeline still waits on its descendants.
+    $taskStartup = Start-Process -FilePath (Join-Path $taskPostgresBin 'pg_ctl.exe') -ArgumentList @(
+      '-D', ('"' + (Join-Path $taskDirectory 'pg') + '"'),
+      '-l', ('"' + (Join-Path $taskDirectory 'postgres.log') + '"'),
+      '-o', ('"-h 127.0.0.1 -p ' + $taskPort + '"'), '-w', 'start'
+    ) -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $taskDirectory 'pg-start.log') -RedirectStandardError (Join-Path $taskDirectory 'pg-start.err')
+    $taskStarted = $true
+    if (!$taskStartup.WaitForExit(30000)) { throw 'Disposable PostgreSQL startup timed out' }
+    $taskStartup.WaitForExit()
+    $taskStartup.Refresh()
+    if ($null -ne $taskStartup.ExitCode -and $taskStartup.ExitCode -ne 0) { throw 'Could not start the disposable PostgreSQL cluster' }
+    & (Join-Path $taskPostgresBin 'pg_ctl.exe') -D (Join-Path $taskDirectory 'pg') status *> (Join-Path $taskDirectory 'pg-status.log')
+    if ($LASTEXITCODE -ne 0) { throw 'Disposable PostgreSQL is not running after startup' }
+    $taskPassword = ''
   } else {
     docker run -d --name $taskContainer -e POSTGRES_USER=serms_test -e "POSTGRES_PASSWORD=$taskPassword" -p 127.0.0.1::5432 postgres:18-alpine
     if ($LASTEXITCODE -ne 0) { throw 'Start Docker Desktop or provide -PostgresBin' }
