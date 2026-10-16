@@ -25,6 +25,13 @@ export const pages = [
 ];
 export const unavailablePages = [];
 export const menuOrder = ['/', '/equipment', '/loans', '/reservations', '/maintenance', '/approvals', '/notifications', '/overdue', '/manage/equipment', '/reports', '/admin/users', '/admin/audit'];
+// Shared expected menus come from this explicit policy inventory, never from rendered UI.
+export const workflowMenus = Object.fromEntries(
+  Object.entries(accounts).filter(([account]) => account !== 'borrower2').map(([account, role]) => [
+    account, menuOrder.filter(route => pages.find(page => page.route === route).roles.includes(role))
+      .map(route => pages.find(page => page.route === route).menu),
+  ]),
+);
 const read = (id, route, roles) => ({ id, route, roles });
 export const reads = [
   read('identity', '/api/v1/auth/me', all),
@@ -85,6 +92,14 @@ export function deniedWrites(f) {
       body: { expectedVersion: f.loanVersion, condition: 'GOOD', note: 'RBAC denial probe' } },
     { id: 'equipment registration', route: '/api/v1/equipment/manage', roles: ['CUSTODIAN', 'ADMIN'],
       body: { assetTag: 'RBAC-DENIED-' + f.equipmentId, name: 'RBAC denial probe', category: 'Photography', location: 'Store', condition: 'GOOD' } },
+    { id: 'equipment update', route: '/api/v1/equipment/manage/' + f.equipmentId, method: 'PUT', roles: ['CUSTODIAN', 'ADMIN'],
+      body: { assetTag: 'RBAC-DENIED-' + f.equipmentId, name: 'RBAC denial probe', category: 'Photography', location: 'Store', condition: 'GOOD', expectedVersion: 0 } },
+    { id: 'equipment retirement', route: '/api/v1/equipment/manage/' + f.equipmentId + '/retire', roles: ['CUSTODIAN', 'ADMIN'],
+      body: { expectedVersion: 0 } },
+    { id: 'category creation', route: '/api/v1/equipment/manage/categories', roles: ['CUSTODIAN', 'ADMIN'],
+      body: { name: 'RBAC-denied-category' } },
+    { id: 'category rename', route: '/api/v1/equipment/manage/categories/Photography', method: 'PATCH', roles: ['CUSTODIAN', 'ADMIN'],
+      body: { name: 'RBAC-denied-rename' } },
     { id: 'fault report', route: '/api/v1/maintenance/cases', roles: ['BORROWER', 'CUSTODIAN'],
       body: { equipmentId: f.equipmentId, faultDescription: 'RBAC denial probe; must not persist', faultCategory: 'OTHER', priority: 'MEDIUM' } },
     { id: 'technician assignment', route: '/api/v1/maintenance/cases/' + f.caseId + '/assignment', roles: ['CUSTODIAN', 'ADMIN'],

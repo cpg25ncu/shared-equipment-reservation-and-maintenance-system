@@ -87,7 +87,7 @@ try {
     await borrower.getByRole('link',{name:'Find equipment',exact:true}).first().click();
     await borrower.getByLabel('Name or asset tag').fill('DEMO-LIG-01');
     await borrower.getByRole('button',{name:'Search',exact:true}).click();
-    await expect(borrower.getByText('Available',{exact:true})).toBeVisible();
+    await expect(borrower.getByRole('row').filter({hasText:'DEMO-LIG-01'})).toContainText('Available');
     await borrower.screenshot({path:path.join(evidence,`${name}-available.png`),fullPage:true});
     pass(`${name}: resolved equipment available in real catalogue`);
     await context.close();

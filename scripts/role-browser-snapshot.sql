@@ -5,6 +5,7 @@ BEGIN READ ONLY;
 SELECT json_build_object(
   'users', (SELECT md5(coalesce(string_agg(to_jsonb(t)::text, '' ORDER BY user_id), '')) FROM serms.app_user t),
   'equipment', (SELECT md5(coalesce(string_agg(to_jsonb(t)::text, '' ORDER BY equipment_id), '')) FROM serms.equipment t),
+  'categories', (SELECT md5(coalesce(string_agg(to_jsonb(t)::text, '' ORDER BY name), '')) FROM serms.equipment_category t),
   'reservations', (SELECT md5(coalesce(string_agg(to_jsonb(t)::text, '' ORDER BY reservation_id), '')) FROM serms.reservation t),
   'decisions', (SELECT md5(coalesce(string_agg(to_jsonb(t)::text, '' ORDER BY approval_id), '')) FROM serms.approval_decision t),
   'loans', (SELECT md5(coalesce(string_agg(to_jsonb(t)::text, '' ORDER BY loan_id), '')) FROM serms.loan t),
