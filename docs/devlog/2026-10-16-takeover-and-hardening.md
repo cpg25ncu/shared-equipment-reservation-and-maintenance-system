@@ -55,3 +55,23 @@ The same combined head `07e8f83` ran on a fresh local demo (ports 55481 / 8096 /
 | `node scripts/check-uc01-uc04-browser.mjs` (real Chromium, desktop and mobile) | Passed, 10 of 10: search, reserve and cancel; fault report from the catalogue; custodian assignment; technician diagnosis, repair and resolution; equipment available again |
 
 The browser script overwrites the tracked screenshots in `docs/evidence/uc01-uc04/`; they were restored, because the existing evidence still shows the same flows. The UC01 items of #9 are left to Zhang Hanming's independent check, even though this run also covered them.
+
+## 2026-10-16 Merges and release
+
+On the repository owner's instruction the four takeover PRs were merged in dependency order, each after updating its branch with `main` and waiting for all 16 checks on the new head (strict up-to-date protection):
+
+| PR | Issue | Head merged | Merge commit (UTC) |
+| --- | --- | --- | --- |
+| #81 | #17 | `b4e1017` | `0325f20` (07:36) |
+| #84 | #20 | `ee22f89` | `f491874` (07:41) |
+| #82 | #6 | `7ea27fa` | `b1c627e` (07:46) |
+| #83 | #10 headers | `f216301` | `92cca31` (07:50) |
+
+`git diff 07e8f83 92cca31` lists only this devlog file, so the combined-head runs recorded above (smoke, UC01/UC04 API and browser, CSP) cover exactly the code now on `main`.
+
+### Problems and fixes
+
+| Symptom | Root cause | Fix | How it was verified |
+| --- | --- | --- | --- |
+| No workflow ran for `92cca31`: no CI, no Deploy, 0 runs for the SHA after 14 minutes, while the three earlier merges triggered normally. GitHub's status page reported all systems operational. | The push event of that merge did not start Actions; the cause is not visible from the repository. Only `deploy.yml` has `workflow_dispatch`, so the checks on that SHA could not be started by hand, and the release gate needs all twelve on the released SHA. | This documentation-only PR. Its merge is a new push to `main`, which runs every check workflow (none filters by path); `deploy.yml` ignores documentation-only pushes, so the release is then started with `workflow_dispatch` on `main` and still passes the release gate and the owner's approval. | Hosted checks on the new `main` SHA, then the gated deploy run (recorded with the ZAP baseline). |
+| Three Deploy runs queued: `0325f20` waiting for approval, `f491874` cancelled, `b1c627e` pending. | `deploy-production` concurrency keeps one run in progress and only the newest pending one. | The owner rejects the earlier waiting runs and approves only the run that releases the final `main`. | Recorded with the deployed headers. |
