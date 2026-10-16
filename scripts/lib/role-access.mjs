@@ -19,19 +19,20 @@ export const pages = [
   { route: '/maintenance/report', title: '^Maintenance report$', roles: ['ADMIN'] },
   { route: '/reports', title: '^Reports$', roles: ['ADMIN'], menu: 'Reports' },
   { route: '/overdue', title: '^Overdue loans$', roles: ['CUSTODIAN', 'ADMIN'], menu: 'Overdue' },
+  { route: '/manage/equipment', title: '^Manage equipment$', roles: ['CUSTODIAN', 'ADMIN'], menu: 'Manage equipment' },
   { route: '/admin/users', title: '^Users and roles$', roles: ['ADMIN'], menu: 'Users and roles' },
   { route: '/admin/audit', title: '^Audit log$', roles: ['ADMIN'], menu: 'Audit log' },
 ];
-export const unavailablePages = [
-  { route: '/manage/equipment', issue: 17, owner: 'Zhou Fanhao' },
-];
-export const menuOrder = ['/', '/equipment', '/loans', '/reservations', '/maintenance', '/approvals', '/notifications', '/overdue', '/reports', '/admin/users', '/admin/audit'];
+export const unavailablePages = [];
+export const menuOrder = ['/', '/equipment', '/loans', '/reservations', '/maintenance', '/approvals', '/notifications', '/overdue', '/manage/equipment', '/reports', '/admin/users', '/admin/audit'];
 const read = (id, route, roles) => ({ id, route, roles });
 export const reads = [
   read('identity', '/api/v1/auth/me', all),
   read('catalogue', '/api/v1/equipment', all),
   read('catalogue filters', '/api/v1/equipment/filters', all),
   read('availability', '/api/v1/equipment/:equipmentId/availability?:period', all),
+  read('managed equipment', '/api/v1/equipment/manage', ['CUSTODIAN', 'ADMIN']),
+  read('equipment categories', '/api/v1/equipment/manage/categories', ['CUSTODIAN', 'ADMIN']),
   read('own reservations', '/api/v1/reservations/mine', ['BORROWER']),
   read('reservation detail', '/api/v1/reservations/:reservationId', ['BORROWER']),
   read('pending approvals', '/api/v1/approvals/pending', ['APPROVER']),
@@ -82,6 +83,8 @@ export function deniedWrites(f) {
       body: { reservationId: f.reservationId, borrowerId: f.borrowerId, expectedVersion: f.reservationVersion, identityConfirmed: true } },
     { id: 'return', route: '/api/v1/loans/' + f.loanId + '/return', roles: ['CUSTODIAN'],
       body: { expectedVersion: f.loanVersion, condition: 'GOOD', note: 'RBAC denial probe' } },
+    { id: 'equipment registration', route: '/api/v1/equipment/manage', roles: ['CUSTODIAN', 'ADMIN'],
+      body: { assetTag: 'RBAC-DENIED-' + f.equipmentId, name: 'RBAC denial probe', category: 'Photography', location: 'Store', condition: 'GOOD' } },
     { id: 'fault report', route: '/api/v1/maintenance/cases', roles: ['BORROWER', 'CUSTODIAN'],
       body: { equipmentId: f.equipmentId, faultDescription: 'RBAC denial probe; must not persist', faultCategory: 'OTHER', priority: 'MEDIUM' } },
     { id: 'technician assignment', route: '/api/v1/maintenance/cases/' + f.caseId + '/assignment', roles: ['CUSTODIAN', 'ADMIN'],
