@@ -11,9 +11,10 @@ This index provides navigation without replacing existing standards; historical 
 | Tools, sole writers, delegation, resume | [Agent workflow](collaboration/agent-workflow.md) |
 | Conflicts, reference patterns, user decisions | [Decisions](collaboration/decisions.md) |
 | Commands, actual CI, evidence formats | [Testing](testing.md) |
-| Current progress and remaining acceptance | [Integration update 2026-10-14](agile/sprint-status.md#integration-update-2026-10-14), [2026-10-13 snapshot](agile/sprint-status.md#current-local-progress-2026-10-13) |
-| Development process, problems met, report material | [Development log](devlog/README.md), [2026-10-14 review and completion plan](devlog/2026-10-14-project-review-and-completion-plan.md) |
-| Local startup and real-flow checks | [Local demo](local-demo.md), [Verification](evidence/local-demo/verification.md) |
+| Current progress and remaining acceptance | [Integration update 2026-10-17](agile/sprint-status.md#integration-update-2026-10-17), [plan Issue #27](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/issues/27); earlier snapshots: [2026-10-14](agile/sprint-status.md#integration-update-2026-10-14), [2026-10-13](agile/sprint-status.md#current-local-progress-2026-10-13) |
+| Development process, problems met, report material | [Development log](devlog/README.md), [2026-10-14 review and completion plan](devlog/2026-10-14-project-review-and-completion-plan.md), [2026-10-17 acceptance close-out](devlog/2026-10-17-acceptance-closeout.md) |
+| Local startup and real-flow checks | [Local demo](local-demo.md), [Verification](evidence/local-demo/verification.md), [2026-10-17 acceptance evidence](evidence/acceptance-20261017/README.md) |
+| Server release, backup and security scan | [Server handover and release](server-release.md), [Backup runbook](runbook-backup.md), [ZAP baseline 2026-10-16](evidence/zap-baseline-20261016/zap-baseline.md) |
 | Local cleanup, retained history and next work | [Repository closeout](local-repository-closeout.md), [Repository preparation](repository-preparation.md) |
 | Interface contracts | [Contracts](contracts/README.md) |
 | Backlog, Sprints, task status, report evidence | [Agile](agile/README.md) |
@@ -23,7 +24,9 @@ This index provides navigation without replacing existing standards; historical 
 | Platform/React integration | [Platform REST/React](platform-rest-react.md) |
 | UC01 | [Search and reservation](uc01-search-and-reserve.md) |
 | UC02 | [Approval implementation](uc02-approval-implementation.md) |
+| UC03 | [Checkout and return](uc03-checkout-and-return.md) |
 | UC04 | [Fault and maintenance analysis and design](uc04-fault-and-maintenance.md) |
+| UC05 | [Notification design](notification-design.md) |
 | Data foundation/historical delivery | [Database](../database/README.md), [Alignment](serms-database-alignment.md) |
 | Notification adaptation/integration | [integration/notifications](../integration/notifications/README.md), [Alignment](notification-interface-alignment.md) |
 
@@ -35,7 +38,7 @@ This index provides navigation without replacing existing standards; historical 
 | `frontend/` | One React application; `src/features/` corresponds to business modules, reusing `app/`, `api/`, `components/`, `lib/` |
 | `database/` | Retained data-foundation/regression module; production migrations now live in `app/` |
 | `integration/notifications/` | PostgreSQL adapters are included by app's build; pinned historical contract testing remains separate |
-| `web/`, root Docker/Compose | Existing deployment entry; distinguish current runtime and three-container target |
+| `web/`, root Docker/Compose | Production `web` + `app` + `db` runtime, released by the gated `Deploy` workflow since 2026-10-15 |
 | `scripts/` | Existing test/deployment scripts retained; collaboration check entry added |
 | `docs/collaboration/` | Added practices, ownership sources, agent workflow, decisions |
 | `.agents/skills/` | Added SERMS operating guides; read as needed without duplicating rules |

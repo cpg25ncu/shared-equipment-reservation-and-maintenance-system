@@ -1,6 +1,6 @@
 # SERMS Technology Stack
 
-Current implementation snapshot: 2026-10-14, main `b3def12`, which includes the local demo (#11), the UC01/UC04 acceptance fixes (#14) and the Spring Boot 4 release preparation (#13). Default/local startup uses PostgreSQL 18, approval is enabled by default, and production Flyway V001-V004 is unified under `app/src/main/resources/db/migration`. MySQL production dependencies are removed; H2 is test-only. Liu Tongyao executes local integration and later release work under [D-004](collaboration/decisions.md#d-004-local-first-integration-and-wenqi-task-execution), preserving Shi Wenqi's team membership and original contribution. [D-005](collaboration/decisions.md#d-005-local-closeout-and-cloud-last) defers cloud deployment until basic local functionality and subsequent user-defined changes are accepted.
+Current implementation snapshot: 2026-10-17, main `cef0e10`. The five use cases and the remaining Proposal scope (user and role administration, equipment and category management, reports, audit viewer) are merged. Default/local startup uses PostgreSQL 18, approval is enabled by default, and production Flyway V001-V007 is unified under `app/src/main/resources/db/migration`. MySQL production dependencies are removed; H2 is test-only. Cloud deployment, kept last under [D-005](collaboration/decisions.md#d-005-local-closeout-and-cloud-last), has run through the gated `Deploy` workflow since 2026-10-15; deployed acceptance remains open on Issue #10. Liu Tongyao executed local integration and release work under [D-004](collaboration/decisions.md#d-004-local-first-integration-and-wenqi-task-execution), preserving Shi Wenqi's team membership and original contribution. The 2026-10-14 snapshot (main `b3def12`) is kept in [Sprint status](agile/sprint-status.md#integration-update-2026-10-14).
 
 Team 07 · Shared Equipment Reservation and Maintenance System (SERMS)
 
@@ -12,7 +12,7 @@ This document defines the team's shared technology baseline. It is based on the 
 
 The system uses **separate frontend and backend applications**: a React single-page frontend, a Spring Boot backend exposing REST APIs only, and PostgreSQL 18 for storage.
 
-The Status column describes verified implementation at main `b3def12`: ✅ implemented; 🔶 partial delivery or pending integration/acceptance, described in the row; ⬜ selected, not implemented. Items dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze) say so in their row. Sections 2-6 include target design and required practices; naming a technology there does not mean it is installed or its gate is enforced. See [current progress](agile/sprint-status.md#integration-update-2026-10-14) for version-bound evidence and remaining acceptance.
+The Status column describes verified implementation at main `cef0e10`: ✅ implemented; 🔶 partial delivery or pending integration/acceptance, described in the row; ⬜ selected, not implemented. Items dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze) say so in their row. Sections 2-6 include target design and required practices; naming a technology there does not mean it is installed or its gate is enforced. See [current progress](agile/sprint-status.md#integration-update-2026-10-17) for version-bound evidence and remaining acceptance.
 
 ### 1.1 Frontend (`frontend/`)
 
@@ -32,7 +32,7 @@ The Status column describes verified implementation at main `b3def12`: ✅ imple
 | Package manager / runtime | pnpm · Node.js LTS | Node 24 | ✅ |
 | Code style | ESLint + Prettier | — | ✅ |
 | Unit / component tests | Vitest + React Testing Library + MSW (API mocks) | — | ✅ |
-| End-to-end tests | Playwright | — | 🔶 Existing mock browser suites; PR #11 adds limited real-browser checks; all-role acceptance open |
+| End-to-end tests | Playwright | — | ✅ Mocked-API suites run in the `frontend` CI check; real all-role browser checks against the local demo are scripted and recorded (Issue #24, [testing](testing.md)) |
 
 ### 1.2 Backend (`app/`)
 
@@ -45,38 +45,38 @@ The Status column describes verified implementation at main `b3def12`: ✅ imple
 | Error format | RFC 9457 Problem Details (Spring's built-in `ProblemDetail`) | Bundled with Boot | ✅ |
 | Security | Spring Security: session cookie authentication, BCrypt password hashing, `@PreAuthorize` method authorization, and CSRF protection (cookie + request header) | Bundled with Boot | ✅ JSON identity, roles and CSRF |
 | Data access | Spring Data JPA / Hibernate; handwritten SQL through JdbcTemplate for locking or complex queries | Bundled with Boot | ✅ |
-| Scheduled tasks | Spring `@Scheduled` | Bundled with Boot | 🔶 Notification delivery worker; overdue scanner/producer still open |
+| Scheduled tasks | Spring `@Scheduled` | Bundled with Boot | ✅ Notification delivery worker, loan reminder/overdue scanner and collection reminder scanner (Issue #19) |
 | Operational endpoints | Spring Boot Actuator (only `health` and `info` exposed) | Bundled with Boot | ✅ |
 | Build | Maven (Maven Wrapper `./mvnw`) | 3.9 | ✅ |
 | Testing | JUnit Jupiter 6 · Mockito · AssertJ · Spring Boot Test | Bundled with Boot 4 | ✅ Transitional data/adapter benches retain JUnit 5 |
-| Integration test database | Testcontainers (real PostgreSQL 18) | — | ✅ UC01/UC03; UC04 PostgreSQL acceptance runs in its own workflow (`maintenance-tests.yml`) |
+| Integration test database | Testcontainers (real PostgreSQL 18) | — | ✅ UC01 in ordinary tests; UC02 (`approval-postgres-tests.yml`), UC03/UC05/equipment management (`zhoufanhao.yml`, `notification-tests.yml`) and UC04 (`maintenance-tests.yml`) PostgreSQL profiles run in CI |
 | Layering checks | ArchUnit | — | ⬜ Dropped by D-009 |
-| Coverage | JaCoCo (service + domain ≥ 70% as a merge gate) | 0.8.x | ✅ Reports generated; gate pending (Issue #24) |
-| Code style / static analysis | Spotless (google-java-format) · SpotBugs + FindSecBugs | — | ⬜ Dropped by D-009; CodeQL covers static analysis (Issue #25) |
+| Coverage | JaCoCo (service + domain ≥ 70% as a merge gate) | 0.8.x | ✅ `verify` fails below 70% line coverage of the service and domain packages (Issue #24) |
+| Code style / static analysis | Spotless (google-java-format) · SpotBugs + FindSecBugs | — | ⬜ Dropped by D-009; CodeQL covers static analysis |
 
 ### 1.3 Database
 
 | Area | Technology | Version | Status |
 | --- | --- | --- | --- |
-| Database | PostgreSQL (`postgres:18-alpine` in container-based checks; native local demo) | 18 | ✅ Default/local and CI; server acceptance deferred |
+| Database | PostgreSQL (`postgres:18-alpine` in container-based checks and production; native local demo) | 18 | ✅ Default/local, CI and the production `db` service; deployed acceptance open (Issue #10) |
 | Schema migrations | Flyway (the only schema creation mechanism) | Bundled with Boot | ✅ |
 | Reservation overlap prevention | PostgreSQL exclusion constraints (`EXCLUDE USING gist` + `tstzrange`) | — | ✅ Shared migrations and concurrent reservation tests |
-| Backups | Daily `pg_dump` backups retained for 7 days | — | ⬜ |
+| Backups | Daily `pg_dump` backups retained for 7 days | — | 🔶 `scripts/backup.sh` and the [backup runbook](runbook-backup.md); restore rehearsed on scratch databases (Issue #25); each release takes a pre-release dump; the production daily schedule is not yet confirmed (Issue #10) |
 
 ### 1.4 DevSecOps and Deployment
 
 | Area | Technology | Status |
 | --- | --- | --- |
-| CI/CD | GitHub Actions | 🔶 Application/security checks pass; complete-system deployment pending |
+| CI/CD | GitHub Actions | ✅ Application/security checks on every PR; the gated `Deploy` workflow has released `main` to production since 2026-10-15 ([release runbook](server-release.md)) |
 | Secret scanning | gitleaks | ✅ |
 | Vulnerability scanning | Trivy (filesystem + Docker images) | ✅ Filesystem scan on every PR; `app` and `web` image scans in the `release-images` check |
 | Dependency checks | Dependency Review (PR stage) + Dependabot (weekly automated upgrades) | ✅ Dependency Review; 🔶 Dependabot configured, version updates paused until after the 2026-10-22 code freeze (majors ignored, minor/patch grouped) |
-| Code security scanning | CodeQL (Java + TypeScript) | ⬜ Issue #25 |
-| Post-deployment security scanning | OWASP ZAP Baseline | ⬜ Best effort in Issue #25 |
-| Load testing | k6 (50 concurrent users) | ⬜ Best effort in Issue #25 |
-| Containers | Docker (multi-stage builds, non-root execution) + Docker Compose: three containers, `web` + `app` + `db` | ✅ Packaging on `main`: non-root `app` and `web` images, PostgreSQL 18, production-profile Compose smoke in CI; not yet run on the server |
-| Image registry | GitHub Container Registry (GHCR) | ⬜ |
-| Server | Hong Kong server + nginx + Let's Encrypt, https://serms.midas.cyou | 🔶 Existing endpoint; server handover pending; deployment is gated and deferred to Issue #10 |
+| Code security scanning | CodeQL (Java + TypeScript) | ✅ `codeql.yml` on every PR and push to `main` (Issue #25); not a required branch-protection check |
+| Post-deployment security scanning | OWASP ZAP Baseline | 🔶 One passive baseline against production on 2026-10-16: 0 FAIL, 7 WARN, 60 PASS ([evidence](evidence/zap-baseline-20261016/zap-baseline.md)); not automated after deployment |
+| Load testing | k6 (50 concurrent users) | 🔶 `scripts/load-k6.js` ran 50 users against a local instance: all functional checks passed, reservation p95 2.26 s missed the 2 s target ([log](devlog/issue-25-devsecops.md)); no production run |
+| Containers | Docker (multi-stage builds, non-root execution) + Docker Compose: three containers, `web` + `app` + `db` | ✅ Non-root `app` and `web` images, PostgreSQL 18, production-profile Compose smoke in CI; running on the server since 2026-10-15 |
+| Image registry | GitHub Container Registry (GHCR) | ⬜ `scripts/deploy.sh` builds the images on the server; no registry is used |
+| Server | Hong Kong server + nginx + Let's Encrypt, https://serms.midas.cyou | 🔶 Serving `main` since 2026-10-15 with security response headers; server inventory and deployed acceptance remain open on Issue #10 |
 
 ### 1.5 Optional Features (If Time Permits)
 
@@ -101,7 +101,7 @@ Both features below were dropped for this delivery by [D-009](collaboration/deci
 
 ### 2.1 System Context and Deployment
 
-The diagram below is the final deployment target. The current complete local demo uses loopback native React/Spring/PostgreSQL processes; root Docker/Compose still packages a static welcome page.
+The diagram below is the production deployment, running since 2026-10-15 from the root `Dockerfile` and `compose.yaml`. The optional SMTP path was dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze) and is not implemented. The [local demo](local-demo.md) runs the same React, Spring Boot and PostgreSQL 18 parts as native loopback processes.
 
 ```mermaid
 flowchart LR
@@ -196,7 +196,7 @@ frontend/src
 | Role-based features (5.1) | The frontend displays menus and buttons based on `/auth/me` roles; **backend services enforce authorization with `@PreAuthorize`** |
 | Administrator account and role management (5.1) | Frontend `features/admin` pages + backend `identity` endpoints; role changes create audit records |
 | Equipment records; unique asset tags and serial numbers (5.2) | Database `UNIQUE` constraints; immediate frontend Zod validation and backend Bean Validation; duplicate identifiers return 409 with a field-level message |
-| Equipment states; retain retired equipment history (5.2) | Enums with database `CHECK` constraints; centralized State pattern transitions. **State count pending confirmation**: Proposal 5.2 lists five (including Reserved), while the current model has four (`AVAILABLE`, `ON_LOAN`, `UNDER_MAINTENANCE`, `RETIRED`); see [Contract Section 9](contracts/auth-and-approval.md#9-items-pending-confirmation) |
+| Equipment states; retain retired equipment history (5.2) | Enums with database `CHECK` constraints; centralized State pattern transitions. Four states (`AVAILABLE`, `ON_LOAN`, `UNDER_MAINTENANCE`, `RETIRED`) against the Proposal's five: Reserved is derived per time window from reservations, as confirmed by [D-008](collaboration/decisions.md#d-008-equipment-and-maintenance-state-models) |
 | Search by name / category / location / time interval (5.3) | Backend JPA Specifications build dynamic queries; SQL interval overlap checks determine availability. Frontend search criteria are synchronized with URL parameters so refreshes and shared links preserve them |
 | **No overlapping reservations** (5.3, rules 1 and 12) | PostgreSQL **exclusion constraint**: `EXCLUDE USING gist (equipment_id WITH =, tstzrange(start_at, end_at) WITH &&)`, applying only to pending approval / confirmed / fulfilled reservations. Availability checks and inserts share one transaction; the database rejects concurrent overlaps even if application checks are bypassed. The backend maps this error to 409, "This time slot is already reserved," and the frontend asks the user to choose another slot |
 | Reservation validation: duration limits, eligibility, quotas, approval requirement (5.3, rules 10 and 11) | **Strategy pattern**: a `ReservationPolicy` interface with one strategy class per rule, composed by equipment category or borrower type |
@@ -206,13 +206,13 @@ frontend/src
 | Return, record condition, route damaged equipment to maintenance (5.5, rule 7) | Publish `EquipmentReturned`; when damage is recorded, create a maintenance case in the same transaction and mark equipment as under maintenance |
 | Overdue detection and reminders (5.5) | `@Scheduled` scans; a **deduplication key** based on loan + reminder type + due time, enforced by a database unique constraint |
 | View overdue equipment and overdue duration (5.5) | A backend query calculates `now() - due_at`; frontend TanStack Table sorts by overdue duration |
-| Fault reports and maintenance workflow (5.6) | `maintenance_case` state machine (**State pattern**). **State count pending confirmation**: Proposal 5.6 lists six (including Closed), while the current model has five; see [Contract Section 9](contracts/auth-and-approval.md#9-items-pending-confirmation). Equipment with an open case is unavailable for reservation (rules 2 and 8) |
+| Fault reports and maintenance workflow (5.6) | `maintenance_case` state machine (**State pattern**). Five states against the Proposal's six: Closed is folded into the terminal `RESOLVED` / `UNREPAIRABLE`, as confirmed by [D-008](collaboration/decisions.md#d-008-equipment-and-maintenance-state-models). Equipment with an open case is unavailable for reservation (rules 2 and 8) |
 | Maintenance history (5.6) | Append-only cases and state-change records; the frontend displays a timeline on equipment details |
 | In-app notifications (5.7) | `notification` table + inbox + navigation unread count; channels use a `NotificationChannel` interface (**Adapter / Factory Method pattern**), initially implementing in-app delivery only |
-| Email notifications (optional) | Another `NotificationChannel` implementation using Spring Mail; Mailpit receives development emails |
+| Email notifications (optional) | Dropped by D-009. Planned as another `NotificationChannel` implementation using Spring Mail, with Mailpit receiving development emails |
 | Reports (5.7) | Read-only SQL aggregation in backend `report` (`GET /api/v1/reports`, administrators only); frontend Recharts charts, each with a table view, + TanStack Table details. CSV export not built |
 | Audit records (5.7, rule 9) | Append-only `audit_log` (database triggers reject `UPDATE` and `DELETE`); domain event listeners record actor, action, target, and time |
-| QR codes (optional) | The frontend generates codes for asset tags; custodians can scan with a camera or enter identifiers manually |
+| QR codes (optional) | Dropped by D-009. Planned as frontend-generated codes for asset tags scanned with a camera; custodians instead enter the reservation number, borrower or asset tag (Issue #20) |
 
 ### 3.2 Non-functional Requirements
 
@@ -275,7 +275,7 @@ flowchart LR
 | Deployment to a test environment | GitHub Actions runs `docker compose pull && up -d` over SSH; Flyway migrates the database on backend startup |
 | Basic post-deployment verification | Smoke tests (`/api/v1/health` returns UP, homepage returns 200) + Playwright login and reservation flow + ZAP Baseline |
 
-**Required checks** (configured in main branch protection): `backend`, `frontend`, `Secrets scan (gitleaks)`, `Vulnerability scan (Trivy)`, `Dependency review`, and `CodeQL`.
+**Required checks** (configured in main branch protection, read on 2026-10-17): `Secrets scan (gitleaks)`, `Vulnerability scan (Trivy)`, `Dependency review`, `database-test`, `java-tests`, `frontend`, `notification-contract` and `checkout-return`, with strict up-to-date branches. CodeQL, the UC02 and UC04 PostgreSQL acceptance runs, collaboration documents and release checks also run but are not required; the `Deploy` release gate additionally waits for `collaboration-docs`, `maintenance-postgres`, `release-config` and `release-images`. The diagram above is the original target: images are built on the server rather than pushed to GHCR, and post-deployment checks are run by hand.
 
 ### 3.4 Environments
 
@@ -368,8 +368,8 @@ Local development, CI, and the server must use the same PostgreSQL major version
 
 ## 7. Aligning Existing Code
 
-- **On main `b3def12`**: React pages and JSON identity/notification APIs replace the earlier page-only platform. Default/local app configuration uses PostgreSQL 18; MySQL production dependencies are removed and H2 is test-only. Flyway V001-V004, real approval persistence, UUID Identity mapping and the notification bridge are integrated. UC01-UC04 and their current test benches are present.
-- **Local runtime (merged from #11)**: isolated native PostgreSQL 18, explicit demo accounts, startup/shutdown, real API/data/browser checks and restart preservation. Its hosted CI passed; member acceptance remains separate.
+- **On main `cef0e10` (2026-10-17)**: React pages and JSON APIs cover UC01-UC05, user and role administration with session revocation, equipment and category management, reports and the audit viewer. Default/local app configuration uses PostgreSQL 18; MySQL production dependencies are removed and H2 is test-only. Flyway V001-V007, real approval persistence, UUID Identity mapping and the notification bridge are integrated. Loan and equipment SQL lives in `repository` packages (#91). The state on main `b3def12` is kept in [Sprint status](agile/sprint-status.md#integration-update-2026-10-14).
+- **Local runtime (merged from #11)**: isolated native PostgreSQL 18, explicit demo accounts, startup/shutdown, real API/data/browser checks and restart preservation. Issues #5-#9 are closed after local acceptance, recorded in the [acceptance close-out](devlog/2026-10-17-acceptance-closeout.md) and the [#6 validation log](devlog/issue-6-postgres-validation.md); member acceptance remains separate.
 - **Retained transitional modules**: `database/` supplies data regression/history checks, and `integration/notifications/` supplies app-included PostgreSQL adapters plus pinned historical contract verification. Removing or renaming these modules requires its own integration task; this closeout does not remove them or rewrite merged migrations.
-- **Remaining local work**: full Issues #6-#9 acceptance, overdue scanner/producer, complete role/browser flows, shared test consolidation, automatic coverage enforcement, and the Proposal scope listed on Issue #27 (user/role administration, equipment and category management, reports, audit viewer). Existing requirements in §5 continue to apply; local reports are not an enabled CI gate.
-- **Final release work**: web/app/db packaging, the release-SHA gate and the deployment script are on `main` (from #13). Issue #10 still needs the server handover, the first-admin bootstrap (Issue #18), database storage/backups and actual deployed acceptance. Cloud execution is last under D-005.
+- **Coverage and quality gates**: `verify` enforces the §5 70% service/domain line coverage; the eight required checks in §3.3 block merging. ArchUnit, Spotless and SpotBugs were dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze), so the layering rules in §2.2 are not enforced by automated tests.
+- **Release**: web/app/db packaging, the release-SHA gate and the deployment script (from #13) have released `main` to production since 2026-10-15; an empty production database gets its first administrator through the startup bootstrap (#41). Issue #10 still needs the server inventory, the production backup schedule and signed-in deployed acceptance, together with the production checks for #17 and #20.
