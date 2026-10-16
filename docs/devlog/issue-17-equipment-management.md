@@ -70,3 +70,69 @@ Zhang Hanming's agent-assisted cross-check of #81 ([comment](https://github.com/
 | Symptom | Root cause | Fix | How it was verified |
 | --- | --- | --- | --- |
 | In a real Chromium session, a category named `.` or `..` was created (201) but could not be renamed (404); the old name stayed. | Browsers resolve `.` and `..` URL path segments before sending, so `PATCH .../categories/..` reaches a different path. The 2026-10-16 check covered only encoded characters. | Create and rename also refuse an exact trimmed `.` or `..` (400, field `name`); contract 2.4 says so. | `EquipmentManagementPostgresIT`: the rejected-name case now includes `.`, `..` and ` .. `, plus a rename to `..`; `./mvnw -Puc03-postgres-it -Dit.test=EquipmentManagementPostgresIT clean verify` on PostgreSQL 18.6 passed 685 unit/database tests and 7/7 integration cases. Hanming's report also confirmed that normal renames work. |
+
+## 2026-10-17 Equipment management repository extraction (Refs #17, Refs #20)
+
+Primary human owner: Liu Tongyao (@cpg25ncu). Agent-prepared by Codex under the owner's
+bounded repository-layer task. Same independent branch/worktree as the loan extraction:
+`refactor/liu-tongyao-loan-repository`,
+`C:/Users/14824/.codex/worktrees/serms-loan-repository/SWE5006_Group_Project`.
+Base/rule baseline: main `da099e065225fed902a8b69f3b9914a1513f2625`.
+Sole writer: this Codex session. No merge is authorized for this task.
+
+### What moved and decisions
+
+`EquipmentManagementRepository` owns all management JdbcTemplate queries/updates, SQL columns,
+row mapping, categories, equipment locks, active-loan/account projections and audit persistence.
+`EquipmentManagementService` still decides validation, allowed actions, retirement conflicts,
+normalization, duplicate-field errors, audit action/entity names and version-conflict handling.
+Every original service transaction and `@PreAuthorize` annotation remains unchanged; the repository
+has no transaction boundary. `EquipmentSearchRepository` was not modified.
+
+The internal repository `EquipmentRow` is a data projection. The service maps it to the original
+public `ManagedEquipment` record, preserving controller/API/OpenAPI type identity and field/null/
+duration values without a repository dependency on the service or API layer. Lists remain mutable
+ArrayLists, as with the former JDBC result. SQL, argument ordering and the equipment `FOR UPDATE`
+lock stay in the original service call sequence and transaction. Category-name and retired-item
+rules, rollback and optimistic versions are unchanged. No tests required wiring edits.
+
+### Remaining cross-module reads
+
+| Table read by EquipmentManagementRepository | Purpose and reason retained |
+| --- | --- |
+| `serms.app_user` | ACTIVE management-account predicate. IdentityService.findById is a configurable-schema profile projection rather than this same exact check; AdminAccess is ADMIN-only and would deny custodians. |
+| `serms.user_role`, `serms.role` | Current CUSTODIAN/ADMIN membership in the same existence query; no equivalent public management-account predicate is exposed. |
+| `serms.loan`, `serms.reservation` | Any ACTIVE loan linked to this equipment before retirement. LoanService exposes caller-scoped loan lists/details, not an equipment-level existence method; substituting it would change visibility and authorization. |
+
+`serms.equipment` and `serms.equipment_category` are this module's own tables. The existing
+`serms.audit_log` INSERT is preserved (no read). There is no access to another module's
+repository. Retaining these queries when no same-check public service exists is explicitly
+within the owner's current task instruction; no established contract rule is edited.
+
+### Verification, problems and acceptance
+
+The exact rules read, tested inputs, environment, six isolated database/env mappings, commands,
+report locations and the corrected UC04 fixture failure are recorded in
+[the dated UC03 section](issue-20-uc03-lookup.md#2026-10-17-repository-layer-extraction-refs-20).
+Both services and both new repositories were tested together on the base plus their uncommitted
+source content, retained by SHA-256 and checked after committing.
+
+- `mvnw.cmd -B -Puc03-postgres-it clean verify`: 685 ordinary regression + 38 integration tests,
+  including all 7 EquipmentManagementPostgresIT cases; zero failures/errors/skips.
+- Workflow-equivalent UC04: 30/30; UC02: 30/30, zero failures/errors/skips.
+- Unchanged service/domain coverage gate: 1,630 / 1,675 = 97.31%, minimum 70%; actual zero-coverage
+  rejection and byte-identical restore/recheck passed. Moving SQL changes the lines in service
+  scope naturally; no coverage configuration or threshold was changed.
+- Real local demo at 55509/8111/5211: smoke 28/28 and UC01/UC04 API 24/24; clean package/actual
+  JAVA_HOME JVM; the demo and both verification clusters were stopped.
+- Unique SQL literals, service transaction/security annotations and diff whitespace were checked.
+  Tests, API/schema, frontend, migrations, workflows, shared acceptance scripts and other agents'
+  worktrees were not edited. No tracked evidence needed restoration.
+
+No new product defect or rule conflict was found during extraction. The initial UC04 environment
+failure was repaired only in the private harness and successfully rechecked; it is not concealed
+as an initial pass. No behavior deviation is intended. Full hosted checks must be green on the
+PR head; those exact-head results are recorded on the PR. Member review, main integration,
+deployment and team acceptance remain separate. The owner requested review from @cpg25ncu and
+@Hanming1008; GitHub does not permit an author to be their own requested reviewer. Keep the PR
+unmerged and do not change Issue state. No human approval, hours or team Done is claimed.
