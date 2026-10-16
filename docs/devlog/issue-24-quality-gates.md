@@ -182,3 +182,11 @@ render time, so waiting only in Node can leave that button disabled. The harness
 the browser's real `Date.now()` before loading the queue, without a fake clock or forced click.
 Its final availability assertion is also scoped to the actual fixture asset. The failed attempt
 retained history, cancelled its own unissued reservation and restored the temporary dual role.
+
+The final #91 combination's matrix passed all preceding page/API/write probes but a later
+mobile login bootstrap went blank. A prior private trace includes `net::ERR_NETWORK_CHANGED`;
+this also occurred after mock execution had stopped, so concurrency alone is not a proven root
+cause. The matrix now permits at most two navigation retries only when a React root stays empty
+and that exact transport error was observed during navigation. Policy/content/API/fingerprint
+assertions stay outside this retry, and other failures still fail. Retry paths/errors are recorded
+without query tokens. This does not retry a denied write, change roles or relax any assertion.

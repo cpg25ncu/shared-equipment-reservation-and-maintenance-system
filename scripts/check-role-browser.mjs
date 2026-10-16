@@ -64,6 +64,30 @@ const before = sql('role-browser-snapshot.sql');
 const period = new URLSearchParams({ from: new Date(Date.now() - 86400000).toISOString(), to: new Date().toISOString() }).toString();
 const errors = [];
 const browser = await chromium.launch({ headless: true });
+// Chromium can lose a module request when the Windows network configuration changes.
+// Retry only an empty React bootstrap with an observed transport failure, never policy assertions.
+async function navigate(page, url) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const failures = [];
+    const failed = request => {
+      const error = request.failure()?.errorText ?? '';
+      if (error.includes('net::ERR_NETWORK_CHANGED'))
+        failures.push({ path: new URL(request.url()).pathname, error });
+    };
+    page.on('requestfailed', failed);
+    try {
+      await page.goto(url);
+      await expect(page.locator('#root')).not.toBeEmpty({ timeout: 15000 });
+      return;
+    } catch (error) {
+      if (!failures.length || attempt === 2) throw error;
+      (summary.navigationRetries ??= []).push({ route: new URL(url).pathname, attempt: attempt + 1, failures });
+      console.log('RETRY transport-interrupted navigation ' + new URL(url).pathname);
+    } finally {
+      page.off('requestfailed', failed);
+    }
+  }
+}
 async function request(page, route, method = 'GET', body, csrf = true) {
   return page.evaluate(async ({ route, method, body, csrf }) => {
     const headers = { Accept: 'application/json' };
@@ -102,7 +126,7 @@ try {
       page.on('pageerror', e => errors.push(e.message));
       let tracing = false;
       try {
-        await page.goto(baseURL + '/login');
+        await navigate(page, baseURL + '/login');
         const role = accounts[account];
         if (role) {
           await page.getByLabel('Email address').fill(account + '@example.test');
@@ -132,7 +156,7 @@ try {
         }
         pass(device + ' ' + account + ': all ' + reads.length + ' real read APIs match permissions/ownership');
         for (const spec of pages) {
-          await page.goto(baseURL + resolveRoute(spec.route, fixture, period));
+          await navigate(page, baseURL + resolveRoute(spec.route, fixture, period));
           const allowed = role && spec.roles.includes(role);
           if (!role) {
             await expect(page).toHaveURL(baseURL + '/login');
@@ -166,7 +190,7 @@ try {
         }
         pass(device + ' ' + account + ': all ' + pages.length + ' direct page routes, deny states and viewport fit');
         if (!role) continue;
-        await page.goto(baseURL + '/');
+        await navigate(page, baseURL + '/');
         // Valid CSRF and syntactically valid bodies: a 403 must mean role denial, not bad input/token.
         for (const spec of deniedWrites(fixture).filter(x => !x.roles.includes(role))) {
           const result = await request(page, spec.route, spec.method ?? 'POST', spec.body);
