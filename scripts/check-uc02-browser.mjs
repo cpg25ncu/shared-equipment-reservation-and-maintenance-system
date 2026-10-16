@@ -290,6 +290,8 @@ try {
       const wait = Math.max(0, Date.parse(accepted.startAt) - Date.now() + 200);
       console.log(device + ': waiting ' + Math.ceil(wait / 1000) + 's for the real checkout window');
       await new Promise(resolve => setTimeout(resolve, wait));
+      // Use the browser's real clock too: an early render leaves the time-gated button disabled.
+      await custodian.waitForFunction(startAt => Date.now() >= startAt, Date.parse(accepted.startAt));
       await custodian.goto(baseURL + '/loans');
       const checkout = custodian.getByRole('region', { name: 'Checkout queue' }).getByRole('article').filter({ hasText: item.name });
       await checkout.getByRole('button', { name: 'Check out', exact: true }).click();
@@ -328,7 +330,7 @@ try {
       await borrower.goto(baseURL + '/equipment');
       await borrower.getByLabel('Name or asset tag').fill(item.assetTag);
       await borrower.getByRole('button', { name: 'Search', exact: true }).click();
-      await expect(borrower.getByText('Available', { exact: true })).toBeVisible();
+      await expect(borrower.getByRole('row').filter({ hasText: item.assetTag })).toContainText('Available');
       await fit(borrower, 'equipment restored');
       await admin.getByRole('link', { name: 'Reports', exact: true }).first().click();
       await expect(admin.getByRole('heading', { level: 1, name: /Reports/ })).toBeVisible();

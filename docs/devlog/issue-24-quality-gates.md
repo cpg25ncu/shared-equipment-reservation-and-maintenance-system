@@ -175,3 +175,10 @@ Fresh combined-head results and exact tested versions are recorded separately in
 closeout delivery (`docs/devlog/2026-10-17-acceptance-closeout.md`), rather than relabelling the
 2026-10-16 evidence. Local verification, hosted CI, merge, production, member acceptance and
 team Done remain separate. No merge or human approval is supplied by this agent.
+
+A combined rerun also reached checkout before the browser clock crossed the requested start:
+the trace recorded the queue request at 17:26:59.347Z. The page evaluates its disabled state at
+render time, so waiting only in Node can leave that button disabled. The harness now waits on
+the browser's real `Date.now()` before loading the queue, without a fake clock or forced click.
+Its final availability assertion is also scoped to the actual fixture asset. The failed attempt
+retained history, cancelled its own unissued reservation and restored the temporary dual role.
