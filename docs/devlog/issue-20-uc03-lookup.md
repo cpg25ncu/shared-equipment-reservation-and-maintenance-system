@@ -35,3 +35,28 @@ The UC03 owner should review the contract update and complete member acceptance.
 ### Authorship
 
 The code, tests, and this log entry were generated and verified by Codex under the user's instruction. No member review or effort hours are claimed.
+
+## 2026-10-16 Takeover, sync and secured service entry points
+
+Owner from 2026-10-16: Liu Tongyao (@cpg25ncu), on the repository owner's re-split recorded on #27 (past the D-012 deadline of Thu 23:00 SGT, no push since draft #78 opened). Branch: `feature/liu-tongyao-issue20-uc03-lookup`, cut from Zhou Fanhao's #78 head `135af4e`, so the work above keeps its commits and authorship. As UC03 executor the owner also agreed to the #21 damaged-return defaults (`PHYSICAL_DAMAGE` / `HIGH`).
+
+### What was changed
+
+- Merged `main` `871ba3e` and the #81 branch (#17), which edits the same generated `frontend/src/api/schema.d.ts`; both merges were clean, and `pnpm check:api` against the regenerated `openapi.json` confirmed the merged schema is exactly what the generator produces.
+- Removed the overloads `LoanService.list(boolean,int,int)` and `checkoutQueue(int,int)`, which `LoanPostgresIT` used. They had no `@PreAuthorize` / `@Transactional` and called the annotated methods on `this`, so Spring's proxies were bypassed and those tests did not exercise the role checks (finding 2 of the [agent review of #78](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/pull/78)). The tests now call the secured methods with `q = null`.
+
+The optional items of #20 (serial-number search, moving the SQL into `loan/repository`) were not done.
+
+### Verification
+
+Windows 11, JDK 25.0.4 (target 17), PostgreSQL 18.6 throw-away cluster, Node.js 24.20.0, pnpm 11.19.0.
+
+| Check | Result |
+| --- | --- |
+| `./mvnw -B -Puc03-postgres-it clean verify` with fresh `serms_test_app`, `_uc03`, `_uc05`, `_equipment` databases, after the overload removal | Passed: 685 unit/database tests; 38 integration cases (`LoanPostgresIT` 21, `Uc05PostgresIT` 10, `EquipmentManagementPostgresIT` 7); business coverage met |
+| `OPENAPI_FILE=../app/target/openapi.json pnpm check:api` | Passed |
+| `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` | Passed; 173 component tests |
+| `pnpm test:e2e` (mocked API) | Passed, 16 paths |
+| `node --test scripts/role-access.test.mjs` | Passed, 8 tests |
+
+Hosted checks, the member check by Zhang Hanming and the deployed check are separate.

@@ -182,7 +182,7 @@ class LoanPostgresIT {
     checkout();
     var other=fixtures.user("BORROWER");
     authenticate(new SermsUserPrincipal(other,"other@example.invalid","Other",Set.of("BORROWER")));
-    assertThat(service.list(true,0,100)).isEmpty();
+    assertThat(service.list(true,0,100,null)).isEmpty();
     assertThatThrownBy(this::checkout).isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
     mvc.perform(get("/api/v1/loans").with(anonymous())).andExpect(status().isUnauthorized());
     mvc.perform(post("/api/v1/loans").with(user(operator)).contentType("application/json").content("{}"))
@@ -210,7 +210,7 @@ class LoanPostgresIT {
     assertThat(environment.getProperty("serms.approval.enabled")).isEqualTo("true");
     assertThat(jdbc.queryForObject("SELECT max(version) FROM serms.schema_version",Integer.class)).isEqualTo(7);
     assertThat(jdbc.queryForObject("SELECT notification_principal FROM serms.app_user WHERE user_id=?",String.class,custodian)).isEqualTo(custodian.toString());
-    assertThat(service.checkoutQueue(0,100)).anyMatch(r -> r.reservationId().equals(reservation));
+    assertThat(service.checkoutQueue(0,100,null)).anyMatch(r -> r.reservationId().equals(reservation));
   }
   @Test void custodianCanFindCheckoutAndActiveLoanByReservationBorrowerAndAssetTag() throws Exception {
     String tag = jdbc.queryForObject("SELECT asset_tag FROM serms.equipment WHERE equipment_id=?", String.class, equipment);

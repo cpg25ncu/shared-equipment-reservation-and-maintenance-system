@@ -149,10 +149,6 @@ public class LoanService {
     return jdbc.query(sql, (r, n) -> map(r, now), args.toArray());
   }
 
-  public List<LoanView> list(boolean activeOnly, int page, int size) {
-    return list(activeOnly, page, size, null);
-  }
-
   private LoanView load(UUID id, Instant now) {
     return jdbc.query(VIEW + " WHERE l.loan_id=?", (r, n) -> map(r, now), id)
         .stream().findFirst().orElseThrow(RecordNotFoundException::new);
@@ -182,10 +178,6 @@ public class LoanService {
         r.getObject("equipment_id",UUID.class),r.getString("name"),r.getString("asset_tag"),r.getObject("requester_id",UUID.class),
         r.getString("display_name"),r.getTimestamp("start_at").toInstant(),r.getTimestamp("end_at").toInstant(),
         r.getLong("version")),args.toArray());
-  }
-
-  public List<CheckoutCandidate> checkoutQueue(int page, int size) {
-    return checkoutQueue(page, size, null);
   }
 
   private static String searchPattern(String q) {
