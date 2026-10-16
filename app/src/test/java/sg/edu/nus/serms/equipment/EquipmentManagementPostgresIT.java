@@ -148,6 +148,23 @@ class EquipmentManagementPostgresIT {
     assertThatThrownBy(() -> management.list(0, 20)).isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
   }
 
+  @Test void categoryNamesThatCannotBeRenamedThroughThePathAreRejected() throws Exception {
+    long before = jdbc.queryForObject("SELECT count(*) FROM serms.equipment_category", Long.class);
+    for (String name : new String[] {"Audio/Video", "Lab\\\\Kit", "Kit;2", "100% Kit"}) {
+      mvc.perform(post("/api/v1/equipment/manage/categories").with(user(operator)).with(csrf())
+          .contentType("application/json").content("{\"name\":\"" + name + "\"}"))
+          .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0].field").value("name"));
+    }
+    authenticate(operator);
+    String category = "Managed-" + UUID.randomUUID();
+    management.createCategory(category);
+    assertThatThrownBy(() -> management.renameCategory(category, category + "/new"))
+        .isInstanceOf(EquipmentManagementException.class).hasMessageContaining("cannot contain");
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM serms.equipment_category", Long.class)).isEqualTo(before + 1);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM serms.audit_log WHERE action='EQUIPMENT_CATEGORY_RENAME'"
+        + " AND actor_id=?", Long.class, custodian)).isZero();
+  }
+
   @Test void twoConcurrentRegistrationsOfOneTagHaveOneWinner() throws Exception {
     String category = "Managed-" + UUID.randomUUID();
     management.createCategory(category);

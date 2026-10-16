@@ -41,3 +41,24 @@ The V005 migration, UC01 read fields and demo seed work were transferred to issu
 The integration branch was synchronized with upstream `main` at `871ba3e` after the UC01 reply. Merge conflicts in the generated API schema, navigation assertion, and role-access matrix combined the new equipment page with the newly merged admin pages. The API schema was regenerated from the synchronized backend rather than hand-edited.
 
 On the synchronized, uncommitted merge inputs, `scripts/test-issue17-equipment.ps1 -PostgresBin 'C:\Program Files\PostgreSQL\18\bin'` passed 685 backend tests and six management PostgreSQL integration cases; `scripts/test-zhoufanhao.ps1` passed 685 backend and 30 UC03/UC05 integration cases. Both had zero failures or skips. Logs are preserved in `.cache/issue17-main-sync-management.log` and `.cache/issue17-main-sync-regression.log`. `pnpm gen:api`, `pnpm check:api`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test` (172 passing tests), `pnpm test:e2e` (16 desktop/mobile paths), and `node --test scripts/role-access.test.mjs` (eight passing tests) also passed. The new merge commit and its hosted checks must be verified separately.
+
+## 2026-10-16 Takeover, CI inclusion and category names
+
+Owner from 2026-10-16: Liu Tongyao (@cpg25ncu), on the repository owner's re-split recorded on #27 (the Issue was past its D-012 deadline with no activity since Thu 23:04 SGT). Branch: `feature/liu-tongyao-issue17-equipment-management`, cut from Zhou Fanhao's #80 head `32cf32b`, so the work above keeps its commits and authorship. Baseline: `main` `871ba3e`.
+
+### What was built
+
+- `EquipmentManagementPostgresIT` is now part of the `uc03-postgres-it` failsafe profile, so the hosted "Zhou Fanhao UC03 integration" and "Notification and default PostgreSQL tests" jobs run it against Testcontainers PostgreSQL 18.
+- Category create and rename refuse names containing `/`, `\`, `%` or `;` with 400 and field `name`; contract section 2.4 states the rule. One new integration case covers it.
+
+### Problems and fixes
+
+| Symptom | Root cause | Fix | How it was verified |
+| --- | --- | --- | --- |
+| The agent review of #80 found the six real-PostgreSQL cases in none of the 11 hosted runs on `32cf32b`; all checks were still green. | Failsafe runs only in profiles, and no profile included the new class (`uc03` lists Loan and Uc05, `uc02` Approval, the maintenance job narrows `uc04` with `-Dit.test`). | Add the class to the `uc03-postgres-it` includes. | Hosted job logs on the new head must show `EquipmentManagementPostgresIT` with seven tests. |
+| A category such as `Audio/Video` could be created but, by inference from the firewall defaults, never renamed. | Rename takes the current name as a path variable; Spring Security's `StrictHttpFirewall` rejects encoded `/`, `\`, `%` and `;`. | Validate category names on create and rename. | New case `categoryNamesThatCannotBeRenamedThroughThePathAreRejected`. |
+| The new case first failed with `AuthenticationCredentialsNotFound`. | MockMvc clears the test security context after `perform`, so the following direct service call had no principal. | Authenticate again before calling the service, as `invalidFieldsAndRevokedRoleAreRejected` already does. | Rerun below. |
+
+### Verification
+
+Windows 11, JDK 25.0.4 targeting 17, PostgreSQL 18.6 in a throw-away cluster: `./mvnw -B -Puc03-postgres-it -Dit.test=EquipmentManagementPostgresIT clean verify` with `SERMS_EQUIPMENT_TEST_*` and `SERMS_APP_TEST_*` pointing at fresh databases passed 685 unit/database tests and 7 of 7 management integration cases, and the business coverage check was met. Before the change, the agent ran the six original cases on `32cf32b` the same way (6 of 6 passed). Frontend checks were not rerun: no frontend or API-schema file changed. Hosted checks, the deployed check of `/manage/equipment` and team acceptance are separate.

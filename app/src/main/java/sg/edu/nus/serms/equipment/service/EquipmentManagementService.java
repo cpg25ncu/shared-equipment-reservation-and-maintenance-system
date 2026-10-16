@@ -110,7 +110,7 @@ public class EquipmentManagementService {
   @PreAuthorize("hasAnyRole('CUSTODIAN','ADMIN')")
   public List<String> createCategory(String name) {
     UUID actor = actor();
-    name = name.strip();
+    name = categoryName(name);
     try { jdbc.update("INSERT INTO serms.equipment_category(name) VALUES (?)", name); }
     catch (DataIntegrityViolationException e) {
       throw new EquipmentManagementException(409, "name", "This category already exists.");
@@ -122,7 +122,7 @@ public class EquipmentManagementService {
   @PreAuthorize("hasAnyRole('CUSTODIAN','ADMIN')")
   public List<String> renameCategory(String oldName, String newName) {
     UUID actor = actor();
-    newName = newName.strip();
+    newName = categoryName(newName);
     if (oldName.equals(newName)) return categories();
     try {
       if (jdbc.update("UPDATE serms.equipment_category SET name=? WHERE name=?", newName, oldName) != 1)
@@ -171,6 +171,15 @@ public class EquipmentManagementService {
     if (!Boolean.TRUE.equals(jdbc.queryForObject(
         "SELECT EXISTS(SELECT 1 FROM serms.equipment_category WHERE name=?)", Boolean.class, name.strip())))
       throw new EquipmentManagementException(400, "category", "Choose an existing category.");
+  }
+
+  // Rename carries the current name in the URL path, where the security firewall rejects encoded
+  // '/', '\', '%' and ';'. A category containing them could never be renamed, so refuse them here.
+  private static String categoryName(String name) {
+    String value = name.strip();
+    if (value.chars().anyMatch(c -> "/\\%;".indexOf(c) >= 0))
+      throw new EquipmentManagementException(400, "name", "Category names cannot contain /, \\, % or ;.");
+    return value;
   }
 
   private static String optional(String value) {
