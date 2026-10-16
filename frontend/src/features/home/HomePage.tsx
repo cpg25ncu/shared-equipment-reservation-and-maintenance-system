@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
 import { useUnread } from '@/features/notification/queries';
 import { roleLabels } from '@/lib/roles';
-/** Landing page: one card per page the signed-in account can use. */
+import { DashboardCards } from './DashboardCards';
+
+/** Landing page: the figures the account's roles act on, then one card per page it can use. */
 export function HomePage() {
   const { user } = useAuth();
   const unread = useUnread();
@@ -18,7 +20,7 @@ export function HomePage() {
       <PageHeader
         eyebrow="YOUR WORKSPACE"
         title={user?.displayName ? `Welcome, ${user.displayName}` : 'Welcome'}
-        description="Everything your account can do in SERMS starts here."
+        description="What needs your attention today, and everything your account can do in SERMS."
       />
       {roles.length > 0 && (
         <ul aria-label="Your roles" className="m-0 mb-7 flex list-none flex-wrap gap-2 p-0">
@@ -29,36 +31,49 @@ export function HomePage() {
           ))}
         </ul>
       )}
-      <nav aria-label="Your pages" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {pages.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className="group flex flex-col gap-3 rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40 hover:bg-secondary/40"
-          >
-            <span className="flex items-center justify-between gap-3">
-              <span className="grid size-10 place-items-center rounded-lg bg-secondary text-secondary-foreground">
+      <section aria-labelledby="glance-title" className="mb-10">
+        <h2 id="glance-title" className="mb-4 text-sm font-semibold">
+          At a glance
+        </h2>
+        <DashboardCards roles={user?.roles} />
+      </section>
+      <section aria-labelledby="pages-title">
+        <h2 id="pages-title" className="mb-4 text-sm font-semibold">
+          Your pages
+        </h2>
+        <nav aria-label="Your pages" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {pages.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="group flex items-start gap-4 rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-secondary/40 motion-reduce:transition-none"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
                 <item.icon size={20} aria-hidden="true" />
               </span>
-              {item.to === '/notifications' && unreadCount > 0 && (
-                <Badge tone="pending">{unreadCount} unread</Badge>
-              )}
-            </span>
-            <span className="text-sm font-semibold">{item.label}</span>
-            <span className="text-xs leading-relaxed text-muted-foreground">
-              {item.description}
-            </span>
-            <span className="mt-auto inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
-              Open
-              <ArrowRight
-                size={14}
-                aria-hidden="true"
-                className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
-              />
-            </span>
-          </Link>
-        ))}
-      </nav>
+              <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <span className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                  {item.label}
+                  {item.to === '/notifications' && unreadCount > 0 && (
+                    <Badge tone="pending">{unreadCount} unread</Badge>
+                  )}
+                </span>
+                <span className="text-xs leading-relaxed text-muted-foreground">
+                  {item.description}
+                </span>
+                <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
+                  Open
+                  <ArrowRight
+                    size={14}
+                    aria-hidden="true"
+                    className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+                  />
+                </span>
+              </span>
+            </Link>
+          ))}
+        </nav>
+      </section>
     </>
   );
 }

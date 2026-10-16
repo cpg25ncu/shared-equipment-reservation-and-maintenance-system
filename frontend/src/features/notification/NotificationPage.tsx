@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Bell, Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { Bell, Check, RefreshCw } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { api, message } from '@/api/client';
 import type { components } from '@/api/schema';
+import { EmptyState, ErrorState } from '@/components/Feedback';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { EmptyState, ErrorState, LoadingState } from '@/components/Feedback';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
+import { PageHeader } from '@/components/ui/page-header';
+import { Select } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import { notificationKeys, useUnread } from './queries';
 type Notification = components['schemas']['NotificationView'];
 const helper = createColumnHelper<Notification>();
@@ -44,19 +45,32 @@ export function NotificationPage() {
     () => [
       helper.accessor('content', {
         header: 'Update',
-        cell: (info) => (
-          <div className="message-cell">
-            <span
-              className={`message-icon ${info.row.original.type === 'OVERDUE' ? 'overdue' : ''}`}
-            >
-              <Bell size={18} />
-            </span>
-            <div>
-              <strong>{labels[info.row.original.type ?? ''] ?? 'Equipment update'}</strong>
-              <p>{info.getValue()}</p>
+        cell: (info) => {
+          const overdue = info.row.original.type === 'OVERDUE';
+          return (
+            <div className="flex gap-3">
+              <span
+                className={cn(
+                  'grid size-8 shrink-0 place-items-center rounded-lg',
+                  overdue
+                    ? 'bg-tone-bad text-tone-bad-foreground'
+                    : 'bg-secondary text-secondary-foreground',
+                )}
+                aria-hidden="true"
+              >
+                <Bell size={16} />
+              </span>
+              <div className="min-w-0">
+                <strong className="block text-xs font-semibold">
+                  {labels[info.row.original.type ?? ''] ?? 'Equipment update'}
+                </strong>
+                <p className="m-0 mt-1 text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
+                  {info.getValue()}
+                </p>
+              </div>
             </div>
-          </div>
-        ),
+          );
+        },
       }),
       helper.accessor('deliveredAt', {
         header: 'Received · SGT',
@@ -72,66 +86,92 @@ export function NotificationPage() {
       }),
       helper.accessor('readAt', {
         header: 'Status',
-        cell: (info) => (
-          <span className={info.getValue() ? 'badge badge-read' : 'badge'}>
-            {info.getValue() ? 'Read' : 'Unread'}
-          </span>
-        ),
+        cell: (info) =>
+          info.getValue() ? <Badge tone="muted">Read</Badge> : <Badge tone="pending">Unread</Badge>,
+      }),
+      helper.display({
+        id: 'action',
+        header: () => <span className="sr-only">Action</span>,
+        cell: (info) =>
+          !info.row.original.readAt ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={read.isPending}
+              onClick={() => read.mutate(info.row.original.id!)}
+            >
+              <Check size={15} aria-hidden="true" />
+              Mark as read
+            </Button>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Check size={15} aria-hidden="true" />
+              Reviewed
+            </span>
+          ),
       }),
     ],
-    [],
+    [read],
   );
-  const table = useReactTable({
-    data: notifications.data?.content ?? [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+  const count = unread.data?.count;
   return (
-    <>
-      <div className="page-title">
-        <div>
-          <p className="eyebrow">STAY IN THE LOOP</p>
-          <h1>
-            Notifications<span className="title-dot">.</span>
-          </h1>
-          <p className="muted">Your equipment updates, with the next step always in view.</p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            void client.invalidateQueries({ queryKey: notificationKeys.all });
-          }}
-          disabled={notifications.isFetching}
+    <div className="grid gap-6">
+      <PageHeader
+        eyebrow="STAY IN THE LOOP"
+        title="Notifications"
+        description="Your equipment updates, with the next step always in view."
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => {
+              void client.invalidateQueries({ queryKey: notificationKeys.all });
+            }}
+            disabled={notifications.isFetching}
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+            Refresh
+          </Button>
+        }
+      />
+      <Card className="flex items-center gap-4 bg-secondary/50 p-5">
+        <span
+          className="grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground"
+          aria-hidden="true"
         >
-          <RefreshCw size={16} />
-          Refresh
-        </Button>
-      </div>
-      <div className="inbox-summary">
-        <span className="summary-icon">
-          <Bell size={23} />
+          <Bell size={22} />
         </span>
         <div>
-          <strong>
-            {unread.data
-              ? `${unread.data.count} unread ${unread.data.count === 1 ? 'notification' : 'notifications'}`
+          <strong className="text-sm font-semibold">
+            {count !== undefined
+              ? `${count} unread ${count === 1 ? 'notification' : 'notifications'}`
               : 'Your notification inbox'}
           </strong>
-          <p>Return reminders and reservation decisions, together.</p>
+          <p className="m-0 mt-1 text-xs text-muted-foreground">
+            Return reminders and reservation decisions, together. Only notifications addressed to
+            you appear here.
+          </p>
         </div>
-        <span className="summary-label">PERSONAL INBOX</span>
-      </div>
+      </Card>
       {unread.isError && (
         <ErrorState message="Unread count is unavailable." onRetry={() => void unread.refetch()} />
       )}
-      <section className="inbox-panel">
-        <div className="panel-toolbar">
-          <h2>
-            All updates{notifications.data && <span>{notifications.data.totalElements}</span>}
-          </h2>
-          <label className="sort-label">
+      <Card>
+        <CardHeader className="flex-row flex-wrap items-start justify-between gap-3">
+          <div className="grid gap-1.5">
+            <CardTitle>
+              All updates
+              {notifications.data && (
+                <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+                  {notifications.data.totalElements}
+                </span>
+              )}
+            </CardTitle>
+            <CardDescription>All times are shown in Singapore time.</CardDescription>
+          </div>
+          <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
             Sort by
-            <select
+            <Select
+              className="min-h-9 w-auto py-1.5 text-xs"
               value={sort}
               onChange={(e) => {
                 setSort(e.target.value);
@@ -140,100 +180,32 @@ export function NotificationPage() {
             >
               <option value="deliveredAt,desc">Newest first</option>
               <option value="deliveredAt,asc">Oldest first</option>
-            </select>
+            </Select>
           </label>
-        </div>
-        {read.isError && <ErrorState message={message(read.error)} />}{' '}
-        {notifications.isPending ? (
-          <LoadingState />
-        ) : notifications.isError ? (
+        </CardHeader>
+        {read.isError && <ErrorState message={message(read.error)} />}
+        {notifications.isError ? (
           <ErrorState
             message={message(notifications.error)}
             onRetry={() => void notifications.refetch()}
           />
-        ) : !notifications.data?.content?.length ? (
-          <EmptyState />
         ) : (
-          <div className="table-scroll">
-            <table>
-              <caption className="sr-only">Delivered notifications for your account</caption>
-              <thead>
-                {table.getHeaderGroups().map((group) => (
-                  <tr key={group.id}>
-                    {group.headers.map((header) => (
-                      <th key={header.id} scope="col">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                    <th scope="col">
-                      <span className="sr-only">Action</span>
-                    </th>
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className={!row.original.readAt ? 'unread-row' : ''}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                    <td>
-                      {!row.original.readAt ? (
-                        <Button
-                          variant="ghost"
-                          disabled={read.isPending}
-                          onClick={() => read.mutate(row.original.id!)}
-                        >
-                          <Check size={15} />
-                          Mark as read
-                        </Button>
-                      ) : (
-                        <span className="reviewed">
-                          <Check size={15} />
-                          Reviewed
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={notifications.data?.content ?? []}
+            caption="Delivered notifications for your account"
+            loading={notifications.isPending}
+            rowClassName={(item) => (item.readAt ? undefined : 'bg-secondary/30')}
+            empty={<EmptyState />}
+            paging={{
+              page,
+              pageCount: Math.max(1, notifications.data?.totalPages ?? 1),
+              onPageChange: setPage,
+              busy: notifications.isFetching,
+            }}
+          />
         )}
-        <div className="pagination">
-          <span>
-            Page {page + 1}
-            {notifications.data && ` of ${Math.max(1, notifications.data.totalPages ?? 1)}`}
-          </span>
-          <div>
-            <Button
-              variant="outline"
-              aria-label="Previous page"
-              disabled={page === 0 || notifications.isFetching}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft size={16} />
-            </Button>
-            <Button
-              variant="outline"
-              aria-label="Next page"
-              disabled={
-                !notifications.data ||
-                page + 1 >= (notifications.data.totalPages ?? 0) ||
-                notifications.isFetching
-              }
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight size={16} />
-            </Button>
-          </div>
-        </div>
-      </section>
-      <p className="inbox-note">
-        All times are shown in Singapore time. Only notifications addressed to you appear here.
-      </p>
-    </>
+      </Card>
+    </div>
   );
 }

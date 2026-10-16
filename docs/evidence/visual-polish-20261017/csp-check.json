@@ -1,0 +1,201 @@
+{
+  "headers": {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Strict-Transport-Security": "max-age=15552000",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin"
+  },
+  "pages": [
+    {
+      "account": "borrower",
+      "route": "/"
+    },
+    {
+      "account": "borrower",
+      "route": "/equipment"
+    },
+    {
+      "account": "borrower",
+      "route": "/equipment/20000000-0000-0000-0000-000000000002/reserve"
+    },
+    {
+      "account": "borrower",
+      "route": "/reservations"
+    },
+    {
+      "account": "borrower",
+      "route": "/loans"
+    },
+    {
+      "account": "borrower",
+      "route": "/maintenance"
+    },
+    {
+      "account": "borrower",
+      "route": "/notifications"
+    },
+    {
+      "account": "approver",
+      "route": "/"
+    },
+    {
+      "account": "approver",
+      "route": "/equipment"
+    },
+    {
+      "account": "approver",
+      "route": "/approvals"
+    },
+    {
+      "account": "approver",
+      "route": "/approvals/571b615d-0314-4626-a415-b14972396a46"
+    },
+    {
+      "account": "approver",
+      "route": "/notifications"
+    },
+    {
+      "account": "custodian",
+      "route": "/"
+    },
+    {
+      "account": "custodian",
+      "route": "/equipment"
+    },
+    {
+      "account": "custodian",
+      "route": "/loans"
+    },
+    {
+      "account": "custodian",
+      "route": "/maintenance"
+    },
+    {
+      "account": "custodian",
+      "route": "/overdue"
+    },
+    {
+      "account": "custodian",
+      "route": "/manage/equipment"
+    },
+    {
+      "account": "custodian",
+      "route": "/notifications"
+    },
+    {
+      "account": "maintainer",
+      "route": "/"
+    },
+    {
+      "account": "maintainer",
+      "route": "/equipment"
+    },
+    {
+      "account": "maintainer",
+      "route": "/maintenance"
+    },
+    {
+      "account": "maintainer",
+      "route": "/maintenance/cases/aeee9e5a-a7d8-426b-84a3-74180625efeb"
+    },
+    {
+      "account": "maintainer",
+      "route": "/notifications"
+    },
+    {
+      "account": "admin",
+      "route": "/"
+    },
+    {
+      "account": "admin",
+      "route": "/equipment"
+    },
+    {
+      "account": "admin",
+      "route": "/maintenance"
+    },
+    {
+      "account": "admin",
+      "route": "/maintenance/report"
+    },
+    {
+      "account": "admin",
+      "route": "/overdue"
+    },
+    {
+      "account": "admin",
+      "route": "/manage/equipment"
+    },
+    {
+      "account": "admin",
+      "route": "/reports"
+    },
+    {
+      "account": "admin",
+      "route": "/admin/users"
+    },
+    {
+      "account": "admin",
+      "route": "/admin/audit"
+    },
+    {
+      "account": "admin",
+      "route": "/notifications"
+    }
+  ],
+  "dialogs": [
+    {
+      "account": "borrower",
+      "dialog": "cancel reservation confirmation"
+    },
+    {
+      "account": "custodian",
+      "dialog": "handover"
+    },
+    {
+      "account": "custodian",
+      "dialog": "register equipment and retire confirmation"
+    },
+    {
+      "account": "admin",
+      "dialog": "register equipment and retire confirmation"
+    },
+    {
+      "account": "admin",
+      "dialog": "edit display name"
+    }
+  ],
+  "violations": [],
+  "consoleErrors": [
+    {
+      "account": "borrower",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "account": "approver",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "account": "custodian",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "account": "maintainer",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "account": "admin",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ],
+  "summary": {
+    "pageLoads": 34,
+    "dialogs": 5,
+    "violations": 0,
+    "consoleErrorsOtherThanSignedOut401": 0
+  }
+}

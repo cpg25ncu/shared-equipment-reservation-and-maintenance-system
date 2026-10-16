@@ -41,7 +41,7 @@ try {
     const row = borrower.getByRole('row').filter({hasText:purpose});
     await expect(row).toContainText('Confirmed');
     await row.getByRole('button',{name:'Cancel reservation for Studio lighting kit'}).click();
-    await row.getByRole('button',{name:'Yes, cancel'}).click();
+    await borrower.getByRole('alertdialog',{name:'Cancel this reservation?'}).getByRole('button',{name:'Yes, cancel'}).click();
     await expect(row).toContainText('Cancelled');
     pass(`${name}: real borrower search reserve and cancel`);
     await borrower.getByRole('link',{name:'Find equipment',exact:true}).first().click();

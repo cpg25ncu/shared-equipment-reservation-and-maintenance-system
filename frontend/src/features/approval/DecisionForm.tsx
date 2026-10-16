@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ApiError, message } from '@/api/client';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/field';
+import { Textarea } from '@/components/ui/textarea';
 import { ErrorState } from '@/components/Feedback';
 import { decisionSchema, safeVersion, type DecisionFormValues } from './format';
 import { useDecision, type ApprovalDetail } from './queries';
@@ -106,10 +108,12 @@ export function DecisionForm({
 
   return (
     <>
-      <h2>Make a decision</h2>
-      <p className="muted">
-        Approval confirms the reservation. Equipment issue is a separate step.
-      </p>
+      <div className="grid gap-1.5">
+        <h2 className="m-0 text-base font-semibold">Make a decision</h2>
+        <p className="m-0 text-xs leading-relaxed text-muted-foreground">
+          Approval confirms the reservation. Equipment issue is a separate step.
+        </p>
+      </div>
       {needsRefresh && (
         <ErrorState
           message={
@@ -120,84 +124,110 @@ export function DecisionForm({
         />
       )}
       {(needsRefresh || changed) && (
-        <Button variant="outline" disabled={refreshing || busy} onClick={() => void reload()}>
+        <Button
+          variant="outline"
+          className="justify-self-start"
+          disabled={refreshing || busy}
+          onClick={() => void reload()}
+        >
           {refreshing ? 'Refreshing…' : 'Refresh request'}
         </Button>
       )}
       {errors.root?.server?.message && (
-        <p className="field-error" role="alert">
+        <p className="m-0 text-xs text-destructive" role="alert">
           {errors.root.server.message}
         </p>
       )}
       <form onSubmit={handleSubmit(review)} noValidate>
-        <fieldset disabled={blocked || !!preview}>
-          <legend>Decision</legend>
+        <fieldset disabled={blocked || !!preview} className="m-0 grid min-w-0 gap-3 border-0 p-0">
+          <legend className="mb-1 p-0 text-sm font-semibold">Decision</legend>
           {!expired && (
-            <label className="approval-choice">
-              <input type="radio" value="APPROVED" {...register('decision')} />
+            <label className="flex items-center gap-2.5 text-sm">
+              <input
+                type="radio"
+                className="size-4 accent-primary"
+                value="APPROVED"
+                {...register('decision')}
+              />
               Approve reservation
             </label>
           )}
-          <label className="approval-choice">
-            <input type="radio" value="REJECTED" {...register('decision')} />
+          <label className="flex items-center gap-2.5 text-sm">
+            <input
+              type="radio"
+              className="size-4 accent-primary"
+              value="REJECTED"
+              {...register('decision')}
+            />
             Reject reservation
           </label>
           {errors.decision && (
-            <p className="field-error" role="alert">
+            <p className="m-0 text-xs text-destructive" role="alert">
               {errors.decision.message}
             </p>
           )}
-          <label className="approval-comment-label" htmlFor="approval-comment">
-            Comment {choice === 'REJECTED' ? '(required)' : '(optional)'}
-          </label>
-          <textarea
-            className="input"
-            id="approval-comment"
-            rows={4}
-            maxLength={1000}
-            aria-invalid={!!errors.comment}
-            aria-describedby="approval-comment-help approval-comment-error"
-            {...register('comment')}
-          />
-          <p className="approval-help" id="approval-comment-help">
-            {comment.length}/1000 characters. Explain the reason when rejecting.
-          </p>
-          <p
-            className="field-error"
-            id="approval-comment-error"
-            role={errors.comment ? 'alert' : undefined}
-          >
-            {errors.comment?.message}
-          </p>
-          <Button type="submit">Review decision</Button>
+          <div className="mt-2 grid gap-1.5">
+            <Label htmlFor="approval-comment">
+              Comment {choice === 'REJECTED' ? '(required)' : '(optional)'}
+            </Label>
+            <Textarea
+              id="approval-comment"
+              rows={4}
+              maxLength={1000}
+              aria-invalid={!!errors.comment}
+              aria-describedby="approval-comment-help approval-comment-error"
+              {...register('comment')}
+            />
+            <p className="m-0 text-xs text-muted-foreground" id="approval-comment-help">
+              {comment.length}/1000 characters. Explain the reason when rejecting.
+            </p>
+            <p
+              className="m-0 text-xs text-destructive empty:hidden"
+              id="approval-comment-error"
+              role={errors.comment ? 'alert' : undefined}
+            >
+              {errors.comment?.message}
+            </p>
+          </div>
+          <Button type="submit" className="justify-self-start">
+            Review decision
+          </Button>
         </fieldset>
       </form>
       {preview && (
         <section
           ref={confirmation}
-          className="approval-confirmation"
+          className="grid gap-3 rounded-lg border border-border bg-secondary/50 p-5"
           aria-label="Confirm approval decision"
         >
-          <h3>
+          <h3 className="m-0 text-sm font-semibold">
             {preview.values.decision === 'APPROVED'
               ? 'Approve this reservation?'
               : 'Reject this reservation?'}
           </h3>
-          <p>
+          <p className="m-0 text-sm leading-relaxed">
             {preview.values.decision === 'APPROVED'
               ? 'The applicant will be notified that their reservation is confirmed.'
               : 'The reserved time slot will be released and the applicant will be notified.'}
           </p>
-          {preview.values.comment && <p className="approval-text">{preview.values.comment}</p>}
+          {preview.values.comment && (
+            <p className="m-0 whitespace-pre-wrap text-sm text-muted-foreground [overflow-wrap:anywhere]">
+              {preview.values.comment}
+            </p>
+          )}
           {(changed || expiredApproval) && (
-            <p className="field-error" role="alert">
+            <p className="m-0 text-xs text-destructive" role="alert">
               {changed
                 ? 'The request was updated. Refresh it before confirming.'
                 : 'This reservation has expired. Return to editing and choose Reject.'}
             </p>
           )}
-          <div className="approval-actions">
-            <Button disabled={blocked || changed || expiredApproval} onClick={() => void confirm()}>
+          <div className="flex flex-wrap gap-2.5">
+            <Button
+              variant={preview.values.decision === 'APPROVED' ? 'default' : 'destructive'}
+              disabled={blocked || changed || expiredApproval}
+              onClick={() => void confirm()}
+            >
               {mutation.isPending
                 ? 'Submitting…'
                 : preview.values.decision === 'APPROVED'

@@ -60,9 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     const { data } = await api.POST('/api/v1/auth/login', { body: { email, password } });
     query.clear();
+    // Publish the user only once the new CSRF token is in place: the sign-in page navigates when
+    // this resolves, and a navigation still pending from a slow refresh would otherwise pull the
+    // user back after they had already opened another page (Issue #26).
+    await refreshCsrf();
     setUser(data ?? null);
     setError(null);
-    await refreshCsrf();
   }
   async function logout() {
     await api.POST('/api/v1/auth/logout');

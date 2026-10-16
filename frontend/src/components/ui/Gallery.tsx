@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createColumnHelper } from '@tanstack/react-table';
 import { PackageSearch } from 'lucide-react';
-import { EmptyState } from '@/components/Feedback';
+import { EmptyState, Notice } from '@/components/Feedback';
 import { ROLES, roleLabel } from '@/lib/roles';
 import { equipmentStatus, loanStatus, maintenanceStatus, reservationStatus } from '@/lib/status';
 import { Badge, StatusBadge } from './badge';
@@ -9,6 +9,7 @@ import { Button } from './button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 import { ConfirmDialog } from './confirm-dialog';
 import { DataTable } from './data-table';
+import { Detail, DetailList } from './detail-list';
 import {
   Dialog,
   DialogClose,
@@ -23,7 +24,8 @@ import { Field } from './field';
 import { Input } from './input';
 import { PageHeader } from './page-header';
 import { Select } from './select';
-import { Skeleton } from './skeleton';
+import { Pager } from './pager';
+import { Skeleton, SkeletonBlock } from './skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 import { Textarea } from './textarea';
 import { toast } from './toast';
@@ -69,6 +71,7 @@ const statusGroups = {
  */
 export default function Gallery() {
   const [confirming, setConfirming] = useState(false);
+  const [page, setPage] = useState(0);
   return (
     <>
       <PageHeader
@@ -138,6 +141,28 @@ export default function Gallery() {
             <CardDescription>Sort from the headers; two rows per page here.</CardDescription>
           </CardHeader>
           <DataTable columns={columns} data={rows} caption="Sample equipment" pageSize={2} />
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Details, notices and list paging</CardTitle>
+            <CardDescription>
+              Facts of one record, a message that stays on the page, and paging for a card list
+              whose API returns no total.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <DetailList>
+              <Detail label="Asset tag">CAM-01</Detail>
+              <Detail label="Status">
+                <StatusBadge status={equipmentStatus.ON_LOAN} />
+              </Detail>
+              <Detail label="Purpose">Field recording for the design module.</Detail>
+            </DetailList>
+            <Notice tone="success">Handover recorded successfully.</Notice>
+            <Notice tone="warning">A damage description is required.</Notice>
+            <SkeletonBlock lines={2} />
+          </CardContent>
+          <Pager page={page} hasNext={page < 2} onPageChange={setPage} />
         </Card>
         <Card>
           <CardHeader>

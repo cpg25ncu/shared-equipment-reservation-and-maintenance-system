@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { App } from '@/app/App';
 import { AuthProvider } from '@/app/AuthProvider';
+import { Toaster } from '@/components/ui/toast';
 import { currentUser, server } from '@/test/server';
 
 const item = {
@@ -16,7 +17,7 @@ const item = {
 function mount(roles = ['CUSTODIAN']) {
   server.use(http.get('/api/v1/auth/me', () => HttpResponse.json({ ...currentUser, roles })));
   return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-    <MemoryRouter initialEntries={['/manage/equipment']}><AuthProvider><App /></AuthProvider></MemoryRouter>
+    <MemoryRouter initialEntries={['/manage/equipment']}><AuthProvider><App /><Toaster /></AuthProvider></MemoryRouter>
   </QueryClientProvider>);
 }
 
@@ -55,7 +56,9 @@ describe('equipment management', () => {
     );
     mount();
     const user = userEvent.setup();
-    expect(await screen.findByText('Studio camera (CAM-017)')).toBeInTheDocument();
+    const row = (await screen.findByText('Studio camera')).closest('tr')!;
+    expect(within(row).getByText('CAM-017 · Serial SN-017')).toBeInTheDocument();
+    expect(within(row).getByText('Available')).toHaveClass('badge-ok');
     await user.click(screen.getByRole('button', { name: 'Register equipment' }));
     const form = screen.getByRole('form', { name: 'Equipment form' });
     await user.type(within(form).getByRole('textbox', { name: 'Asset tag' }), 'CAM-018');
@@ -110,5 +113,25 @@ describe('equipment management', () => {
     await user.click(screen.getByRole('button', { name: 'Rename category' }));
     expect(await screen.findByText('Category renamed.')).toBeInTheDocument();
     expect(writes).toEqual(['Tripod', 'Support']);
+  });
+
+  it('shows twenty records per page and sorts them from the headers', async () => {
+    const records = Array.from({ length: 21 }, (_, index) => ({
+      ...item, equipmentId: 'id-' + index, assetTag: 'TAG-' + String(index).padStart(2, '0'),
+      name: 'Item ' + String(index).padStart(2, '0'),
+    }));
+    server.use(
+      http.get('/api/v1/equipment/manage', () => HttpResponse.json(records)),
+      http.get('/api/v1/equipment/manage/categories', () => HttpResponse.json(['Camera'])),
+    );
+    mount();
+    const user = userEvent.setup();
+    expect(await screen.findByText('Item 19')).toBeInTheDocument();
+    expect(screen.queryByText('Item 20')).not.toBeInTheDocument();
+    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+    await user.click(within(screen.getByRole('columnheader', { name: /Equipment/ })).getByRole('button'));
+    await user.click(within(screen.getByRole('columnheader', { name: /Equipment/ })).getByRole('button'));
+    expect(screen.getByText('Item 20')).toBeInTheDocument();
+    expect(screen.queryByText('Item 00')).not.toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Navigate, useLocation, useNavigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { ArrowRight, Boxes, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/app/AuthProvider';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,6 @@ const schema = z.object({
 type Form = z.infer<typeof schema>;
 export function LoginPage() {
   const auth = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [failure, setFailure] = useState('');
   const {
@@ -24,22 +23,22 @@ export function LoginPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<Form>({ resolver: zodResolver(schema) });
+  const from = location.state?.from;
+  const target =
+    typeof from === 'string' &&
+    from.startsWith('/') &&
+    !from.startsWith('//') &&
+    !from.startsWith('/login')
+      ? from
+      : '/';
   if (auth.loading) return <LoadingState />;
-  if (auth.user) return <Navigate to="/" replace />;
+  // The only navigation after signing in: once the user is known, go where they were heading.
+  // A second navigate() in the submit handler could fire late and pull them off a page (Issue #26).
+  if (auth.user) return <Navigate to={target} replace />;
   async function submit(values: Form) {
     setFailure('');
     try {
       await auth.login(values.email, values.password);
-      const from = location.state?.from;
-      navigate(
-        typeof from === 'string' &&
-          from.startsWith('/') &&
-          !from.startsWith('//') &&
-          !from.startsWith('/login')
-          ? from
-          : '/',
-        { replace: true },
-      );
     } catch (e) {
       setFailure(message(e));
     }

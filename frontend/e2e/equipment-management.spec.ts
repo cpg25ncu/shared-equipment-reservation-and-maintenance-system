@@ -23,7 +23,7 @@ test('custodian registers and retires equipment with confirmation', async ({ pag
     version: 0,
   };
   let signedIn = false;
-  let equipment: typeof item[] = [];
+  let equipment: (typeof item)[] = [];
   let retireRequests = 0;
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
@@ -48,7 +48,10 @@ test('custodian registers and retires equipment with confirmation', async ({ pag
       return route.fulfill({ json: equipment });
     if (path === '/api/v1/equipment/manage' && request.method() === 'POST') {
       expect(request.postDataJSON()).toMatchObject({
-        assetTag: 'CAM-018', name: 'Field camera', category: 'Camera', location: 'Store',
+        assetTag: 'CAM-018',
+        name: 'Field camera',
+        category: 'Camera',
+        location: 'Store',
       });
       equipment = [item];
       return route.fulfill({ status: 201, json: item });
@@ -75,7 +78,9 @@ test('custodian registers and retires equipment with confirmation', async ({ pag
   await form.getByRole('textbox', { name: 'Location' }).fill('Store');
   await form.getByRole('button', { name: 'Save equipment' }).click();
   await expect(page.getByText('Equipment registered.')).toBeVisible();
-  await expect(page.getByText('Field camera (CAM-018)')).toBeVisible();
+  const row = page.getByRole('row').filter({ hasText: 'CAM-018' });
+  await expect(row).toContainText('Field camera');
+  await expect(row).toContainText('Available');
   await page.getByRole('button', { name: 'Retire Field camera' }).click();
   const dialog = page.getByRole('alertdialog', { name: 'Retire this equipment?' });
   await dialog.getByRole('button', { name: 'Cancel' }).click();
@@ -85,4 +90,5 @@ test('custodian registers and retires equipment with confirmation', async ({ pag
   await expect(page.getByText('Equipment retired.')).toBeVisible();
   expect(retireRequests).toBe(1);
   await expect(page.getByRole('button', { name: 'Retire Field camera' })).toHaveCount(0);
+  await expect(row).toContainText('Retired');
 });

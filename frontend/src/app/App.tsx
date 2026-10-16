@@ -12,6 +12,8 @@ import { MyReservationsPage } from '@/features/reservation/MyReservationsPage';
 import { RequireRole } from './RequireRole';
 import { Layout } from './Layout';
 import { LoadingState } from '@/components/Feedback';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 import { MaintenanceHomePage } from '@/features/maintenance/MaintenanceHomePage';
 import { MaintenanceCasePage } from '@/features/maintenance/MaintenanceCasePage';
 import { MaintenanceReportPage } from '@/features/maintenance/MaintenanceReportPage';
@@ -77,10 +79,16 @@ export function App() {
           <Route
             path="*"
             element={
-              <div>
-                <h1>Page not found</h1>
-                <Link to="/">Back to the overview</Link>
-              </div>
+              <PageHeader
+                eyebrow="NOT FOUND"
+                title="Page not found"
+                description="The address may be mistyped, or the page may have moved."
+                actions={
+                  <Button asChild variant="outline">
+                    <Link to="/">Back to the overview</Link>
+                  </Button>
+                }
+              />
             }
           />
         </Route>

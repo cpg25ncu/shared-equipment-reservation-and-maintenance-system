@@ -6,6 +6,7 @@ export function EquipmentName({ item, linked }: { item: MaintenanceCase; linked:
   if (!linked) return label;
   return (
     <Link
+      className="text-primary underline underline-offset-4"
       to={equipmentHistoryPath(item.equipmentId)}
       aria-label={'Maintenance history for ' + label}
     >

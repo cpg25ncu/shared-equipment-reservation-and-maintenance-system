@@ -132,7 +132,7 @@ describe('approval workspace', () => {
     );
     mount('/approvals');
     await screen.findByText('First page');
-    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
     expect(await screen.findByText('Second page')).toBeVisible();
     expect(pages).toEqual(['0', '1']);
   });
