@@ -1,156 +1,125 @@
 # Shared Equipment Reservation and Maintenance System (SERMS)
 
-Shared Equipment Reservation and Maintenance System · SWE5006 Team 07
-
-## Run the Complete Local Demo
-
-The integrated React, Spring Boot and PostgreSQL 18 system can run locally before server handover. See the [local demo guide](docs/local-demo.md) for isolated startup/shutdown, six role accounts and real API smoke checks. Local acceptance and cloud publication are tracked separately in Issues #5-#10.
-
-Current baseline: main `b3def12` (2026-10-14) includes the local demo (#11), the UC01/UC04 acceptance fixes (#14) and the Spring Boot 4 upgrade with `web` + `app` + `db` packaging and gated deployment (#13). UC01-UC04, shared login and the notification inbox are integrated; overdue production, the remaining Proposal scope (administration, equipment management, reports, audit viewer) and member acceptance are open and tracked with owners and dates on [Issue #27](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/issues/27). Cloud deployment is the last step. See [current progress](docs/agile/sprint-status.md#integration-update-2026-10-14), the [development log](docs/devlog/README.md) and the [local repository handover](docs/local-repository-closeout.md).
+SWE5006 Team 07 · A web system for reserving, approving, lending and maintaining shared equipment.
 
 Use the full name **Shared Equipment Reservation and Maintenance System (SERMS)** on first mention in the project report, then use **SERMS** throughout the remaining text and everyday communication. The repository name is `shared-equipment-reservation-and-maintenance-system`.
 
-## Collaboration and Agent Entry Points
+## Status
 
-- Team participation, task dependencies, branches, and handover: [Collaboration guide](.github/CONTRIBUTING.md).
-- Coding agent startup and task-specific skills: [AGENTS.md](AGENTS.md).
-- Ownership sources, tool boundaries, and confirmed/pending decisions: [Ownership boundaries](docs/collaboration/ownership.md), [Agent workflow](docs/collaboration/agent-workflow.md), [Decision record](docs/collaboration/decisions.md).
-- Documentation, interface contracts, and verification evidence: [Documentation index](docs/README.md), [Contract index](docs/contracts/README.md), [Testing](docs/testing.md).
+As of 2026-10-17 (Asia/Singapore):
 
-These entry points supplement collaboration practices; the technology stack, five-member use-case ownership, existing contracts, and Write collaborators' right to merge their own PRs remain in effect.
+- The five use cases and the remaining Proposal scope (user and role administration, equipment and category management, reports, audit viewer) are merged to `main`.
+- `main` runs in production at https://serms.midas.cyou, released through the gated `Deploy` workflow since 2026-10-15.
+- Deployed acceptance and the presentation schedule (feature freeze 2026-10-20, code freeze 2026-10-22, presentation 2026-10-26) are tracked with owners and dates on [Issue #27](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/issues/27).
+
+The [development log](docs/devlog/README.md) records how each task was built and verified; the [Sprint status](docs/agile/sprint-status.md) keeps dated snapshots.
+
+## Features
+
+Users sign in with one of five roles: Borrower, Approver, Custodian, Maintainer and Administrator.
+
+| Scope | Backend package (`app/src/main/java/sg/edu/nus/serms/`) | Frontend (`frontend/src/features/`) | Design and contract |
+| --- | --- | --- | --- |
+| UC01 Search and reserve equipment | `equipment`, `reservation` | `equipment`, `reservation` | [Design](docs/uc01-search-and-reserve.md), [contract](docs/contracts/equipment-and-reservation.md) |
+| UC02 Review and approve reservations | `approval` | `approval` | [Implementation](docs/uc02-approval-implementation.md), [contract](docs/contracts/auth-and-approval.md) |
+| UC03 Equipment checkout and return | `loan` | `loan` | [Design](docs/uc03-checkout-and-return.md), [contract](docs/contracts/checkout-and-return.md) |
+| UC04 Fault reports and maintenance | `maintenance` | `maintenance` | [Design](docs/uc04-fault-and-maintenance.md) |
+| UC05 Overdue detection and notifications | `notification` | `notification`, `overdue` | [Design](docs/notification-design.md), [overdue contract](docs/contracts/checkout-and-return.md#uc05-overdue-projection) |
+| Sign-in, roles, user administration, audit viewer | `identity`, `audit`, `shared` | `auth`, `admin`, `home` | [Authentication contract](docs/contracts/auth-and-approval.md), [administration contract](docs/contracts/admin-console.md) |
+| Equipment and category management | `equipment` | `equipment` | [Development log #17](docs/devlog/issue-17-equipment-management.md) |
+| Reports | `report` | `report` | [Development log #23](docs/devlog/issue-23-reports.md) |
+
+Use-case owners are listed in [Ownership boundaries](docs/collaboration/ownership.md). Email notifications, QR codes and automatic cancellation of expired pending reservations were dropped by the [scope freeze (D-009)](docs/collaboration/decisions.md#d-009-scope-freeze).
 
 ## Technology Stack
 
-The frontend and backend are separate: a React single-page application, a Spring Boot REST API organized as a modular monolith, and PostgreSQL 18. The local demo runs native processes; Docker Compose packaging and cloud publication remain later release work. GitHub Actions runs the existing application and security checks. See [docs/tech-stack.md](docs/tech-stack.md) for implemented and planned technologies.
+A React single-page application and a Spring Boot REST API organized as a modular monolith, served from one origin and backed by PostgreSQL 18. [docs/tech-stack.md](docs/tech-stack.md) is the maintained source for choices, versions, architecture and the mapping to Proposal requirements.
 
-### Frontend (`frontend/`)
-
-| Area | Technology |
+| Layer | Technology |
 | --- | --- |
-| Language | TypeScript 5 (strict mode) |
-| Framework | React 19 |
-| Build / development server | Vite 7 |
-| Routing | React Router 7 |
-| Server data fetching and caching | TanStack Query 5 |
-| API client | openapi-typescript + openapi-fetch (types generated from the backend API specification) |
-| Forms and validation | React Hook Form + Zod |
-| UI components / styling | shadcn/ui + Tailwind CSS 4 |
-| Tables | TanStack Table 8 |
-| Charts | Recharts 3 (reports page) |
-| Date and time | date-fns + date-fns-tz (displayed in Singapore time) |
-| Package manager / runtime | pnpm · Node.js 24 LTS |
-| Code style | ESLint + Prettier |
-| Testing | Vitest · React Testing Library · MSW (API mocks) · Playwright (end-to-end) |
+| Frontend | TypeScript 5 (strict), React 19, Vite 7, React Router 7, TanStack Query 5 and Table 8, React Hook Form + Zod, shadcn/ui on Tailwind CSS 4, Recharts 3, typed API client generated from the backend OpenAPI document; pnpm on Node.js 24 |
+| Backend | Java 17, Spring Boot 4.0, Spring MVC JSON API under `/api/v1`, Spring Security (session cookie, CSRF, BCrypt, method authorization), Spring Data JPA with JdbcTemplate for locking and complex queries, springdoc-openapi, RFC 9457 Problem Details; Maven Wrapper |
+| Database | PostgreSQL 18 with Flyway migrations in `app/src/main/resources/db/migration`; an exclusion constraint prevents overlapping reservations |
+| Testing | JUnit Jupiter, Mockito, AssertJ, Spring Boot Test, Testcontainers or native PostgreSQL 18; Vitest, React Testing Library, MSW, Playwright; JaCoCo |
+| CI and security | GitHub Actions with gitleaks, Trivy, Dependency Review and CodeQL; Dependabot version updates paused until after the code freeze |
+| Deployment | Docker Compose (`web` nginx, `app`, `db`) behind host nginx with TLS |
 
-### Backend (`app/`)
+## Repository Layout
 
-| Area | Technology |
+| Path | Contents |
 | --- | --- |
-| Language | Java 17 |
-| Framework | Spring Boot 4.0 (modular monolith; user-authorized migration in PR #13) |
-| Web API | Spring MVC JSON endpoints under `/api/v1` + Jakarta Bean Validation |
-| API documentation | springdoc-openapi (OpenAPI 3) |
-| Error format | RFC 9457 Problem Details |
-| Security | Spring Security: session cookie authentication, BCrypt password hashing, `@PreAuthorize` method authorization, and CSRF protection (cookie + request header) |
-| Data access | Spring Data JPA / Hibernate; handwritten SQL through JdbcTemplate for locking or complex queries |
-| Scheduled tasks | Spring `@Scheduled` |
-| Operational endpoints | Spring Boot Actuator (only health and info exposed) |
-| Build | Maven 3.9 (`./mvnw`) |
-| Testing | JUnit Jupiter 6 · Mockito · AssertJ · Spring Boot Test · Testcontainers |
-| Coverage | JaCoCo reports; service + domain ≥ 70% required, automatic gate tracked in Issue #24 |
-| Code style / static analysis | CodeQL planned (Issue #25); Spotless, SpotBugs and ArchUnit were dropped by [D-009](docs/collaboration/decisions.md#d-009-scope-freeze) |
+| `app/` | The only backend application, one package per business module with `api`, `service`, `domain` and `repository` layers |
+| `frontend/` | The only frontend application; pages in `src/features/`, shared code in `src/{app,api,components,lib}/` |
+| `web/` | nginx configuration of the production `web` container |
+| `database/` | Sprint 1 data-foundation module, kept for regression; production migrations live in `app/` |
+| `integration/notifications/` | PostgreSQL notification adapters compiled into `app/`, with their contract test |
+| `scripts/` | Local demo, test, browser-check, backup and release scripts |
+| `docs/` | Documentation; start at the [documentation index](docs/README.md) |
+| `.github/` | Workflows, [collaboration guide](.github/CONTRIBUTING.md), Issue and PR templates |
+| `.agents/skills/` | Operating guides for coding agents, routed from [AGENTS.md](AGENTS.md) |
+| `Dockerfile`, `compose.yaml`, `.env.example` | Production packaging; `compose.dev.yaml` is a local data environment |
 
-Implemented backend packages under `sg.edu.nus.serms` are `identity`, `equipment`, `reservation`, `approval`, `loan`, `maintenance`, `notification`, and `shared`. Reporting queries currently live in maintenance, and audit writes use the shared database; standalone report/audit modules remain architectural targets. Frontend business pages live under `frontend/src/features/`.
+## Run Locally
 
-### Database
+The [local demo guide](docs/local-demo.md) starts the complete React, Spring Boot and PostgreSQL 18 system on Windows with Java 17+, Node.js 24, the pnpm version declared in `frontend/package.json` and PostgreSQL 18 binaries. From the repository root:
 
-| Area | Technology |
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1 -PostgresBin '<PostgreSQL 18 bin directory>'
+```
+
+Open http://127.0.0.1:5174 and sign in with one of the six local accounts listed in the guide; their generated password is in `.cache/local-demo/access.json`, which must not be committed or shared. Stop the demo with `scripts/stop-local.ps1`. The guide also covers ports, smoke checks and browser checks.
+
+## Testing
+
+Each member provides a complete test bench for their use cases in the same PR as the feature code, covering the normal flow and the major exception flows:
+
+- Backend in `app/src/test/java/sg/edu/nus/serms/<module>/`: unit tests for domain rules, integration tests on real PostgreSQL 18, and API and authorization tests with MockMvc.
+- Frontend in `frontend/src/features/<module>/`: component tests with Vitest, React Testing Library and MSW, plus at least one Playwright end-to-end test of the main flow.
+- Each test prepares its own data and does not depend on execution order or other tests.
+
+Main entry points:
+
+| Check | Command |
 | --- | --- |
-| Database | PostgreSQL 18 in local development and CI; server runtime pending |
-| Schema migrations | Flyway |
-| Reservation overlap prevention | PostgreSQL exclusion constraints (`EXCLUDE USING gist` + `tstzrange`) |
-| Backups | Daily `pg_dump` backups retained for 7 days (release target) |
+| Backend, including the coverage gate | `app/`: `./mvnw -B verify` (Windows: `mvnw.cmd -B verify`) |
+| Frontend | `frontend/`: `pnpm install --frozen-lockfile`, then `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` |
+| Frontend end-to-end | `frontend/`: `pnpm exec playwright install chromium`, then `pnpm test:e2e` |
+| Collaboration documents | Repository root: `node scripts/check-collaboration.mjs` |
 
-### DevSecOps and Deployment
+`verify` fails when line coverage of the service and domain packages falls below 70%. Failing required checks block merging, and skipping or deleting tests to make CI pass is prohibited. [docs/testing.md](docs/testing.md) lists every entry point, including the PostgreSQL integration profiles and real browser checks, and the evidence format; [Section 5 of the technology stack](docs/tech-stack.md#5-test-benches-each-member-owns-their-tests) gives each member's test scope.
 
-| Area | Technology |
+## Documentation
+
+| Topic | Entry point |
 | --- | --- |
-| CI/CD | GitHub Actions |
-| Secret scanning | gitleaks |
-| Vulnerability scanning | Trivy filesystem scan; image scanning pending |
-| Dependency checks | Dependency Review on PRs; Dependabot planned |
-| Code security scanning | CodeQL (Java + TypeScript), planned |
-| Post-deployment security scanning | OWASP ZAP Baseline, planned |
-| Load testing | k6 (50 concurrent users), planned |
-| Containers | Current root deployment serves a static welcome page; `web` + `app` + `db` remains the release target |
-| Image registry | GitHub Container Registry (GHCR), planned |
-| Server | Existing Hong Kong endpoint https://serms.midas.cyou; complete-system release deferred |
-
-### Optional Features (If Time Permits)
-
-| Feature | Technology |
-| --- | --- |
-| Email notifications | Spring Mail; Mailpit receives test emails during development |
-| QR codes | Generated with `qrcode` and scanned with `@zxing/browser` in the frontend |
-
-### Collaboration
-
-| Area | Technology |
-| --- | --- |
-| Source control | Git + GitHub |
-| Project management | GitHub Projects |
-| Design diagrams | PlantUML / Mermaid (source files in `docs/diagrams/`), supplemented by draw.io |
-
-> Main `b3def12` includes React, JSON login/RBAC, UC01-UC04, notification APIs/inbox, PostgreSQL 18, unified Flyway V001-V004, the reproducible local demo and the Spring Boot 4 release packaging. These results do not establish complete UC05 overdue behavior, the administration/equipment-management/report scope still to be built, member acceptance or cloud deployment.
-
-## Testing: Each Member Owns Their Test Bench
-
-CI can only run tests that have been written. **Each member must provide a complete test bench for their use cases and submit it in the same PR as the feature code**, so every PR can verify its behavior in CI.
-
-- Locations: backend `app/src/test/java/sg/edu/nus/serms/<module>/`; frontend `frontend/src/features/<module>/**/*.test.tsx`.
-- Backend: unit tests (domain rules) + integration tests (real PostgreSQL 18 with Testcontainers) + API / authorization tests (MockMvc).
-- Frontend: component tests (Vitest + React Testing Library with MSW API mocks) + at least one Playwright end-to-end test for the main flow of the member's use case.
-- Cover the normal flow and all major exception flows.
-- Requirements: after installing Docker and Node, `./mvnw verify` and `pnpm test` must run the tests; each test prepares its own data and is independent of execution order and other tests.
-- CI runs the existing frontend/backend suites; failing required checks block merging. Service/domain coverage ≥ 70% remains required, but JaCoCo currently generates reports without an automatic threshold gate. Explicit integration profiles are listed in [testing](docs/testing.md); skipping or deleting tests to make CI pass is prohibited.
-
-See [Section 5 of docs/tech-stack.md](docs/tech-stack.md#5-test-benches-each-member-owns-their-tests) for each member's test scope.
+| All documents | [Documentation index](docs/README.md) |
+| Interface contracts | [Contract index](docs/contracts/README.md) |
+| Backlog, Sprints, demo script, agile evidence | [Agile](docs/agile/README.md) |
+| Decisions and their sources | [Decision record](docs/collaboration/decisions.md) |
+| Development process and problems met | [Development log](docs/devlog/README.md) |
+| Diagram sources (Mermaid) | [docs/diagrams/](docs/diagrams/) |
+| Screenshots and verification reports | [docs/evidence/](docs/evidence/) |
+| Server release and recovery | [Server handover and release](docs/server-release.md), [backup runbook](docs/runbook-backup.md) |
 
 ## Collaboration and Releases
 
-Release preparation for Issue #10 is documented in [the server handover and release runbook](docs/server-release.md). The candidate builds the real React/backend/PostgreSQL system and gates deployment on the current main SHA, successful checks and verified handover. Production readiness remains disabled until the actual server inventory and acceptance are complete.
-
-- Cross-module interface contracts live in [`docs/contracts/`](docs/contracts/); the repository version is authoritative. Changes require a PR and confirmation from the owners of affected modules. Available contracts: [Authentication and Approval (UC02)](docs/contracts/auth-and-approval.md), [Equipment Search and Reservation (UC01)](docs/contracts/equipment-and-reservation.md).
+- Team participation, task dependencies, branches and handover: [Collaboration guide](.github/CONTRIBUTING.md). Coding agents start at [AGENTS.md](AGENTS.md); see also [Ownership boundaries](docs/collaboration/ownership.md) and [Agent workflow](docs/collaboration/agent-workflow.md).
+- Cross-module interface contracts live in [`docs/contracts/`](docs/contracts/README.md); the repository version is authoritative. Changes require a PR and confirmation from the owners of affected modules.
 - All changes go through PRs. `main` is protected by eight required security/application checks; local commits await their own PR/CI before integration.
 - Collaborators with Write permission may merge their own PRs without another reviewer's approval, provided all CI checks pass.
-- Existing server endpoint: https://serms.midas.cyou. A complete-system cloud release is deferred until local basic functionality and the user's later changes are accepted.
-- The deployment workflow runs on code pushes to `main` and on manual dispatch, and stops at its release gate until `SERMS_PRODUCTION_READY` is set and the release checks pass on the current `main` SHA. No deployment secrets are configured in this repository yet, so a red `Deploy` run after a merge is expected and does not reach the server.
-- Deployment uses Docker Compose: `compose.yaml` and `Dockerfile` must exist at the repository root. The container port maps to the host's `127.0.0.1:8789`, with nginx providing the public reverse proxy.
+- Local checks, CI, member checks, merge, deployment and team Done are recorded separately; the [Definition of Done](docs/agile/sprint-plan.md#2-definition-of-done) applies to team Done.
+- Every push to `main` that changes more than documentation (`**.md`, `docs/**`, `.agents/**`, Issue templates) starts the `Deploy` workflow, which can also be dispatched manually. Its release gate (`scripts/verify-release.mjs`) requires `SERMS_PRODUCTION_READY` and successful required, collaboration-docs, maintenance-postgres, release-config and release-images checks on the exact current `main` SHA. The `production` environment then needs reviewer approval before the release runs over SSH.
+- Deployment uses Docker Compose: `compose.yaml` and `Dockerfile` must exist at the repository root. The `web` container port maps to the host's `127.0.0.1:8789`, with nginx providing the public reverse proxy at https://serms.midas.cyou. The procedure, first-administrator bootstrap and recovery are in the [server release runbook](docs/server-release.md).
 - Secrets are stored only in `/opt/agfp/.env` on the server (template: `.env.example`) and must never be committed to Git.
 
-## SERMS Sprint 1 application
+These entry points supplement collaboration practices; the technology stack, five-member use-case ownership, existing contracts, and Write collaborators' right to merge their own PRs remain in effect.
 
-The backend lives in `app/`, and React pages live in `frontend/`. The default configuration uses PostgreSQL 18 and loads the shared Flyway migrations, notification adapter, and Identity data mapping; see the [PostgreSQL guide](docs/serms-postgres-runtime.md). The `local` configuration also uses PostgreSQL; H2 is test-only. PR #11 explicitly provisions isolated local demo accounts; server web/app/db deployment remains deferred.
+## Historical Deliveries
 
-## UC01 Search and Reserve Equipment (Member 1)
+Earlier member deliveries keep their own records and verification scripts; [docs/testing.md](docs/testing.md) lists the scripts.
 
-Backend `equipment` and `reservation` modules in `app/`, and frontend `frontend/src/features/{equipment,reservation}`: search by name / category / location / time interval, view occupied slots, submit and cancel reservations, and view personal reservations. Reservation rules use the Strategy pattern, and `ReservationApprovalService` implements the UC02 contract. The test bench includes concurrency conflict tests on PostgreSQL 18 (Testcontainers, requiring Docker). See the [UC01 documentation](docs/uc01-search-and-reserve.md) and [interface contract](docs/contracts/equipment-and-reservation.md).
-
-Requirements, Sprint plans, progress and risks, demo scripts, and agile evidence are in [docs/agile/](docs/agile/README.md).
-
-## SERMS Sprint 1 data foundation
-
-Zhou Fanhao's Java/JDBC domain and reservation data module is in [database](database/README.md).
-The database has been upgraded to V002 using the SERMS diagrams and documents, covering ten business entities; see the [alignment record](docs/serms-database-alignment.md). It includes PostgreSQL migrations, concurrency conflict protection, real database tests and CI, plus the [domain design](docs/sprint1-domain.md) and [delivery record](docs/sprint1-zhoufanhao.md).
-Local verification: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-sprint1.ps1`.
-
-## Notification Integration
-
-The PostgreSQL adapter for Wang Yuanmeng's notification branch is in [integration/notifications](integration/notifications/README.md), including the V003 migration, a real LoanReminderGuard and a minimal integration patch.
-Local tests: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-notification-integration.ps1`; see the [interface alignment record](docs/notification-interface-alignment.md) for results.
-
-## Zhou Fanhao: Checkout, Return, and Database Integration
-
-UC03 backend, the React `/loans` page, the complete PostgreSQL profile, V004 data alignment, and the approval persistence adapter are provided. See the [delivery notes](docs/zhoufanhao-delivery.md), [interface contract](docs/contracts/checkout-and-return.md), [member integration checklist](docs/zhoufanhao-handoffs.md), and [verification record](docs/zhoufanhao-validation.md).
-
-Full verification: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-zhoufanhao.ps1`; without Docker, add `-PostgresBin 'C:/Program Files/PostgreSQL/18/bin'`. The complete application uses PostgreSQL by default without selecting a database profile; see the [PostgreSQL runtime guide](docs/serms-postgres-runtime.md) for migration and startup instructions.
+| Delivery | Records |
+| --- | --- |
+| Sprint 1 data foundation by Zhou Fanhao: Java/JDBC domain and reservation data module, aligned to the ten SERMS business entities at V002 | [Database module](database/README.md), [alignment](docs/serms-database-alignment.md), [domain design](docs/sprint1-domain.md), [delivery record](docs/sprint1-zhoufanhao.md) |
+| PostgreSQL adapter for Wang Yuanmeng's notification branch: V003 migration and LoanReminderGuard | [Adapter](integration/notifications/README.md), [interface alignment](docs/notification-interface-alignment.md) |
+| UC03 checkout and return by Zhou Fanhao: backend, `/loans` page, PostgreSQL profile, V004 alignment and approval persistence adapter | [Delivery notes](docs/zhoufanhao-delivery.md), [integration checklist](docs/zhoufanhao-handoffs.md), [verification](docs/zhoufanhao-validation.md), [PostgreSQL runtime](docs/serms-postgres-runtime.md) |
