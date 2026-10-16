@@ -154,3 +154,24 @@ traces/credentials remain ignored. All owned runtimes and disposable clusters ar
 handover. No commit/push/PR, Issue update/closure, independent human review or deployed
 acceptance is claimed. PR81's dot-category and PR82's PowerShell cleanup findings remain open
 follow-ups; optional Testcontainers refactoring is still optional and not delivered.
+
+## 2026-10-17 owner-authorized continuation (Refs #24, Refs #9)
+
+Human task owner: Liu Tongyao (@cpg25ncu). Executor: Codex agent. Zhang Hanming's original
+PR #86 commit `1d876bd7eb2b845b8bac9f1228a4417ce43a0329` and authorship are retained.
+The original branch was behind strict main protection; this successor branch merges fetched main
+`da099e065225fed902a8b69f3b9914a1513f2625` and does not push to Zhang's branch.
+
+A fresh main run passed API smoke (28), UC01/UC04 API checks (24), administrator creation/audit
+and cross-session security (two compound viewport scenarios each). The old main five-role runner
+failed its stale menu expectation, already corrected by PR #86. Another harness failure reproduced
+at the final mobile availability assertion: a global `Available` locator matched seven rows while
+search results refreshed. The continuation scopes that assertion to the actual repaired asset
+`DEMO-LIG-01`; it still requires that equipment to become Available. No product behavior,
+contract, test requirement or threshold is changed. The exact main product was rerun with this
+single disclosed harness input. Historical screenshots overwritten by runners are restored.
+
+Fresh combined-head results and exact tested versions are recorded separately in the documentation
+closeout delivery (`docs/devlog/2026-10-17-acceptance-closeout.md`), rather than relabelling the
+2026-10-16 evidence. Local verification, hosted CI, merge, production, member acceptance and
+team Done remain separate. No merge or human approval is supplied by this agent.
