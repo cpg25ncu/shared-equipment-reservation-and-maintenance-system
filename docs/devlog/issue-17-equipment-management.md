@@ -62,3 +62,11 @@ Owner from 2026-10-16: Liu Tongyao (@cpg25ncu), on the repository owner's re-spl
 ### Verification
 
 Windows 11, JDK 25.0.4 targeting 17, PostgreSQL 18.6 in a throw-away cluster: `./mvnw -B -Puc03-postgres-it -Dit.test=EquipmentManagementPostgresIT clean verify` with `SERMS_EQUIPMENT_TEST_*` and `SERMS_APP_TEST_*` pointing at fresh databases passed 685 unit/database tests and 7 of 7 management integration cases, and the business coverage check was met. Before the change, the agent ran the six original cases on `32cf32b` the same way (6 of 6 passed). Frontend checks were not rerun: no frontend or API-schema file changed. Hosted checks, the deployed check of `/manage/equipment` and team acceptance are separate.
+
+## 2026-10-17 Cross-check follow-up: "." and ".." category names
+
+Zhang Hanming's agent-assisted cross-check of #81 ([comment](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/pull/81#issuecomment-6210867283)) found a gap in the 2026-10-16 category-name rule.
+
+| Symptom | Root cause | Fix | How it was verified |
+| --- | --- | --- | --- |
+| In a real Chromium session, a category named `.` or `..` was created (201) but could not be renamed (404); the old name stayed. | Browsers resolve `.` and `..` URL path segments before sending, so `PATCH .../categories/..` reaches a different path. The 2026-10-16 check covered only encoded characters. | Create and rename also refuse an exact trimmed `.` or `..` (400, field `name`); contract 2.4 says so. | `EquipmentManagementPostgresIT`: the rejected-name case now includes `.`, `..` and ` .. `, plus a rename to `..`; `./mvnw -Puc03-postgres-it -Dit.test=EquipmentManagementPostgresIT clean verify` on PostgreSQL 18.6 passed 685 unit/database tests and 7/7 integration cases. Hanming's report also confirmed that normal renames work. |
