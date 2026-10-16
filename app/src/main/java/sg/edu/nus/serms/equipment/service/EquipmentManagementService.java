@@ -174,11 +174,12 @@ public class EquipmentManagementService {
   }
 
   // Rename carries the current name in the URL path, where the security firewall rejects encoded
-  // '/', '\', '%' and ';'. A category containing them could never be renamed, so refuse them here.
+  // '/', '\', '%' and ';', and browsers resolve a "." or ".." segment away. A category with such a
+  // name could never be renamed, so refuse it here.
   private static String categoryName(String name) {
     String value = name.strip();
-    if (value.chars().anyMatch(c -> "/\\%;".indexOf(c) >= 0))
-      throw new EquipmentManagementException(400, "name", "Category names cannot contain /, \\, % or ;.");
+    if (value.equals(".") || value.equals("..") || value.chars().anyMatch(c -> "/\\%;".indexOf(c) >= 0))
+      throw new EquipmentManagementException(400, "name", "Category names cannot be . or .. or contain /, \\, % or ;.");
     return value;
   }
 

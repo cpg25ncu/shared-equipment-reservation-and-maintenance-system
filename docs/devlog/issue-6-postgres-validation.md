@@ -68,3 +68,11 @@ Windows 11, JDK 25.0.4 (target 17), PostgreSQL 18.6, Node.js 24.20.0, pnpm 11.19
 | Database and UC03/UC05 regression on PostgreSQL 18 | Left to the hosted jobs on the PR head ("Sprint 1 database", "Zhou Fanhao UC03 integration", "Notification and default PostgreSQL tests") | Not run locally in this session |
 
 No production or cloud upgrade was run. The production database already went through V007 when #72 was deployed on 2026-10-15; this branch changes no migration.
+
+## 2026-10-17 Cross-check follow-up: PowerShell 7 environment cleanup
+
+Zhang Hanming's agent-assisted cross-check of #82 ([comment](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/pull/82#issuecomment-6210867862)) ran the script under PowerShell 7.6.5.
+
+| Symptom | Root cause | Fix | How it was verified |
+| --- | --- | --- | --- |
+| Under PowerShell 7 the V007 start of the upgrade phase failed: `Version may only contain 0..9 and . (dot). Invalid version:`. Windows PowerShell 5.1 passed. | `[Environment]::SetEnvironmentVariable('SPRING_FLYWAY_TARGET', $null, 'Process')` left an empty variable that the child JVM still saw, so Flyway got an empty target. The cleanup loop used the same call. | Remove the variable with `Remove-Item Env:SPRING_FLYWAY_TARGET`. In cleanup, remove variables that were absent before and restore the others with `Set-Item`. | Windows PowerShell 5.1: both phases passed again, and no Java process was left. PowerShell 7 is not installed on this machine, so the re-run under PowerShell 7 is left to the cross-checker. |

@@ -150,7 +150,8 @@ class EquipmentManagementPostgresIT {
 
   @Test void categoryNamesThatCannotBeRenamedThroughThePathAreRejected() throws Exception {
     long before = jdbc.queryForObject("SELECT count(*) FROM serms.equipment_category", Long.class);
-    for (String name : new String[] {"Audio/Video", "Lab\\\\Kit", "Kit;2", "100% Kit"}) {
+    // "." and ".." are resolved away by browsers as URL path segments (Zhang Hanming's cross-check of #81).
+    for (String name : new String[] {"Audio/Video", "Lab\\\\Kit", "Kit;2", "100% Kit", ".", "..", " .. "}) {
       mvc.perform(post("/api/v1/equipment/manage/categories").with(user(operator)).with(csrf())
           .contentType("application/json").content("{\"name\":\"" + name + "\"}"))
           .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0].field").value("name"));
@@ -159,7 +160,9 @@ class EquipmentManagementPostgresIT {
     String category = "Managed-" + UUID.randomUUID();
     management.createCategory(category);
     assertThatThrownBy(() -> management.renameCategory(category, category + "/new"))
-        .isInstanceOf(EquipmentManagementException.class).hasMessageContaining("cannot contain");
+        .isInstanceOf(EquipmentManagementException.class).hasMessageContaining("Category names cannot");
+    assertThatThrownBy(() -> management.renameCategory(category, ".."))
+        .isInstanceOf(EquipmentManagementException.class).hasMessageContaining("Category names cannot");
     assertThat(jdbc.queryForObject("SELECT count(*) FROM serms.equipment_category", Long.class)).isEqualTo(before + 1);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM serms.audit_log WHERE action='EQUIPMENT_CATEGORY_RENAME'"
         + " AND actor_id=?", Long.class, custodian)).isZero();

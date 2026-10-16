@@ -114,7 +114,9 @@ try {
   Seed 'seed-v006.log'
   $before = Query $snapshot
   StopBackend
-  [Environment]::SetEnvironmentVariable('SPRING_FLYWAY_TARGET', $null, 'Process')
+  # Remove the variable itself: under PowerShell 7 a .NET null assignment can leave an empty value
+  # that the child JVM still sees, and Flyway rejects an empty target.
+  Remove-Item -LiteralPath Env:SPRING_FLYWAY_TARGET -ErrorAction SilentlyContinue
   $backend = StartBackend 'upgrade-v007'
   $migrations = Query $history
   if ($migrations -ne '7:7') { throw "Upgrade did not reach V007: $migrations" }
@@ -126,5 +128,8 @@ try {
 } finally {
   if ($backend -and !$backend.HasExited) { Stop-Process -Id $backend.Id -ErrorAction SilentlyContinue }
   if ($started) { & (Join-Path $pg 'pg_ctl.exe') -D $data -m fast -w stop | Out-Null }
-  foreach ($key in $old.Keys) { [Environment]::SetEnvironmentVariable($key, $old[$key], 'Process') }
+  foreach ($key in $old.Keys) {
+    if ($null -eq $old[$key]) { Remove-Item -LiteralPath "Env:$key" -ErrorAction SilentlyContinue }
+    else { Set-Item -LiteralPath "Env:$key" -Value $old[$key] }
+  }
 }
