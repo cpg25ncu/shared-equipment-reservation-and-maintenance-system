@@ -112,3 +112,81 @@ The user authorized normal main synchronization. [The dated integration log](202
 Final native regression passed **590 + 30 UC02 + 20 UC03 + 10 UC05** with four isolated databases; no assertion/test was relaxed. New UC05 business logic is included in **79.82%** line coverage, and the negative 70% check still fails/restores/passes. Frontend **137 components / 12 mocked E2E / 7 Node tests** and quality checks passed. Main already contains CodeQL and a deliberately paused/grouped Dependabot configuration; do not describe them as absent. Actual latest-HEAD CI and member/deployed acceptance remain separate. #18 still belongs to Hanming and is not implemented by this synchronization.
 
 Future equipment #17, Hanming's admin #18, overdue #19 and final combined-page acceptance remain open. CodeQL/Dependabot/backup/load/ZAP are Wang's #25, not silently assumed complete or reassigned. No effort, human check, merge or deployed acceptance is claimed. Authorship: Codex-assisted implementation/testing for Hanming.
+
+## Final dependent-page local pass — 2026-10-16
+
+Human owner Zhang Hanming authorized continuing #24 after the UC01 check. Sole writer: Codex,
+branch `codex/hanming-final-acceptance-20261016`, isolated worktree
+`C:/Users/LENOVO/Documents/ChatGPT/Dev/SERMS-hanming-acceptance-20261016`.
+HEAD and fetched main `eedd8c7c2909536e9c7f4084a0a1280adcaa6cf0` plus the test-only changes
+recorded in [the final evidence](../evidence/final-quality-20261016/README.md). No product,
+schema, role contract, coverage threshold, production service or teammate checkout changed.
+
+Rules read: AGENTS, CONTRIBUTING, task/worktree/verify skills, testing and technology §5,
+contract index, relevant UC01/UC02/admin/loan contracts, agent workflow, latest #24 assignment.
+The same owned local demo preserves the earlier UC01 history. New main differs from its built
+product source `92cca31` only by a devlog Markdown file. Local execution and source hashes are
+not a claim that an unpublished commit has passed CI or that a person performed these checks.
+
+Delivered verification changes: central explicit expected menus shared by the full workflow,
+including Manage equipment; four more equipment/category denied mutation families; category
+fingerprints; a real CUSTODIAN/ADMIN desktop/mobile management harness; and a Windows-native
+PostgreSQL startup repair in `test-uc02.ps1`. The inherited output-handle stall was reproduced;
+only its owned processes were stopped, and an independent native harness plus the repaired
+formal script were both verified. The formal rerun passed **685 + 30 UC02 PostgreSQL tests**.
+
+Real results: **37 workflow checks**, **66 matrix groups** (224 page observations / 16 routes,
+378 API reads / 27 families, 210 denied writes / 23 families, four cross-user denials and
+unchanged fingerprints), **16 management checks**, two admin create/name/audit viewport
+scenarios and two cross-session security viewport scenarios passed. Temporary dual roles were
+restored before the matrix; admin fixture creation runs only after the six-account-guarded work.
+No clocks, APIs or transaction histories were faked to obtain passes.
+
+Business coverage is **75.24%** (1,307 covered / 430 missed aggregate service/domain lines), not
+the earlier baseline's 81.38%. The unchanged 70% zero-execution failure, byte-identical restore
+and recheck passed on the final rerun. Frontend **174 component tests**, **16 mocked E2E**,
+**9 policy Node tests**, lint/typecheck/build and actual generated API drift check passed.
+Known chart/chunk warnings remain. Sandbox pnpm permission/export-readiness attempts are
+recorded as infrastructure interruptions, followed by successful normal-permission checks.
+
+Safe result JSON and six inspected synthetic screenshots are local delivery artifacts; raw
+traces/credentials remain ignored. All owned runtimes and disposable clusters are checked at
+handover. No commit/push/PR, Issue update/closure, independent human review or deployed
+acceptance is claimed. PR81's dot-category and PR82's PowerShell cleanup findings remain open
+follow-ups; optional Testcontainers refactoring is still optional and not delivered.
+
+## 2026-10-17 owner-authorized continuation (Refs #24, Refs #9)
+
+Human task owner: Liu Tongyao (@cpg25ncu). Executor: Codex agent. Zhang Hanming's original
+PR #86 commit `1d876bd7eb2b845b8bac9f1228a4417ce43a0329` and authorship are retained.
+The original branch was behind strict main protection; this successor branch merges fetched main
+`da099e065225fed902a8b69f3b9914a1513f2625` and does not push to Zhang's branch.
+
+A fresh main run passed API smoke (28), UC01/UC04 API checks (24), administrator creation/audit
+and cross-session security (two compound viewport scenarios each). The old main five-role runner
+failed its stale menu expectation, already corrected by PR #86. Another harness failure reproduced
+at the final mobile availability assertion: a global `Available` locator matched seven rows while
+search results refreshed. The continuation scopes that assertion to the actual repaired asset
+`DEMO-LIG-01`; it still requires that equipment to become Available. No product behavior,
+contract, test requirement or threshold is changed. The exact main product was rerun with this
+single disclosed harness input. Historical screenshots overwritten by runners are restored.
+
+Fresh combined-head results and exact tested versions are recorded separately in the documentation
+closeout delivery (`docs/devlog/2026-10-17-acceptance-closeout.md`), rather than relabelling the
+2026-10-16 evidence. Local verification, hosted CI, merge, production, member acceptance and
+team Done remain separate. No merge or human approval is supplied by this agent.
+
+A combined rerun also reached checkout before the browser clock crossed the requested start:
+the trace recorded the queue request at 17:26:59.347Z. The page evaluates its disabled state at
+render time, so waiting only in Node can leave that button disabled. The harness now waits on
+the browser's real `Date.now()` before loading the queue, without a fake clock or forced click.
+Its final availability assertion is also scoped to the actual fixture asset. The failed attempt
+retained history, cancelled its own unissued reservation and restored the temporary dual role.
+
+The final #91 combination's matrix passed all preceding page/API/write probes but a later
+mobile login bootstrap went blank. A prior private trace includes `net::ERR_NETWORK_CHANGED`;
+this also occurred after mock execution had stopped, so concurrency alone is not a proven root
+cause. The matrix now permits at most two navigation retries only when a React root stays empty
+and that exact transport error was observed during navigation. Policy/content/API/fingerprint
+assertions stay outside this retry, and other failures still fail. Retry paths/errors are recorded
+without query tokens. This does not retry a denied write, change roles or relax any assertion.
