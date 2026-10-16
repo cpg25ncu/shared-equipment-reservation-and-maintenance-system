@@ -1,0 +1,103 @@
+{
+  "checks": [
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/runs/117117242722",
+      "name": "CodeQL",
+      "state": "SUCCESS",
+      "workflow": ""
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551760/job/117116891086",
+      "name": "Vulnerability scan (Trivy)",
+      "state": "SUCCESS",
+      "workflow": "CI"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551483/job/117116889894",
+      "name": "frontend",
+      "state": "SUCCESS",
+      "workflow": "Frontend and API contract"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551375/job/117116889069",
+      "name": "database-test",
+      "state": "SUCCESS",
+      "workflow": "Sprint 1 database"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551379/job/117116888149",
+      "name": "approval-postgres",
+      "state": "SUCCESS",
+      "workflow": "Approval PostgreSQL acceptance"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551397/job/117116888285",
+      "name": "maintenance-postgres",
+      "state": "SUCCESS",
+      "workflow": "Maintenance PostgreSQL acceptance"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551532/job/117116888568",
+      "name": "notification-contract",
+      "state": "SUCCESS",
+      "workflow": "Notification PostgreSQL contract"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551600/job/117116889151",
+      "name": "java-tests",
+      "state": "SUCCESS",
+      "workflow": "Notification and default PostgreSQL tests"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551421/job/117116888703",
+      "name": "release-config",
+      "state": "SUCCESS",
+      "workflow": "Release preparation"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551670/job/117116889249",
+      "name": "collaboration-docs",
+      "state": "SUCCESS",
+      "workflow": "Collaboration documentation"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551748/job/117116889651",
+      "name": "checkout-return",
+      "state": "SUCCESS",
+      "workflow": "Zhou Fanhao UC03 integration"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551537/job/117116889025",
+      "name": "Analyze javascript-typescript",
+      "state": "SUCCESS",
+      "workflow": "CodeQL"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551537/job/117116889213",
+      "name": "Analyze java",
+      "state": "SUCCESS",
+      "workflow": "CodeQL"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551421/job/117116888592",
+      "name": "release-images",
+      "state": "SUCCESS",
+      "workflow": "Release preparation"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551760/job/117116890599",
+      "name": "Dependency review",
+      "state": "SUCCESS",
+      "workflow": "CI"
+    },
+    {
+      "link": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/38943551760/job/117116891023",
+      "name": "Secrets scan (gitleaks)",
+      "state": "SUCCESS",
+      "workflow": "CI"
+    }
+  ],
+  "head": "5eec1cf41fafe72825041c0b03997eec3051ffde",
+  "capturedAt": "2026-10-16T18:00:50.4003635Z",
+  "base": "cbbb3033941347f9990221436ed51d657ddb10a7"
+}
