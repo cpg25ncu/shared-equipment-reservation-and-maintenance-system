@@ -15,13 +15,21 @@ for(const route of ['/','/equipment','/reservations','/maintenance','/loans','/n
  assert.equal(response.headers.get('x-frame-options'),'DENY');assert.equal(response.headers.get('x-content-type-options'),'nosniff');
  assert.equal(response.headers.get('referrer-policy'),'strict-origin-when-cross-origin');
  assert.match(response.headers.get('strict-transport-security')??'',hsts);
+ assert.equal(response.headers.get('permissions-policy'),'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+ assert.equal(response.headers.get('cross-origin-opener-policy'),'same-origin');
+ assert.equal(response.headers.get('cross-origin-resource-policy'),'same-origin');
+ assert.equal(response.headers.get('cache-control'),'no-cache');
  const html=await response.text();assert.match(html,/<div id="root"><\/div>/);
  const asset=html.match(/src="(\/assets\/[^"]+\.js)"/)[1];
  const script=await get(asset);assert.equal(script.status,200);assert.equal(script.headers.get('x-content-type-options'),'nosniff');
+ assert.equal(script.headers.get('cache-control'),'public, max-age=31536000, immutable');
+ assert.equal(script.headers.get('permissions-policy'),'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+ assert.equal(script.headers.get('cross-origin-opener-policy'),'same-origin');
+ assert.equal(script.headers.get('cross-origin-resource-policy'),'same-origin');
 }
 const anonymous=await get('/api/v1/auth/me');
 assert.equal(anonymous.status,401);
 assert.ok((await anonymous.json()).type.endsWith('/problems/unauthenticated'));
 const csrf=await get('/api/v1/auth/csrf');assert.equal(csrf.status,204);
 assert.ok(csrf.headers.getSetCookie().some(c=>c.startsWith('XSRF-TOKEN=')&&/; Secure/i.test(c)));
-console.log('Production Compose smoke passed: real database health, six React routes/assets, security headers, API proxy, anonymous denial and Secure CSRF cookie');
+console.log('Production Compose smoke passed: real database health, six React routes/assets, security and cache headers, API proxy, anonymous denial and Secure CSRF cookie');
