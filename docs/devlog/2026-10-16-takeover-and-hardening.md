@@ -75,3 +75,43 @@ On the repository owner's instruction the four takeover PRs were merged in depen
 | --- | --- | --- | --- |
 | No workflow ran for `92cca31`: no CI, no Deploy, 0 runs for the SHA after 14 minutes, while the three earlier merges triggered normally. GitHub's status page reported all systems operational. | The push event of that merge did not start Actions; the cause is not visible from the repository. Only `deploy.yml` has `workflow_dispatch`, so the checks on that SHA could not be started by hand, and the release gate needs all twelve on the released SHA. | This documentation-only PR. Its merge is a new push to `main`, which runs every check workflow (none filters by path); `deploy.yml` ignores documentation-only pushes, so the release is then started with `workflow_dispatch` on `main` and still passes the release gate and the owner's approval. | Hosted checks on the new `main` SHA, then the gated deploy run (recorded with the ZAP baseline). |
 | Three Deploy runs queued: `0325f20` waiting for approval, `f491874` cancelled, `b1c627e` pending. | `deploy-production` concurrency keeps one run in progress and only the newest pending one. | The owner rejects the earlier waiting runs and approves only the run that releases the final `main`. | Recorded with the deployed headers. |
+
+### Release of `eedd8c7`
+
+- #85 merged as `eedd8c7`; its push ran all eleven check workflows, and the twelve checks required by `scripts/verify-release.mjs` succeeded on that SHA. As expected, no Deploy run started for the documentation-only push.
+- Deploy was started with `workflow_dispatch` on `main` (run 38872254823). It queued behind run 38868326819 (`0325f20`, #81 alone), which was still waiting for approval.
+- The owner reported rejecting 38868326819 and approving 38872254823, but the API showed no review on either run: the new run had not yet reached its environment step, so there was nothing to approve. At the owner's stated instruction, the agent rejected 38868326819 through the API. 38872254823 then passed `release-gate` ("Verified current main eedd8c7…: 12 successful GitHub Actions checks"). The owner approved it in GitHub, and the log ends with "Released eedd8c7…" (about 2026-10-17 00:06 SGT).
+- Lesson: the approval button appears only after `release-gate` finishes. A run that is still queued behind another one cannot be approved.
+
+## 2026-10-17 Production headers and OWASP ZAP baseline (#10, #25)
+
+### Deployed headers
+
+`curl -D -` against https://serms.midas.cyou at 00:12 SGT:
+
+- `/` and `/manage/equipment`: the exact CSP of `web/nginx.conf`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=15552000`.
+- `/api/v1/health`: one each of Spring's `nosniff` and `DENY`, plus HSTS and `Referrer-Policy`.
+- `Server: nginx/1.18.0 (Ubuntu)` still comes from the host nginx. That stays with Shi Wenqi in #10.
+
+### ZAP baseline
+
+`zaproxy/zap-stable:2.17.0` (digest `sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6`), pulled with the owner's permission. Ran locally with Docker on 2026-10-17 00:19-00:20 SGT:
+
+```text
+docker run --rm -v <scratch>:/zap/wrk:rw zaproxy/zap-stable:2.17.0 zap-baseline.py -t https://serms.midas.cyou -r zap-baseline.html -J zap-baseline.json -w zap-baseline.md -I
+```
+
+The generated plan (`zap.yaml`) contains only passiveScan-config, a one-minute spider, passiveScan-wait and reports. **No active scan was run** (#25 forbids one against production without the owner). Result: **0 FAIL, 7 WARN, 60 PASS** over 6 URLs. The reports are in `docs/evidence/zap-baseline-20261016/`.
+
+Header rules that pass because of #83: Strict-Transport-Security [10035], Anti-clickjacking [10020], X-Content-Type-Options [10021], CSP Header Not Set [10038]. Cookie Secure / HttpOnly / SameSite [10011, 10010, 10054], Absence of Anti-CSRF Tokens [10202] and Vulnerable JS Library [10003] also pass.
+
+| Alert | Risk (confidence) | Disposition |
+| --- | --- | --- |
+| CSP: style-src unsafe-inline [10055] | Medium (High) | Accepted for the presentation: Radix dialogs insert `<style>` at runtime; scripts remain `'self'` only. Removing it would need nonces or hashes and a style audit. |
+| Cross-Origin-Embedder/Opener/Resource-Policy missing [90004] | Low (Medium) | Deferred: the app uses no cross-origin isolation features and loads only same-origin resources. `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Resource-Policy: same-origin` are low-risk candidates for a later hardening PR. |
+| Permissions Policy Header Not Set [10063] | Low (Medium) | Deferred, same follow-up (for example `camera=(), microphone=(), geolocation=()`). |
+| Server leaks version via `Server` [10036] | Low (High) | Host nginx `server_tokens off` — Shi Wenqi (#10); the container's nginx already sends none. |
+| Modern Web Application [10109] | Informational | No action: an SPA as designed. |
+| Re-examine Cache-control Directives [10015], Storable and Cacheable Content [10049] | Informational | No action for hashed assets. `index.html` could get `Cache-Control: no-cache` in the same later PR. |
+
+**Coverage limits:** the scan was unauthenticated. The spider reaches only `/`, `robots.txt`, `sitemap.xml` and the two hashed assets, because the React routes are client-side and every API needs a session. No authenticated or active testing was done; local real-browser checks with every role cover those pages functionally.
