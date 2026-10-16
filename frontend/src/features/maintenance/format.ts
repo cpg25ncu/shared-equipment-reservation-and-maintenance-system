@@ -1,8 +1,12 @@
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { z } from 'zod';
+import { maintenanceStatus } from '@/lib/status';
 import type { FaultCategory, Priority, Status } from './queries';
 export const statuses: Status[] = ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'UNREPAIRABLE'];
-export const statusLabel = (status: Status) => status.replaceAll('_', ' ');
+/** Display name from the central map (Proposal 5.6, decision D-008), never the stored code. */
+export const statusLabel = (status: Status) => maintenanceStatus[status]?.label ?? status;
+/** Responsive grid of case cards: as many 19rem columns as fit, one on a phone. */
+export const cardGrid = 'grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,19rem),1fr))]';
 export const faultCategories: FaultCategory[] = [
   'MECHANICAL',
   'ELECTRICAL',

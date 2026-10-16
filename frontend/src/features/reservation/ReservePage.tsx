@@ -5,10 +5,16 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, CalendarPlus, Wrench } from 'lucide-react';
 import { api, ApiError, message } from '@/api/client';
+import { ErrorState, Notice } from '@/components/Feedback';
+import { Badge, StatusBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { ErrorState, LoadingState } from '@/components/Feedback';
-import { equipmentStatus, slotReason, toneClass } from '@/lib/status';
+import { PageHeader } from '@/components/ui/page-header';
+import { Skeleton, SkeletonBlock } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { equipmentStatus, slotReason } from '@/lib/status';
 import { formatRange, localToIso } from '@/lib/time';
 import { equipmentKeys, useAvailability } from '@/features/equipment/queries';
 import { reservationKeys } from './queries';
@@ -71,7 +77,16 @@ export function ReservePage() {
       } else setFailure({ detail: message(e), violations: [] });
     },
   });
-  if (availability.isPending) return <LoadingState />;
+  if (availability.isPending)
+    return (
+      <div className="grid gap-6">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-10 w-1/2" />
+        <Card className="p-6">
+          <SkeletonBlock lines={4} />
+        </Card>
+      </div>
+    );
   if (availability.isError)
     return (
       <ErrorState
@@ -82,135 +97,130 @@ export function ReservePage() {
   const a = availability.data;
   const blocked = a.equipment.status === 'UNDER_MAINTENANCE' || a.openMaintenance;
   return (
-    <>
-      <Link className="back-link" to="/equipment">
-        <ArrowLeft size={15} />
+    <div className="grid gap-6">
+      <Link
+        className="inline-flex items-center gap-1.5 justify-self-start text-xs text-muted-foreground hover:text-foreground"
+        to="/equipment"
+      >
+        <ArrowLeft size={15} aria-hidden="true" />
         Back to search
       </Link>
-      <div className="page-title">
-        <div>
-          <p className="eyebrow">RESERVE · {a.equipment.assetTag}</p>
-          <h1>
-            {a.equipment.name}
-            <span className="title-dot">.</span>
-          </h1>
-          <p className="muted">
-            {a.equipment.category} · {a.equipment.location} ·{' '}
-            <span className={toneClass(equipmentStatus[a.equipment.status].tone)}>
-              {equipmentStatus[a.equipment.status].label}
-            </span>
-          </p>
-        </div>
-      </div>
-      <div className="reserve-grid">
-        <section className="inbox-panel form-panel">
-          <div className="panel-toolbar">
-            <h2>Your reservation</h2>
-          </div>
-          {blocked ? (
-            <div className="notice notice-warning" role="status">
-              <Wrench size={18} />
-              This equipment has a reported fault or is being repaired, so it cannot be reserved
-              right now.
-            </div>
-          ) : (
-            <form
-              className="reserve-form"
-              onSubmit={handleSubmit((v) => {
-                setFailure(null);
-                create.mutate(v);
-              })}
-              noValidate
-            >
-              <label htmlFor="startAt">Start (SGT)</label>
-              <Input
-                id="startAt"
-                type="datetime-local"
-                aria-invalid={!!errors.startAt}
-                aria-describedby={errors.startAt ? 'startAt-error' : undefined}
-                {...register('startAt')}
-              />
-              {errors.startAt && (
-                <p id="startAt-error" className="field-error">
-                  {errors.startAt.message}
-                </p>
-              )}
-              <label htmlFor="endAt">End (SGT)</label>
-              <Input
-                id="endAt"
-                type="datetime-local"
-                aria-invalid={!!errors.endAt}
-                aria-describedby={errors.endAt ? 'endAt-error' : undefined}
-                {...register('endAt')}
-              />
-              {errors.endAt && (
-                <p id="endAt-error" className="field-error">
-                  {errors.endAt.message}
-                </p>
-              )}
-              <label htmlFor="purpose">Purpose (optional)</label>
-              <textarea
-                id="purpose"
-                className="input"
-                rows={3}
-                aria-invalid={!!errors.purpose}
-                {...register('purpose')}
-              />
-              {errors.purpose && <p className="field-error">{errors.purpose.message}</p>}
-              {itemMaxMinutes !== null && (
-                <p className="muted small">
-                  This item can be reserved for at most {durationText(itemMaxMinutes)}.
-                </p>
-              )}
-              {a.equipment.requiresApproval && (
-                <p className="muted small">
-                  This equipment needs approval. Your request waits for an approver before it is
-                  confirmed.
-                </p>
-              )}
-              {failure && (
-                <div role="alert" className="field-error">
-                  <strong>{failure.detail}</strong>
-                  {failure.violations.length > 1 && (
-                    <ul>
-                      {failure.violations.map((v) => (
-                        <li key={v.code}>{v.message}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-              <Button type="submit" disabled={create.isPending}>
-                <CalendarPlus size={16} />
-                {create.isPending
-                  ? 'Reserving…'
-                  : a.equipment.requiresApproval
-                    ? 'Request reservation'
-                    : 'Reserve'}
-              </Button>
-            </form>
-          )}
-        </section>
-        <section className="inbox-panel">
-          <div className="panel-toolbar">
-            <h2>
-              Taken in the next {LOOKAHEAD_DAYS} days<span>{a.busySlots.length}</span>
-            </h2>
-          </div>
+      <PageHeader
+        eyebrow={`RESERVE · ${a.equipment.assetTag}`}
+        title={a.equipment.name}
+        description={
+          <span className="inline-flex flex-wrap items-center gap-2">
+            {a.equipment.category} · {a.equipment.location}
+            <StatusBadge status={equipmentStatus[a.equipment.status]} />
+          </span>
+        }
+      />
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Your reservation</CardTitle>
+            <CardDescription>Choose the time in Singapore time.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {blocked ? (
+              <Notice tone="warning" role="status">
+                <Wrench size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
+                This equipment has a reported fault or is being repaired, so it cannot be reserved
+                right now.
+              </Notice>
+            ) : (
+              <form
+                className="grid gap-4 sm:grid-cols-2"
+                onSubmit={handleSubmit((v) => {
+                  setFailure(null);
+                  create.mutate(v);
+                })}
+                noValidate
+              >
+                <Field label="Start (SGT)" id="startAt" error={errors.startAt?.message}>
+                  <Input type="datetime-local" {...register('startAt')} />
+                </Field>
+                <Field label="End (SGT)" id="endAt" error={errors.endAt?.message}>
+                  <Input type="datetime-local" {...register('endAt')} />
+                </Field>
+                <Field
+                  label="Purpose (optional)"
+                  id="purpose"
+                  className="sm:col-span-2"
+                  error={errors.purpose?.message}
+                >
+                  <Textarea rows={3} {...register('purpose')} />
+                </Field>
+                {(itemMaxMinutes !== null || a.equipment.requiresApproval) && (
+                  <ul className="m-0 grid list-disc gap-1 pl-5 text-xs leading-relaxed text-muted-foreground sm:col-span-2">
+                    {itemMaxMinutes !== null && (
+                      <li>This item can be reserved for at most {durationText(itemMaxMinutes)}.</li>
+                    )}
+                    {a.equipment.requiresApproval && (
+                      <li>
+                        This equipment needs approval. Your request waits for an approver before it
+                        is confirmed.
+                      </li>
+                    )}
+                  </ul>
+                )}
+                {failure && (
+                  <Notice tone="danger" role="alert" className="block sm:col-span-2">
+                    <strong>{failure.detail}</strong>
+                    {failure.violations.length > 1 && (
+                      <ul className="mb-0 mt-1.5 pl-5">
+                        {failure.violations.map((v) => (
+                          <li key={v.code}>{v.message}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </Notice>
+                )}
+                <Button type="submit" className="justify-self-start" disabled={create.isPending}>
+                  <CalendarPlus size={16} aria-hidden="true" />
+                  {create.isPending
+                    ? 'Reserving…'
+                    : a.equipment.requiresApproval
+                      ? 'Request reservation'
+                      : 'Reserve'}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Taken in the next {LOOKAHEAD_DAYS} days
+              <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+                {a.busySlots.length}
+              </span>
+            </CardTitle>
+            <CardDescription>Pick a time outside these slots.</CardDescription>
+          </CardHeader>
           {a.busySlots.length === 0 ? (
-            <p className="slot-empty">Nothing booked yet — every slot is open.</p>
+            <CardContent>
+              <p className="m-0 text-sm text-muted-foreground">
+                Nothing booked yet — every slot is open.
+              </p>
+            </CardContent>
           ) : (
-            <ul className="slot-list" aria-label="Taken time slots">
+            <ul className="m-0 list-none border-t border-border p-0" aria-label="Taken time slots">
               {a.busySlots.map((s) => (
-                <li key={s.startAt}>
+                <li
+                  key={s.startAt}
+                  className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-6 py-3 text-sm last:border-b-0"
+                >
                   <span>{formatRange(s.startAt, s.endAt)}</span>
-                  <small>{slotReason[s.reason] ?? s.reason}</small>
+                  <Badge tone={s.reason === 'PENDING_APPROVAL' ? 'pending' : 'muted'}>
+                    {slotReason[s.reason] ?? s.reason}
+                  </Badge>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Card>
       </div>
-    </>
+    </div>
   );
 }

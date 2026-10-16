@@ -2,14 +2,29 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { RefreshCw } from 'lucide-react';
 import { useAuth } from '@/app/AuthProvider';
+import { ErrorState, Notice } from '@/components/Feedback';
+import { StatusBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ErrorState, LoadingState } from '@/components/Feedback';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Detail, DetailList } from '@/components/ui/detail-list';
+import { PageHeader } from '@/components/ui/page-header';
+import { Skeleton, SkeletonBlock } from '@/components/ui/skeleton';
 import { message } from '@/api/client';
-import { isUuid, safeVersion, singaporeTime, statusLabel } from './format';
+import { reservationStatus } from '@/lib/status';
+import { isUuid, safeVersion, singaporeTime } from './format';
 import { useApprovalDetail } from './queries';
 import { DecisionForm } from './DecisionForm';
 
-function Detail({ id }: { id: string }) {
+const backLink = (
+  <Link
+    to="/approvals"
+    className="justify-self-start text-xs text-primary underline underline-offset-4"
+  >
+    ← Pending reservations
+  </Link>
+);
+
+function RequestDetail({ id }: { id: string }) {
   const query = useApprovalDetail(id);
   const { user } = useAuth();
   const [tick, setTick] = useState(0);
@@ -25,7 +40,21 @@ function Detail({ id }: { id: string }) {
     return () => window.clearTimeout(timer);
   }, [starts, pending, serverExpired, tick]);
 
-  if (query.isPending) return <LoadingState />;
+  if (query.isPending)
+    return (
+      <div className="grid gap-6">
+        {backLink}
+        <Skeleton className="h-10 w-1/3" />
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <Card className="p-6">
+            <SkeletonBlock lines={6} />
+          </Card>
+          <Card className="p-6">
+            <SkeletonBlock lines={4} />
+          </Card>
+        </div>
+      </div>
+    );
   if (!query.data)
     return <ErrorState message={message(query.error)} onRetry={() => void query.refetch()} />;
   const item = query.data;
@@ -47,91 +76,97 @@ function Detail({ id }: { id: string }) {
   }
 
   return (
-    <div className="approval">
-      <Link to="/approvals" className="approval-back">
-        ← Pending reservations
-      </Link>
-      <div className="page-title">
-        <div>
-          <p className="eyebrow">RESERVATION REVIEW</p>
-          <h1>Request details</h1>
-          <p className="muted">Check the equipment, applicant and reserved time before deciding.</p>
-        </div>
-        <span className="badge">{statusLabel(item.status)}</span>
-      </div>
+    <div className="grid gap-6">
+      {backLink}
+      <PageHeader
+        eyebrow="RESERVATION REVIEW"
+        title="Request details"
+        description="Check the equipment, applicant and reserved time before deciding."
+        actions={
+          <StatusBadge status={reservationStatus[item.status as keyof typeof reservationStatus]} />
+        }
+      />
       {query.isError && (
         <ErrorState message={message(query.error)} onRetry={() => void query.refetch()} />
       )}
       {expired && (
-        <p className="approval-notice" role="status">
+        <Notice tone="warning" role="status">
           This reservation has expired. You can still reject it to release the reserved time slot.
-        </p>
+        </Notice>
       )}
-      <div className="approval-grid">
-        <section className="approval-panel" aria-labelledby="reservation-heading">
-          <h2 id="reservation-heading">{item.equipment?.name ?? 'Reserved equipment'}</h2>
-          <dl className="approval-meta">
-            <dt>Asset tag</dt>
-            <dd>{item.equipment?.assetTag ?? '—'}</dd>
-            <dt>Category</dt>
-            <dd>{item.equipment?.category ?? '—'}</dd>
-            <dt>Applicant</dt>
-            <dd>{item.requesterName ?? '—'}</dd>
-            <dt>Starts</dt>
-            <dd>{singaporeTime(item.startAt)}</dd>
-            <dt>Ends</dt>
-            <dd>{singaporeTime(item.endAt)}</dd>
-            <dt>Requested</dt>
-            <dd>{singaporeTime(item.createdAt)}</dd>
-            <dt>Purpose</dt>
-            <dd className="approval-text">{item.purpose || 'Not provided'}</dd>
-          </dl>
-        </section>
-        <section className="approval-panel" aria-label="Approval decision">
-          {item.decision ? (
-            <>
-              <h2>Decision recorded</h2>
-              <dl className="approval-meta">
-                <dt>Result</dt>
-                <dd>
-                  {item.decision.decision === 'APPROVED'
-                    ? 'Approved'
-                    : item.decision.decision === 'REJECTED'
-                      ? 'Rejected'
-                      : 'Unavailable'}
-                </dd>
-                <dt>Approver</dt>
-                <dd>{item.decision.approverId ?? '—'}</dd>
-                <dt>Recorded</dt>
-                <dd>{singaporeTime(item.decision.decidedAt)}</dd>
-                <dt>Comment</dt>
-                <dd className="approval-text">{item.decision.comment || 'No comment'}</dd>
-              </dl>
-            </>
-          ) : !pending ? (
-            <>
-              <h2>Reservation status</h2>
-              <p>This reservation is no longer waiting for approval.</p>
-            </>
-          ) : own ? (
-            <p className="approval-notice">You cannot approve or reject your own reservation.</p>
-          ) : !safe ? (
-            <ErrorState
-              message="Unable to safely load this request. Refresh before continuing."
-              onRetry={() => void query.refetch()}
-            />
-          ) : (
-            <DecisionForm
-              item={item}
-              expired={expired}
-              busy={query.isFetching || query.isError}
-              refresh={refresh}
-            />
-          )}
-        </section>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <Card>
+          <section aria-labelledby="reservation-heading">
+            <CardHeader>
+              <CardTitle id="reservation-heading" className="text-base">
+                {item.equipment?.name ?? 'Reserved equipment'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DetailList>
+                <Detail label="Asset tag">{item.equipment?.assetTag ?? '—'}</Detail>
+                <Detail label="Category">{item.equipment?.category ?? '—'}</Detail>
+                <Detail label="Applicant">{item.requesterName ?? '—'}</Detail>
+                <Detail label="Starts">{singaporeTime(item.startAt)}</Detail>
+                <Detail label="Ends">{singaporeTime(item.endAt)}</Detail>
+                <Detail label="Requested">{singaporeTime(item.createdAt)}</Detail>
+                <Detail label="Purpose" className="whitespace-pre-wrap">
+                  {item.purpose || 'Not provided'}
+                </Detail>
+              </DetailList>
+            </CardContent>
+          </section>
+        </Card>
+        <Card>
+          <section aria-label="Approval decision" className="grid gap-4 p-6">
+            {item.decision ? (
+              <>
+                <CardTitle className="text-base">Decision recorded</CardTitle>
+                <DetailList>
+                  <Detail label="Result">
+                    {item.decision.decision === 'APPROVED'
+                      ? 'Approved'
+                      : item.decision.decision === 'REJECTED'
+                        ? 'Rejected'
+                        : 'Unavailable'}
+                  </Detail>
+                  <Detail label="Approver">{item.decision.approverId ?? '—'}</Detail>
+                  <Detail label="Recorded">{singaporeTime(item.decision.decidedAt)}</Detail>
+                  <Detail label="Comment" className="whitespace-pre-wrap">
+                    {item.decision.comment || 'No comment'}
+                  </Detail>
+                </DetailList>
+              </>
+            ) : !pending ? (
+              <>
+                <CardTitle className="text-base">Reservation status</CardTitle>
+                <p className="m-0 text-sm">This reservation is no longer waiting for approval.</p>
+              </>
+            ) : own ? (
+              <Notice>You cannot approve or reject your own reservation.</Notice>
+            ) : !safe ? (
+              <ErrorState
+                message="Unable to safely load this request. Refresh before continuing."
+                onRetry={() => void query.refetch()}
+              />
+            ) : (
+              <DecisionForm
+                item={item}
+                expired={expired}
+                busy={query.isFetching || query.isError}
+                refresh={refresh}
+              />
+            )}
+          </section>
+        </Card>
       </div>
-      <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
-        <RefreshCw size={16} />
+      <Button
+        variant="outline"
+        className="justify-self-start"
+        disabled={query.isFetching}
+        onClick={() => void query.refetch()}
+      >
+        <RefreshCw size={16} aria-hidden="true" />
         Refresh details
       </Button>
     </div>
@@ -141,5 +176,5 @@ function Detail({ id }: { id: string }) {
 export function ApprovalDetailPage() {
   const { reservationId = '' } = useParams();
   if (!isUuid(reservationId)) return <ErrorState message="This reservation link is invalid." />;
-  return <Detail key={reservationId} id={reservationId} />;
+  return <RequestDetail key={reservationId} id={reservationId} />;
 }

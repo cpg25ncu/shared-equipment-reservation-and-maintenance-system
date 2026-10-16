@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 import { AlertCircle, Bell, LoaderCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -51,5 +51,33 @@ export function EmptyState({
       {description && <p>{description}</p>}
       {action}
     </div>
+  );
+}
+
+const noticeTones = {
+  success: 'bg-tone-ok text-tone-ok-foreground',
+  warning: 'bg-tone-pending text-tone-pending-foreground',
+  danger: 'bg-tone-bad text-tone-bad-foreground',
+  info: 'bg-tone-info text-tone-info-foreground',
+};
+/**
+ * A message that stays on the page, for example a confirmation that carries a link or a warning
+ * about the item being edited. Give it `role="status"` or `role="alert"` when it appears after an
+ * action. Use a toast for the plain outcome of an action and `ErrorState` for a failed request.
+ */
+export function Notice({
+  tone = 'info',
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { tone?: keyof typeof noticeTones }) {
+  return (
+    <div
+      className={cn(
+        'flex items-start gap-2.5 rounded-lg border border-current/15 px-4 py-3 text-sm leading-relaxed [overflow-wrap:anywhere]',
+        noticeTones[tone],
+        className,
+      )}
+      {...props}
+    />
   );
 }

@@ -1,17 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { ChevronLeft, ChevronRight, ClipboardCheck, RefreshCw } from 'lucide-react';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { ClipboardCheck, RefreshCw } from 'lucide-react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { EmptyState, ErrorState } from '@/components/Feedback';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ErrorState, LoadingState } from '@/components/Feedback';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
+import { PageHeader } from '@/components/ui/page-header';
 import { message } from '@/api/client';
 import { useAuth } from '@/app/AuthProvider';
-import { singaporeTime, statusLabel } from './format';
+import { singaporeTime } from './format';
 import { usePendingApprovals, type ReservationView } from './queries';
 
 const columns = createColumnHelper<ReservationView>();
@@ -26,7 +25,7 @@ export function ApprovalListPage() {
         cell: ({ row }) => (
           <div>
             <strong>{row.original.equipment?.name ?? 'Equipment'}</strong>
-            <small>
+            <small className="cell-sub">
               {row.original.equipment?.assetTag} · {row.original.equipment?.category}
             </small>
           </div>
@@ -37,36 +36,31 @@ export function ApprovalListPage() {
         cell: ({ row }) => (
           <div>
             {row.original.requesterName ?? 'Applicant'}
-            {row.original.requesterId === user?.userId && <small>Your request</small>}
+            {row.original.requesterId === user?.userId && (
+              <small className="cell-sub">Your request</small>
+            )}
           </div>
         ),
       }),
       columns.accessor('startAt', {
         header: 'Reserved time · SGT',
         cell: ({ row }) => (
-          <div>
-            {singaporeTime(row.original.startAt)}
-            <small>to {singaporeTime(row.original.endAt)}</small>
-          </div>
-        ),
-      }),
-      columns.accessor('status', {
-        header: 'Status',
-        cell: ({ row }) => (
-          <div>
-            <span className="badge">{statusLabel(row.original.status)}</span>
-            {row.original.expired && (
-              <small className="approval-expired">Expired · rejection allowed</small>
-            )}
+          <div className="grid justify-items-start gap-1.5">
+            <div className="whitespace-nowrap">
+              {singaporeTime(row.original.startAt)}
+              <small className="cell-sub">to {singaporeTime(row.original.endAt)}</small>
+            </div>
+            {/* Every row here waits for approval, so only an expiry needs a badge. */}
+            {row.original.expired && <Badge tone="bad">Expired · rejection allowed</Badge>}
           </div>
         ),
       }),
       columns.display({
         id: 'review',
-        header: 'Action',
+        header: () => <span className="sr-only">Action</span>,
         cell: ({ row }) =>
           row.original.reservationId ? (
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="sm">
               <Link
                 to={`/approvals/${row.original.reservationId}`}
                 aria-label={`Review request for ${row.original.equipment?.assetTag ?? 'equipment'}`}
@@ -75,101 +69,65 @@ export function ApprovalListPage() {
               </Link>
             </Button>
           ) : (
-            <span>Unavailable</span>
+            <span className="text-xs text-muted-foreground">Unavailable</span>
           ),
       }),
     ],
     [user?.userId],
   );
-  const table = useReactTable({
-    data: query.data?.content ?? [],
-    columns: definitions,
-    getCoreRowModel: getCoreRowModel(),
-  });
   return (
-    <div className="approval">
-      <div className="page-title">
-        <div>
-          <p className="eyebrow">REVIEW EQUIPMENT REQUESTS</p>
-          <h1>
-            Approvals<span className="title-dot">.</span>
-          </h1>
-          <p className="muted">Review a reservation before it is confirmed.</p>
-        </div>
-        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
-          <RefreshCw size={16} />
-          Refresh
-        </Button>
-      </div>
-      <section className="approval-panel" aria-labelledby="approval-queue-title">
-        <div className="approval-panel-heading">
-          <ClipboardCheck size={22} />
-          <div>
-            <h2 id="approval-queue-title">Pending reservations</h2>
-            <p className="muted">Ordered by start time. Expired requests can still be rejected.</p>
-          </div>
-          {query.data && <span className="badge">{query.data.totalElements ?? 0} pending</span>}
-        </div>
-        {query.isPending ? (
-          <LoadingState />
-        ) : query.isError ? (
-          <ErrorState message={message(query.error)} onRetry={() => void query.refetch()} />
-        ) : !query.data.content?.length ? (
-          <div className="state">
-            <ClipboardCheck size={28} />
-            <h3>No pending reservations</h3>
-            <p>New equipment requests will appear here when they need approval.</p>
-          </div>
-        ) : (
-          <div className="approval-table-scroll">
-            <table>
-              <thead>
-                {table.getHeaderGroups().map((group) => (
-                  <tr key={group.id}>
-                    {group.headers.map((header) => (
-                      <th key={header.id} scope="col">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        <nav className="approval-pagination" aria-label="Approval pages">
+    <div className="grid gap-6">
+      <PageHeader
+        eyebrow="REVIEW EQUIPMENT REQUESTS"
+        title="Approvals"
+        description="Review a reservation before it is confirmed."
+        actions={
           <Button
             variant="outline"
-            disabled={page === 0 || query.isFetching}
-            onClick={() => setPage(page - 1)}
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
           >
-            <ChevronLeft size={16} />
-            Previous
+            <RefreshCw size={16} aria-hidden="true" />
+            Refresh
           </Button>
-          <span>
-            Page {page + 1} of {Math.max(query.data?.totalPages ?? 1, 1)}
-          </span>
-          <Button
-            variant="outline"
-            disabled={query.isFetching || !query.data || page + 1 >= (query.data.totalPages ?? 0)}
-            onClick={() => setPage(page + 1)}
-          >
-            Next
-            <ChevronRight size={16} />
-          </Button>
-        </nav>
-      </section>
+        }
+      />
+      <Card>
+        <section aria-labelledby="approval-queue-title">
+          <CardHeader className="flex-row flex-wrap items-start justify-between gap-3">
+            <div className="grid gap-1.5">
+              <CardTitle id="approval-queue-title">Pending reservations</CardTitle>
+              <CardDescription>
+                Ordered by start time. Expired requests can still be rejected.
+              </CardDescription>
+            </div>
+            {query.data && <Badge tone="pending">{query.data.totalElements ?? 0} pending</Badge>}
+          </CardHeader>
+          {query.isError ? (
+            <ErrorState message={message(query.error)} onRetry={() => void query.refetch()} />
+          ) : (
+            <DataTable
+              columns={definitions}
+              data={query.data?.content ?? []}
+              caption="Reservations waiting for approval"
+              loading={query.isPending}
+              empty={
+                <EmptyState
+                  icon={<ClipboardCheck size={26} />}
+                  title="No pending reservations"
+                  description="New equipment requests will appear here when they need approval."
+                />
+              }
+              paging={{
+                page,
+                pageCount: Math.max(query.data?.totalPages ?? 1, 1),
+                onPageChange: setPage,
+                busy: query.isFetching,
+              }}
+            />
+          )}
+        </section>
+      </Card>
     </div>
   );
 }

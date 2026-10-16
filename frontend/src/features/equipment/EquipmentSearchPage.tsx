@@ -3,21 +3,22 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useSearchParams } from 'react-router';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { ChevronLeft, ChevronRight, PackageSearch, Search } from 'lucide-react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { PackageSearch, Search } from 'lucide-react';
 import type { components } from '@/api/schema';
 import { message } from '@/api/client';
 import { useAuth } from '@/app/AuthProvider';
+import { EmptyState, ErrorState } from '@/components/Feedback';
+import { Badge, StatusBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
+import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { ErrorState, LoadingState } from '@/components/Feedback';
+import { PageHeader } from '@/components/ui/page-header';
+import { Select } from '@/components/ui/select';
 import { localToIso } from '@/lib/time';
-import { equipmentStatus, toneClass } from '@/lib/status';
+import { equipmentStatus } from '@/lib/status';
 import { useEquipmentFilters, useEquipmentSearch } from './queries';
 type Equipment = components['schemas']['EquipmentView'];
 const MAX_WINDOW_MS = 90 * 24 * 3600 * 1000;
@@ -61,6 +62,8 @@ export const searchSchema = z
   });
 type SearchForm = z.infer<typeof searchSchema>;
 const helper = createColumnHelper<Equipment>();
+/** Columns shown from 1280px; narrower screens read them under the equipment name. */
+const secondary = 'hidden xl:table-cell';
 /** UC01 step 1: find equipment by name, category, location and a time window. */
 export function EquipmentSearchPage() {
   const [params, setParams] = useSearchParams();
@@ -123,29 +126,32 @@ export function EquipmentSearchPage() {
         cell: (info) => (
           <div>
             <strong>{info.getValue()}</strong>
-            <small className="cell-sub">{info.row.original.assetTag}</small>
+            <small className="cell-sub">
+              {info.row.original.assetTag}
+              {/* The category and location columns give way to this line below 1280px. */}
+              <span className="xl:hidden">
+                {' '}
+                · {info.row.original.category} · {info.row.original.location}
+              </span>
+            </small>
           </div>
         ),
       }),
-      helper.accessor('category', { header: 'Category' }),
-      helper.accessor('location', { header: 'Location' }),
+      helper.accessor('category', { header: 'Category', meta: { className: secondary } }),
+      helper.accessor('location', { header: 'Location', meta: { className: secondary } }),
       helper.accessor('status', {
         header: 'Status',
-        cell: (info) => (
-          <span className={toneClass(equipmentStatus[info.getValue()].tone)}>
-            {equipmentStatus[info.getValue()].label}
-          </span>
-        ),
+        cell: (info) => <StatusBadge status={equipmentStatus[info.getValue()]} />,
       }),
       helper.accessor('availableInWindow', {
         header: 'Chosen time',
         cell: (info) =>
           info.getValue() == null ? (
-            <span className="muted">Pick a time</span>
+            <span className="text-xs text-muted-foreground">Pick a time</span>
           ) : info.getValue() ? (
-            <span className={toneClass('ok')}>Free</span>
+            <Badge tone="ok">Free</Badge>
           ) : (
-            <span className={toneClass('bad')}>Not free</span>
+            <Badge tone="bad">Not free</Badge>
           ),
       }),
       helper.display({
@@ -156,22 +162,24 @@ export function EquipmentSearchPage() {
           const canTry =
             isBorrower && e.status !== 'UNDER_MAINTENANCE' && e.availableInWindow !== false;
           return (
-            <div className="actions">
-              <Link
-                className={canTry ? 'button button-primary' : 'button button-outline'}
-                to={`/equipment/${e.equipmentId}/reserve${windowQuery}`}
-                aria-label={`${canTry ? 'Reserve' : 'View availability of'} ${e.name}`}
-              >
-                {canTry ? 'Reserve' : 'Availability'}
-              </Link>
-              {canReportFault && (
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button asChild size="sm" variant={canTry ? 'default' : 'outline'}>
                 <Link
-                  className="button button-outline"
-                  to={`/maintenance?equipmentId=${e.equipmentId}`}
-                  aria-label={`Report a fault for ${e.name}`}
+                  to={`/equipment/${e.equipmentId}/reserve${windowQuery}`}
+                  aria-label={`${canTry ? 'Reserve' : 'View availability of'} ${e.name}`}
                 >
-                  Report fault
+                  {canTry ? 'Reserve' : 'Availability'}
                 </Link>
+              </Button>
+              {canReportFault && (
+                <Button asChild size="sm" variant="outline">
+                  <Link
+                    to={`/maintenance?equipmentId=${e.equipmentId}`}
+                    aria-label={`Report a fault for ${e.name}`}
+                  >
+                    Report fault
+                  </Link>
+                </Button>
               )}
             </div>
           );
@@ -180,197 +188,135 @@ export function EquipmentSearchPage() {
     ],
     [isBorrower, canReportFault, windowQuery],
   );
-  const table = useReactTable({
-    data: results.data?.content ?? [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
   return (
-    <>
-      <div className="page-title">
-        <div>
-          <p className="eyebrow">SEARCH AND RESERVE</p>
-          <h1>
-            Find equipment<span className="title-dot">.</span>
-          </h1>
-          <p className="muted">
-            Search by name, category or location, and add a time to see what is free.
-          </p>
-        </div>
-      </div>
-      <form
-        className="filters"
-        onSubmit={handleSubmit(search)}
-        noValidate
-        aria-label="Search equipment"
-      >
-        <div className="field field-wide">
-          <label htmlFor="q">Name or asset tag</label>
-          <Input
+    <div className="grid gap-6">
+      <PageHeader
+        eyebrow="SEARCH AND RESERVE"
+        title="Find equipment"
+        description="Search by name, category or location, and add a time to see what is free."
+      />
+      <Card>
+        <form
+          className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-6"
+          onSubmit={handleSubmit(search)}
+          noValidate
+          aria-label="Search equipment"
+        >
+          <Field
+            label="Name or asset tag"
             id="q"
-            placeholder="e.g. Canon, CAM-001"
-            aria-invalid={!!errors.q}
-            {...register('q')}
-          />
-          {errors.q && <p className="field-error">{errors.q.message}</p>}
-        </div>
-        <div className="field">
-          <label htmlFor="category">Category</label>
-          <select id="category" className="input" {...register('category')}>
-            <option value="">All categories</option>
-            {filters.data?.categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="location">Location</label>
-          <select id="location" className="input" {...register('location')}>
-            <option value="">All locations</option>
-            {filters.data?.locations.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="from">From (SGT)</label>
-          <Input
-            id="from"
-            type="datetime-local"
-            aria-invalid={!!errors.from}
-            aria-describedby={errors.from ? 'from-error' : undefined}
-            {...register('from')}
-          />
-          {errors.from && (
-            <p id="from-error" className="field-error">
-              {errors.from.message}
-            </p>
-          )}
-        </div>
-        <div className="field">
-          <label htmlFor="to">Until (SGT)</label>
-          <Input
-            id="to"
-            type="datetime-local"
-            aria-invalid={!!errors.to}
-            aria-describedby={errors.to ? 'to-error' : undefined}
-            {...register('to')}
-          />
-          {errors.to && (
-            <p id="to-error" className="field-error">
-              {errors.to.message}
-            </p>
-          )}
-        </div>
-        <div className="field field-actions">
-          <label className="check">
-            <input type="checkbox" disabled={!hasWindow} {...register('availableOnly')} />
-            Only show free equipment
-          </label>
-          {errors.availableOnly && <p className="field-error">{errors.availableOnly.message}</p>}
-          <div className="actions">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                reset({
-                  q: '',
-                  category: '',
-                  location: '',
-                  from: '',
-                  to: '',
-                  availableOnly: false,
-                });
-                setParams(new URLSearchParams());
-              }}
-            >
-              Clear
-            </Button>
-            <Button type="submit">
-              <Search size={16} />
-              Search
-            </Button>
+            className="sm:col-span-2"
+            error={errors.q?.message}
+          >
+            <Input placeholder="e.g. Canon, CAM-001" {...register('q')} />
+          </Field>
+          <Field label="Category" id="category">
+            <Select {...register('category')}>
+              <option value="">All categories</option>
+              {filters.data?.categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Location" id="location">
+            <Select {...register('location')}>
+              <option value="">All locations</option>
+              {filters.data?.locations.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="From (SGT)" id="from" error={errors.from?.message}>
+            <Input type="datetime-local" {...register('from')} />
+          </Field>
+          <Field label="Until (SGT)" id="to" error={errors.to?.message}>
+            <Input type="datetime-local" {...register('to')} />
+          </Field>
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 lg:col-span-6">
+            <div className="grid gap-1">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-primary"
+                  disabled={!hasWindow}
+                  {...register('availableOnly')}
+                />
+                Only show free equipment
+              </label>
+              {errors.availableOnly && (
+                <p className="m-0 text-xs text-destructive">{errors.availableOnly.message}</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  reset({
+                    q: '',
+                    category: '',
+                    location: '',
+                    from: '',
+                    to: '',
+                    availableOnly: false,
+                  });
+                  setParams(new URLSearchParams());
+                }}
+              >
+                Clear
+              </Button>
+              <Button type="submit">
+                <Search size={16} aria-hidden="true" />
+                Search
+              </Button>
+            </div>
           </div>
-        </div>
-      </form>
-      <section className="inbox-panel">
-        <div className="panel-toolbar">
-          <h2>Results{results.data && <span>{results.data.totalElements}</span>}</h2>
-        </div>
-        {results.isPending ? (
-          <LoadingState />
-        ) : results.isError ? (
+        </form>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Results
+            {results.data && (
+              <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+                {results.data.totalElements}
+              </span>
+            )}
+          </CardTitle>
+          <CardDescription>
+            Sorted by name. Times are Singapore time. “Free” means nobody holds the slot and the
+            equipment is not under repair right now; the final check happens when you reserve.
+          </CardDescription>
+        </CardHeader>
+        {results.isError ? (
           <ErrorState message={message(results.error)} onRetry={() => void results.refetch()} />
-        ) : !results.data.content.length ? (
-          <div className="state empty">
-            <span className="state-icon">
-              <PackageSearch size={26} />
-            </span>
-            <h2>No equipment matches</h2>
-            <p>Try fewer filters or a different time.</p>
-          </div>
         ) : (
-          <div className="table-scroll">
-            <table className="data-table">
-              <caption className="sr-only">Equipment matching your search</caption>
-              <thead>
-                {table.getHeaderGroups().map((group) => (
-                  <tr key={group.id}>
-                    {group.headers.map((header) => (
-                      <th key={header.id} scope="col">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={results.data?.content ?? []}
+            caption="Equipment matching your search"
+            loading={results.isPending}
+            getRowId={(item) => item.equipmentId}
+            empty={
+              <EmptyState
+                icon={<PackageSearch size={26} />}
+                title="No equipment matches"
+                description="Try fewer filters or a different time."
+              />
+            }
+            paging={{
+              page,
+              pageCount: Math.max(1, results.data?.totalPages ?? 1),
+              onPageChange: goTo,
+              busy: results.isFetching,
+            }}
+          />
         )}
-        <div className="pagination">
-          <span>
-            Page {page + 1}
-            {results.data && ` of ${Math.max(1, results.data.totalPages)}`}
-          </span>
-          <div>
-            <Button
-              variant="outline"
-              aria-label="Previous page"
-              disabled={page === 0 || results.isFetching}
-              onClick={() => goTo(page - 1)}
-            >
-              <ChevronLeft size={16} />
-            </Button>
-            <Button
-              variant="outline"
-              aria-label="Next page"
-              disabled={!results.data || page + 1 >= results.data.totalPages || results.isFetching}
-              onClick={() => goTo(page + 1)}
-            >
-              <ChevronRight size={16} />
-            </Button>
-          </div>
-        </div>
-      </section>
-      <p className="inbox-note">
-        Times are Singapore time. “Free” means nobody holds the slot and the equipment is not under
-        repair right now; the final check happens when you reserve.
-      </p>
-    </>
+      </Card>
+    </div>
   );
 }

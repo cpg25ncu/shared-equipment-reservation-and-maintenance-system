@@ -43,6 +43,3 @@ export const slotReason: Record<string, string> = {
   RESERVED: 'Reserved',
   ON_LOAN: 'On loan',
 };
-export function toneClass(tone: Tone) {
-  return `badge badge-${tone}`;
-}

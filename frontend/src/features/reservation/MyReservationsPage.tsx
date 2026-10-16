@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CalendarCheck, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { CalendarCheck, CircleCheck, X } from 'lucide-react';
 import { api, message } from '@/api/client';
 import type { components } from '@/api/schema';
+import { EmptyState, ErrorState, Notice } from '@/components/Feedback';
+import { StatusBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ErrorState, LoadingState } from '@/components/Feedback';
-import { reservationStatus, toneClass } from '@/lib/status';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { DataTable } from '@/components/ui/data-table';
+import { PageHeader } from '@/components/ui/page-header';
+import { Select } from '@/components/ui/select';
+import { toast } from '@/components/ui/toast';
+import { reservationStatus } from '@/lib/status';
 import { formatRange } from '@/lib/time';
 import { equipmentKeys } from '@/features/equipment/queries';
 import { reservationKeys, useMyReservations, type ReservationStatus } from './queries';
@@ -19,13 +27,14 @@ const FILTERS: { value: ReservationStatus | ''; label: string }[] = [
   { value: 'REJECTED', label: reservationStatus.REJECTED.label },
   { value: 'CANCELLED', label: reservationStatus.CANCELLED.label },
 ];
+const column = createColumnHelper<Reservation>();
 /** UC01: the borrower's own reservations, with cancel until checkout. */
 export function MyReservationsPage() {
   const location = useLocation();
   const created = (location.state as { created?: Reservation } | null)?.created;
   const [status, setStatus] = useState<ReservationStatus | ''>('');
   const [page, setPage] = useState(0);
-  const [confirming, setConfirming] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<Reservation | null>(null);
   const client = useQueryClient();
   const list = useMyReservations(status || undefined, page);
   const cancel = useMutation({
@@ -35,41 +44,102 @@ export function MyReservationsPage() {
       });
       return data!;
     },
+    onSuccess: (item) =>
+      toast.success(`Reservation for ${item.equipmentName} cancelled.`, {
+        id: 'reservation-cancelled',
+      }),
     onSettled: () => {
       setConfirming(null);
       void client.invalidateQueries({ queryKey: reservationKeys.all });
       void client.invalidateQueries({ queryKey: equipmentKeys.all });
     },
   });
+  const columns = useMemo(
+    () => [
+      column.accessor('equipmentName', {
+        header: 'Equipment',
+        cell: (info) => (
+          <>
+            <strong>{info.getValue()}</strong>
+            <small className="cell-sub">
+              {info.row.original.assetTag} · {info.row.original.location}
+            </small>
+            {info.row.original.purpose && (
+              <small className="cell-sub">{info.row.original.purpose}</small>
+            )}
+          </>
+        ),
+      }),
+      column.accessor('startAt', {
+        header: 'When (SGT)',
+        cell: (info) => formatRange(info.getValue(), info.row.original.endAt),
+      }),
+      column.accessor('status', {
+        header: 'Status',
+        cell: (info) => <StatusBadge status={reservationStatus[info.getValue()]} />,
+      }),
+      column.display({
+        id: 'action',
+        header: () => <span className="sr-only">Action</span>,
+        cell: (info) =>
+          info.row.original.cancellable && (
+            <div className="row-actions">
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Cancel reservation for ${info.row.original.equipmentName}`}
+                onClick={() => setConfirming(info.row.original)}
+              >
+                <X size={15} aria-hidden="true" />
+                Cancel
+              </Button>
+            </div>
+          ),
+      }),
+    ],
+    [],
+  );
   return (
-    <>
-      <div className="page-title">
-        <div>
-          <p className="eyebrow">YOUR BOOKINGS</p>
-          <h1>
-            My reservations<span className="title-dot">.</span>
-          </h1>
-          <p className="muted">Cancel any reservation until the equipment is checked out.</p>
-        </div>
-        <Link className="button button-primary" to="/equipment">
-          <CalendarCheck size={16} />
-          New reservation
-        </Link>
-      </div>
+    <div className="grid gap-6">
+      <PageHeader
+        eyebrow="YOUR BOOKINGS"
+        title="My reservations"
+        description="Cancel any reservation until the equipment is checked out."
+        actions={
+          <Button asChild>
+            <Link to="/equipment">
+              <CalendarCheck size={16} aria-hidden="true" />
+              New reservation
+            </Link>
+          </Button>
+        }
+      />
       {created && (
-        <div className="notice notice-success" role="status">
+        <Notice tone="success" role="status">
+          <CircleCheck size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
           {created.status === 'PENDING_APPROVAL'
             ? `Request sent for ${created.equipmentName}. You will be notified when an approver decides.`
             : `${created.equipmentName} is reserved for ${formatRange(created.startAt, created.endAt)}.`}
-        </div>
+        </Notice>
       )}
       {cancel.isError && <ErrorState message={message(cancel.error)} />}
-      <section className="inbox-panel">
-        <div className="panel-toolbar">
-          <h2>Reservations{list.data && <span>{list.data.totalElements}</span>}</h2>
-          <label className="sort-label">
+      <Card>
+        <CardHeader className="flex-row flex-wrap items-start justify-between gap-3">
+          <div className="grid gap-1.5">
+            <CardTitle>
+              Reservations
+              {list.data && (
+                <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+                  {list.data.totalElements}
+                </span>
+              )}
+            </CardTitle>
+            <CardDescription>Latest start time first. Times are Singapore time.</CardDescription>
+          </div>
+          <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
             Show
-            <select
+            <Select
+              className="min-h-9 w-auto py-1.5 text-xs"
               value={status}
               onChange={(e) => {
                 setStatus(e.target.value as ReservationStatus | '');
@@ -81,108 +151,57 @@ export function MyReservationsPage() {
                   {f.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
-        </div>
-        {list.isPending ? (
-          <LoadingState />
-        ) : list.isError ? (
+        </CardHeader>
+        {list.isError ? (
           <ErrorState message={message(list.error)} onRetry={() => void list.refetch()} />
-        ) : !list.data.content.length ? (
-          <div className="state empty">
-            <span className="state-icon">
-              <CalendarCheck size={26} />
-            </span>
-            <h2>No reservations yet</h2>
-            <p>Find equipment and reserve a time slot to see it here.</p>
-          </div>
         ) : (
-          <div className="table-scroll">
-            <table className="data-table">
-              <caption className="sr-only">Your reservations</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Equipment</th>
-                  <th scope="col">When (SGT)</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">
-                    <span className="sr-only">Action</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.data.content.map((r) => (
-                  <tr key={r.reservationId}>
-                    <td>
-                      <strong>{r.equipmentName}</strong>
-                      <small className="cell-sub">
-                        {r.assetTag} · {r.location}
-                      </small>
-                      {r.purpose && <small className="cell-sub">{r.purpose}</small>}
-                    </td>
-                    <td>{formatRange(r.startAt, r.endAt)}</td>
-                    <td>
-                      <span className={toneClass(reservationStatus[r.status].tone)}>
-                        {reservationStatus[r.status].label}
-                      </span>
-                    </td>
-                    <td className="row-actions">
-                      {r.cancellable &&
-                        (confirming === r.reservationId ? (
-                          <>
-                            <Button
-                              variant="outline"
-                              disabled={cancel.isPending}
-                              onClick={() => cancel.mutate(r.reservationId)}
-                            >
-                              Yes, cancel
-                            </Button>
-                            <Button variant="ghost" onClick={() => setConfirming(null)}>
-                              Keep
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            aria-label={`Cancel reservation for ${r.equipmentName}`}
-                            onClick={() => setConfirming(r.reservationId)}
-                          >
-                            <X size={15} />
-                            Cancel
-                          </Button>
-                        ))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={list.data?.content ?? []}
+            caption="Your reservations"
+            loading={list.isPending}
+            getRowId={(item) => item.reservationId}
+            empty={
+              <EmptyState
+                icon={<CalendarCheck size={26} />}
+                title="No reservations yet"
+                description={
+                  status
+                    ? 'None with this status. Choose All to see every reservation.'
+                    : 'Find equipment and reserve a time slot to see it here.'
+                }
+              />
+            }
+            paging={{
+              page,
+              pageCount: Math.max(1, list.data?.totalPages ?? 1),
+              onPageChange: setPage,
+              busy: list.isFetching,
+            }}
+          />
         )}
-        <div className="pagination">
-          <span>
-            Page {page + 1}
-            {list.data && ` of ${Math.max(1, list.data.totalPages)}`}
-          </span>
-          <div>
-            <Button
-              variant="outline"
-              aria-label="Previous page"
-              disabled={page === 0 || list.isFetching}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft size={16} />
-            </Button>
-            <Button
-              variant="outline"
-              aria-label="Next page"
-              disabled={!list.data || page + 1 >= list.data.totalPages || list.isFetching}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight size={16} />
-            </Button>
-          </div>
-        </div>
-      </section>
-    </>
+      </Card>
+      <ConfirmDialog
+        open={!!confirming}
+        onOpenChange={(open) => {
+          if (!open) setConfirming(null);
+        }}
+        title="Cancel this reservation?"
+        description={
+          confirming
+            ? `${confirming.equipmentName}, ${formatRange(confirming.startAt, confirming.endAt)} SGT. The time slot is released for others; this cannot be undone.`
+            : ''
+        }
+        confirmLabel="Yes, cancel"
+        cancelLabel="Keep"
+        destructive
+        pending={cancel.isPending}
+        onConfirm={() => {
+          if (confirming) cancel.mutate(confirming.reservationId);
+        }}
+      />
+    </div>
   );
 }

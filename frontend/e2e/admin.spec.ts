@@ -75,6 +75,21 @@ test('administrator creates a borrower who can sign in', async ({ page, context 
           size: 20,
         },
       });
+    // Overview figures (Issue #26), answered empty; each must belong to the signed-in role.
+    const overview: Record<string, string[]> = {
+      '/api/v1/overdue': ['ADMIN'],
+      '/api/v1/maintenance/cases/open': ['ADMIN'],
+      '/api/v1/reservations/mine': ['BORROWER'],
+      '/api/v1/loans': ['BORROWER'],
+    };
+    if (overview[path] && request.method() === 'GET') {
+      expect(signedIn.roles.some((role) => overview[path].includes(role))).toBe(true);
+      return route.fulfill({
+        json: ['/api/v1/loans', '/api/v1/maintenance/cases/open'].includes(path)
+          ? []
+          : { content: [], totalElements: 0, page: 0, size: 20 },
+      });
+    }
     throw new Error('Unhandled admin browser contract: ' + path);
   });
   await page.goto('/login');

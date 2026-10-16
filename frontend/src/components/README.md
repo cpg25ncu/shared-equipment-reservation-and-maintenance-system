@@ -14,12 +14,15 @@ Run the app in development and open `/dev/components` to see every component wit
 | Form field          | `Field` from `@/components/ui/field` with `Input`, `Select`, `Textarea`                                       | Binds label, hint and error to the control; works with `register()`                  |
 | Button              | `Button` from `@/components/ui/button`                                                                        | `variant`: default, outline, ghost, destructive; `size="sm"`                         |
 | Status              | `StatusBadge` from `@/components/ui/badge` with a map from `@/lib/status`                                     | `<StatusBadge status={reservationStatus[item.status]} />`                            |
+| Label and value     | `DetailList`, `Detail` from `@/components/ui/detail-list`                                                     | Facts of one record; two columns from tablet width up                                |
+| List paging         | `Pager` from `@/components/ui/pager`                                                                          | Under a card list; `DataTable` uses it already. `hasNext` when the API has no total  |
+| Message on the page | `Notice` from `@/components/Feedback`                                                                         | `tone`: success, warning, danger, info. For results that must stay visible           |
 | Plain label         | `Badge`                                                                                                       | `tone`: ok, pending, bad, muted, info                                                |
 | Form in a dialog    | `Dialog…` from `@/components/ui/dialog`                                                                       | Always include a `DialogTitle`                                                       |
 | Confirmation        | `ConfirmDialog` from `@/components/ui/confirm-dialog`                                                         | Before anything hard to undo; `destructive` for removal                              |
 | Result of an action | `toast` from `@/components/ui/toast`                                                                          | `toast.success('Saved')`, `toast.error(message(error))`                              |
 | Views of one page   | `Tabs…` from `@/components/ui/tabs`                                                                           |                                                                                      |
-| Loading             | `Skeleton`, or `loading` on `DataTable`; `LoadingState` for a whole page                                      |                                                                                      |
+| Loading             | `SkeletonBlock` in a card, `Skeleton` to shape one, `loading` on `DataTable`; `LoadingState` for the app      | Announces "Loading…" once                                                            |
 | Nothing to show     | `EmptyState` from `@/components/Feedback`                                                                     | Pass `title`, `description`, optional `action`                                       |
 | Request failed      | `ErrorState` from `@/components/Feedback`                                                                     | Pass `onRetry`                                                                       |
 
@@ -28,7 +31,9 @@ Run the app in development and open `/dev/components` to see every component wit
 - **Names come from one place.** Show roles with `roleLabel` / `roleLabels` from `@/lib/roles` (the stored `CUSTODIAN` and `MAINTAINER` read "Storekeeper" and "Technician") and statuses from the maps in `@/lib/status`. Never print an API code. Add a new status to the map, not to a page.
 - **Colours come from tokens.** They are defined in [`src/styles.css`](../styles.css) and available as Tailwind utilities: `bg-card`, `text-muted-foreground`, `border-border`, `text-destructive`, `bg-secondary`. Do not write hex colours in a page.
 - **Style with utilities.** Tailwind utilities on your markup override the older shared styles, because those now live in the `components` cascade layer. Add a rule to a stylesheet only when utilities cannot express it.
-- **Validation messages stay next to the field** (`Field error={...}`); toasts are for the outcome of an action.
+- **Validation messages stay next to the field** (`Field error={...}`); toasts are for the outcome of an action. Give a toast an `id` per kind of action (`toast.success('Saved', { id: 'equipment-saved' })`) so a repeated action replaces it instead of stacking two identical messages. Keep a `Notice` instead when the result carries a link or must outlast a few seconds.
+- **Tables** sort from their headers when they hold the whole list. When the API pages the data, pass `paging` and offer the API's own sort, if it has one, as a control above the table.
+- **No page stylesheets.** `approval.css` and `maintenance.css` were folded into utilities (Issue #26); status tones are utilities too (`bg-tone-ok text-tone-ok-foreground`).
 - **Menus are not security.** Hiding a link by role is for convenience; the backend decides access.
 - **Time** is shown in Singapore time with the helpers in `@/lib/time`.
 

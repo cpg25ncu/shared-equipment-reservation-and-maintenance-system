@@ -1,7 +1,10 @@
 import { Link } from 'react-router';
 import type { ReactNode } from 'react';
+import { StatusBadge } from '@/components/ui/badge';
+import { Detail, DetailList } from '@/components/ui/detail-list';
+import { maintenanceStatus } from '@/lib/status';
 import type { MaintenanceCase } from './queries';
-import { enumLabel, personLabel, singaporeDate, statusLabel } from './format';
+import { enumLabel, personLabel, singaporeDate } from './format';
 import { EquipmentName } from './EquipmentName';
 export function MaintenanceCaseCard({
   item,
@@ -14,34 +17,34 @@ export function MaintenanceCaseCard({
   children?: ReactNode;
 }) {
   return (
-    <article className="maintenance-card">
-      <span className="badge">{statusLabel(item.status)}</span>
-      <h3>
-        <Link to={'/maintenance/cases/' + item.maintenanceCaseId}>{item.faultDescription}</Link>
+    <article className="grid min-w-0 content-start gap-3 rounded-lg border border-border bg-card p-5">
+      <StatusBadge status={maintenanceStatus[item.status]} className="justify-self-start" />
+      <h3 className="m-0 text-sm font-semibold leading-snug">
+        <Link
+          to={'/maintenance/cases/' + item.maintenanceCaseId}
+          className="text-primary underline underline-offset-4 [overflow-wrap:anywhere]"
+        >
+          {item.faultDescription}
+        </Link>
       </h3>
-      <dl className="maintenance-meta">
-        <dt>Equipment</dt>
-        <dd>
+      <DetailList className="text-[13px] sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-y-1.5">
+        <Detail label="Equipment">
           <EquipmentName item={item} linked={historyLink} />
-        </dd>
-        <dt>Category</dt>
-        <dd>{enumLabel(item.faultCategory)}</dd>
-        <dt>Priority</dt>
-        <dd>{enumLabel(item.priority)}</dd>
-        <dt>Reported</dt>
-        <dd>{singaporeDate(item.reportedAt)}</dd>
-        <dt>Reporter</dt>
-        <dd>{personLabel(item.reportedByName, item.reportedBy)}</dd>
+        </Detail>
+        <Detail label="Category">{enumLabel(item.faultCategory)}</Detail>
+        <Detail label="Priority">{enumLabel(item.priority)}</Detail>
+        <Detail label="Reported">{singaporeDate(item.reportedAt)}</Detail>
+        <Detail label="Reporter">{personLabel(item.reportedByName, item.reportedBy)}</Detail>
         {item.assignedTo && (
-          <>
-            <dt>Technician</dt>
-            <dd>{personLabel(item.assignedToName, item.assignedTo)}</dd>
-          </>
+          <Detail label="Technician">{personLabel(item.assignedToName, item.assignedTo)}</Detail>
         )}
-        <dt>Version</dt>
-        <dd>{item.version}</dd>
-      </dl>
-      {item.resolutionNote && <p>{item.resolutionNote}</p>}
+        <Detail label="Version">{item.version}</Detail>
+      </DetailList>
+      {item.resolutionNote && (
+        <p className="m-0 whitespace-pre-wrap text-sm [overflow-wrap:anywhere]">
+          {item.resolutionNote}
+        </p>
+      )}
       {children}
     </article>
   );

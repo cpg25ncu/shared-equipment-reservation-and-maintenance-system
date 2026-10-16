@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { App } from '@/app/App';
 import { AuthProvider } from '@/app/AuthProvider';
+import { Toaster } from '@/components/ui/toast';
 import { server, currentUser } from '@/test/server';
 import { durationLabel, singaporeDate, singaporeInstant } from './format';
 import { maintenanceKeys, type MaintenanceCase, type MaintenanceHistoryEntry } from './queries';
@@ -46,6 +47,7 @@ function mount(roles: string[], path = '/maintenance') {
       <MemoryRouter initialEntries={[path]}>
         <AuthProvider>
           <App />
+          <Toaster />
         </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -350,8 +352,9 @@ describe('UC04 maintenance workspace', () => {
       ],
     );
     mount(['MAINTAINER']);
-    expect(await screen.findByRole('region', { name: 'ASSIGNED' })).toBeVisible();
-    for (const name of ['IN PROGRESS', 'RESOLVED', 'UNREPAIRABLE'])
+    // Groups use the central status names (Issue #26), never the stored codes.
+    expect(await screen.findByRole('region', { name: 'Assigned' })).toBeVisible();
+    for (const name of ['In progress', 'Resolved', 'Not repairable'])
       expect(screen.getByRole('region', { name })).toBeVisible();
     expect(screen.queryByText('Hidden open item')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Report a fault' })).not.toBeInTheDocument();
@@ -433,11 +436,16 @@ describe('UC04 maintenance workspace', () => {
       'Beyond repair',
     );
     await user.click(screen.getByRole('button', { name: 'Mark Unrepairable' }));
-    expect(screen.getByRole('button', { name: 'Confirm unrepairable' })).toHaveFocus();
+    // The shared confirmation dialog starts on Cancel, so Enter alone never retires equipment.
+    const dialog = screen.getByRole('alertdialog', { name: 'Retire this equipment?' });
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus();
     expect(state.requests).toHaveLength(0);
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await user.keyboard('{Enter}');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(state.requests).toHaveLength(0);
     await user.click(screen.getByRole('button', { name: 'Mark Unrepairable' }));
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Confirm unrepairable' })).toHaveFocus();
     await user.keyboard('{Enter}');
     expect(await screen.findByText('Mark Unrepairable completed successfully.')).toBeVisible();
     expect(state.requests).toEqual([
@@ -595,7 +603,7 @@ describe('UC04 maintenance workspace', () => {
     });
     await userEvent.setup().click(screen.getByRole('button', { name: 'Generate report' }));
     const results = await screen.findByRole('region', { name: 'Report results' });
-    for (const status of ['OPEN', 'ASSIGNED', 'IN PROGRESS', 'RESOLVED', 'UNREPAIRABLE'])
+    for (const status of ['Reported', 'Assigned', 'In progress', 'Resolved', 'Not repairable'])
       expect(within(results).getByText(status)).toBeVisible();
     expect(within(results).getByText('2h 30m')).toBeVisible();
     expect(within(results).getByText('Reported cases in selected period')).toBeVisible();

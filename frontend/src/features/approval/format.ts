@@ -1,15 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { z } from 'zod';
 
-export const statusLabels: Record<string, string> = {
-  PENDING_APPROVAL: 'Pending approval',
-  CONFIRMED: 'Confirmed',
-  REJECTED: 'Rejected',
-  CANCELLED: 'Cancelled',
-  FULFILLED: 'Fulfilled',
-};
-export const statusLabel = (status: string | undefined) =>
-  statusLabels[status ?? ''] ?? 'Unavailable';
 export const isUuid = (id: string | undefined): id is string =>
   !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 export const safeVersion = (version: number | undefined): version is number =>

@@ -6,17 +6,33 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type RowData,
   type SortingState,
 } from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { EmptyState } from '@/components/Feedback';
-import { Button } from './button';
+import { Pager } from './pager';
 import { Skeleton } from './skeleton';
+declare module '@tanstack/react-table' {
+  // The type parameters must match TanStack's own declaration.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /**
+     * Classes for the column's header and cells, for example `hidden xl:table-cell` to drop a
+     * secondary column on tablets. Repeat what it shows in another cell for those widths.
+     */
+    className?: string;
+  }
+}
+
 /** Paging done by the API: the table shows `data` as one page and asks for another. */
 export type ServerPaging = {
   /** Zero-based, as in the API's `page` parameter. */
   page: number;
-  pageCount: number;
+  /** Omit when the API returns a plain list without a total, and pass `hasNext` instead. */
+  pageCount?: number;
+  /** A full page came back, so another may follow. Only used without `pageCount`. */
+  hasNext?: boolean;
   onPageChange: (page: number) => void;
   /** Disables the buttons while the next page loads. */
   busy?: boolean;
@@ -37,6 +53,8 @@ type Props<Row> = {
   /** Pass this when the API pages the data; sorting by header is then switched off. */
   paging?: ServerPaging;
   getRowId?: (row: Row) => string;
+  /** Extra classes for one row, for example to mark unread items. */
+  rowClassName?: (row: Row) => string | undefined;
   initialSorting?: SortingState;
 };
 /**
@@ -52,6 +70,7 @@ export function DataTable<Row>({
   pageSize = 10,
   paging,
   getRowId,
+  rowClassName,
   initialSorting = [],
 }: Props<Row>) {
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
@@ -69,12 +88,19 @@ export function DataTable<Row>({
     initialState: { pagination: { pageIndex: 0, pageSize } },
   });
   if (!loading && !data.length)
-    return <>{empty ?? <EmptyState title="Nothing to show yet" description="" />}</>;
+    return (
+      <>
+        {empty ?? <EmptyState title="Nothing to show yet" description="" />}
+        {/* A later page of an open-ended list can come back empty; keep the way back. */}
+        {paging && paging.page > 0 && (
+          <Pager page={paging.page} onPageChange={paging.onPageChange} disabled={paging.busy} />
+        )}
+      </>
+    );
   const page = paging ? paging.page : table.getState().pagination.pageIndex;
-  const pageCount = Math.max(1, paging ? paging.pageCount : table.getPageCount());
+  const pageCount = paging ? paging.pageCount : Math.max(1, table.getPageCount());
   const goTo = (next: number) => (paging ? paging.onPageChange(next) : table.setPageIndex(next));
   const headers = table.getHeaderGroups();
-  const columnCount = headers[0]?.headers.length ?? columns.length;
   return (
     <>
       <div className="table-scroll">
@@ -90,6 +116,7 @@ export function DataTable<Row>({
                     <th
                       key={header.id}
                       scope="col"
+                      className={header.column.columnDef.meta?.className}
                       aria-sort={
                         !header.column.getCanSort()
                           ? undefined
@@ -128,17 +155,17 @@ export function DataTable<Row>({
             {loading
               ? Array.from({ length: 5 }, (_, row) => (
                   <tr key={row}>
-                    {Array.from({ length: columnCount }, (_, cell) => (
-                      <td key={cell}>
+                    {(headers[0]?.headers ?? []).map((header) => (
+                      <td key={header.id} className={header.column.columnDef.meta?.className}>
                         <Skeleton className="h-4 w-3/4" />
                       </td>
                     ))}
                   </tr>
                 ))
               : table.getRowModel().rows.map((row) => (
-                  <tr key={row.id}>
+                  <tr key={row.id} className={rowClassName?.(row.original)}>
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id}>
+                      <td key={cell.id} className={cell.column.columnDef.meta?.className}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
@@ -152,29 +179,13 @@ export function DataTable<Row>({
           Loading…
         </p>
       )}
-      <div className="pagination">
-        <span>
-          Page {page + 1} of {pageCount}
-        </span>
-        <div>
-          <Button
-            variant="outline"
-            aria-label="Previous page"
-            disabled={loading || paging?.busy || page === 0}
-            onClick={() => goTo(page - 1)}
-          >
-            <ChevronLeft size={16} />
-          </Button>
-          <Button
-            variant="outline"
-            aria-label="Next page"
-            disabled={loading || paging?.busy || page + 1 >= pageCount}
-            onClick={() => goTo(page + 1)}
-          >
-            <ChevronRight size={16} />
-          </Button>
-        </div>
-      </div>
+      <Pager
+        page={page}
+        pageCount={pageCount}
+        hasNext={paging?.hasNext}
+        onPageChange={goTo}
+        disabled={loading || paging?.busy}
+      />
     </>
   );
 }

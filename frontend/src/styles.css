@@ -1,11 +1,9 @@
 @import 'tailwindcss';
 /*
- * Existing page styles join the `components` layer in their original order
- * (maintenance, approval, shared), so they keep overriding the Tailwind reset
- * while utilities on new markup override them.
+ * The shared page styles join the `components` layer, so they keep overriding the Tailwind
+ * reset while utilities on markup override them. Page-specific stylesheets were folded into
+ * utilities in Issue #26; do not add new ones.
  */
-@import './features/maintenance/maintenance.css' layer(components);
-@import './features/approval/approval.css' layer(components);
 @import './styles/shared.css' layer(components);
 
 /*
@@ -26,7 +24,8 @@
   --secondary: #eaf1e5;
   --secondary-foreground: #205b45;
   --muted: #f1f4ed;
-  --muted-foreground: #718078;
+  /* Raised from #718078 in Issue #26 to meet WCAG AA (4.5:1) on cards and the page. */
+  --muted-foreground: #5f6e66;
   --accent: #eaf2e8;
   --accent-foreground: #205b45;
   --destructive: #a64337;
@@ -45,7 +44,7 @@
   --tone-bad: #fbe9e5;
   --tone-bad-foreground: #a64337;
   --tone-muted: #f2f3ef;
-  --tone-muted-foreground: #91988c;
+  --tone-muted-foreground: #676e63;
   --tone-info: #e6eef8;
   --tone-info-foreground: #3c5f8a;
 }
@@ -71,6 +70,17 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  /* Status tones as utilities, e.g. `bg-tone-ok text-tone-ok-foreground`. */
+  --color-tone-ok: var(--tone-ok);
+  --color-tone-ok-foreground: var(--tone-ok-foreground);
+  --color-tone-pending: var(--tone-pending);
+  --color-tone-pending-foreground: var(--tone-pending-foreground);
+  --color-tone-bad: var(--tone-bad);
+  --color-tone-bad-foreground: var(--tone-bad-foreground);
+  --color-tone-muted: var(--tone-muted);
+  --color-tone-muted-foreground: var(--tone-muted-foreground);
+  --color-tone-info: var(--tone-info);
+  --color-tone-info-foreground: var(--tone-info-foreground);
   --radius-sm: calc(var(--radius) - 3px);
   --radius-md: calc(var(--radius) - 1px);
   --radius-lg: calc(var(--radius) + 2px);

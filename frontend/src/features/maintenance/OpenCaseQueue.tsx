@@ -1,6 +1,12 @@
 import { useState } from 'react';
+import { Wrench } from 'lucide-react';
+import { EmptyState, ErrorState } from '@/components/Feedback';
 import { Button } from '@/components/ui/button';
-import { ErrorState, LoadingState } from '@/components/Feedback';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/field';
+import { Select } from '@/components/ui/select';
+import { SkeletonBlock } from '@/components/ui/skeleton';
+import { toast } from '@/components/ui/toast';
 import { message } from '@/api/client';
 import {
   useAssignment,
@@ -9,32 +15,32 @@ import {
   type MaintenanceCase,
   type Priority,
 } from './queries';
-import { enumLabel, priorities } from './format';
+import { cardGrid, enumLabel, priorities } from './format';
 import { MaintenanceCaseCard } from './MaintenanceCaseCard';
 function Assignment({
   item,
   technicians,
-  onSuccess,
 }: {
   item: MaintenanceCase;
   technicians: NonNullable<ReturnType<typeof useTechnicians>['data']>;
-  onSuccess: () => void;
 }) {
   const [technician, setTechnician] = useState('');
-  const mutation = useAssignment(item.maintenanceCaseId, onSuccess);
+  // A successful assignment removes this OPEN card, so the outcome is a toast, not card content.
+  const mutation = useAssignment(item.maintenanceCaseId, () =>
+    toast.success('Technician assigned successfully.', { id: 'technician-assigned' }),
+  );
   const id = 'assign-' + item.maintenanceCaseId;
   return (
     <form
-      className="maintenance-assignment"
+      className="grid gap-2 border-t border-border pt-4"
       onSubmit={(event) => {
         event.preventDefault();
         if (technician) mutation.mutate(technician);
       }}
     >
-      <label htmlFor={id}>Assign technician</label>
-      <select
+      <Label htmlFor={id}>Assign technician</Label>
+      <Select
         id={id}
-        className="input"
         required
         value={technician}
         onChange={(event) => setTechnician(event.target.value)}
@@ -46,8 +52,8 @@ function Assignment({
             {tech.displayName} · {tech.email}
           </option>
         ))}
-      </select>
-      <Button disabled={!technician || mutation.isPending}>
+      </Select>
+      <Button className="justify-self-start" disabled={!technician || mutation.isPending}>
         {mutation.isPending ? 'Assigning…' : 'Assign technician'}
       </Button>
       {mutation.isError && <ErrorState message={message(mutation.error)} />}
@@ -58,7 +64,6 @@ const rank = (priority: Priority) => priorities.indexOf(priority);
 export function OpenCaseQueue() {
   const cases = useOpenCases();
   const technicians = useTechnicians();
-  const [assigned, setAssigned] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState<Priority | ''>('');
   const [sort, setSort] = useState<'oldest' | 'priority'>('oldest');
   // The server lists oldest first; filtering and the priority sort are view choices. The sort is
@@ -67,52 +72,71 @@ export function OpenCaseQueue() {
     (item) => !priorityFilter || item.priority === priorityFilter,
   );
   if (sort === 'priority') shown.sort((a, b) => rank(a.priority) - rank(b.priority));
-  // A successful assignment removes the OPEN card; feedback belongs outside that card.
   return (
-    <section className="maintenance-panel" onSubmitCapture={() => setAssigned(false)}>
-      <h2>Open maintenance queue</h2>
-      <p className="muted">Review faults and assign an active maintainer.</p>
-      <div className="maintenance-queue-controls">
-        <label htmlFor="queue-priority">Priority</label>
-        <select
-          id="queue-priority"
-          className="input"
-          value={priorityFilter}
-          onChange={(event) => setPriorityFilter(event.target.value as Priority | '')}
-        >
-          <option value="">All priorities</option>
-          {priorities.map((priority) => (
-            <option key={priority} value={priority}>
-              {enumLabel(priority)}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="queue-sort">Sort</label>
-        <select
-          id="queue-sort"
-          className="input"
-          value={sort}
-          onChange={(event) => setSort(event.target.value as 'oldest' | 'priority')}
-        >
-          <option value="oldest">Oldest report first</option>
-          <option value="priority">Highest priority first</option>
-        </select>
-      </div>
-      {cases.isPending ? (
-        <LoadingState />
-      ) : cases.isError ? (
-        <ErrorState message={message(cases.error)} onRetry={() => void cases.refetch()} />
-      ) : !cases.data.length ? (
-        <p>No open maintenance cases.</p>
-      ) : !shown.length ? (
-        <p>No open cases with this priority.</p>
-      ) : (
-        <div className="maintenance-grid">
-          {shown.map((item) => (
-            <div key={item.maintenanceCaseId}>
-              <MaintenanceCaseCard item={item} historyLink>
+    <Card>
+      <CardHeader className="flex-row flex-wrap items-end justify-between gap-4">
+        <div className="grid gap-1.5">
+          <CardTitle>Open maintenance queue</CardTitle>
+          <CardDescription>Review faults and assign an active maintainer.</CardDescription>
+        </div>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="grid gap-1.5">
+            <Label htmlFor="queue-priority">Priority</Label>
+            <Select
+              id="queue-priority"
+              className="min-h-10 w-auto min-w-40 py-2"
+              value={priorityFilter}
+              onChange={(event) => setPriorityFilter(event.target.value as Priority | '')}
+            >
+              <option value="">All priorities</option>
+              {priorities.map((priority) => (
+                <option key={priority} value={priority}>
+                  {enumLabel(priority)}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="queue-sort">Sort</Label>
+            <Select
+              id="queue-sort"
+              className="min-h-10 w-auto min-w-40 py-2"
+              value={sort}
+              onChange={(event) => setSort(event.target.value as 'oldest' | 'priority')}
+            >
+              <option value="oldest">Oldest report first</option>
+              <option value="priority">Highest priority first</option>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {cases.isPending ? (
+          <SkeletonBlock />
+        ) : cases.isError ? (
+          <ErrorState message={message(cases.error)} onRetry={() => void cases.refetch()} />
+        ) : !cases.data.length ? (
+          <EmptyState
+            icon={<Wrench size={26} />}
+            className="min-h-0 py-8"
+            title="No open maintenance cases."
+            description="Reported faults wait here until a technician is assigned."
+          />
+        ) : !shown.length ? (
+          <EmptyState
+            icon={<Wrench size={26} />}
+            className="min-h-0 py-8"
+            title="No open cases with this priority."
+            description="Choose All priorities to see every open case."
+          />
+        ) : (
+          <div className={cardGrid}>
+            {shown.map((item) => (
+              <MaintenanceCaseCard key={item.maintenanceCaseId} item={item} historyLink>
                 {technicians.isPending ? (
-                  <p role="status">Loading technicians…</p>
+                  <p role="status" className="m-0 text-xs text-muted-foreground">
+                    Loading technicians…
+                  </p>
                 ) : technicians.isError ? (
                   <ErrorState
                     message={message(technicians.error)}
@@ -120,20 +144,19 @@ export function OpenCaseQueue() {
                   />
                 ) : (
                   <>
-                    <Assignment
-                      item={item}
-                      technicians={technicians.data}
-                      onSuccess={() => setAssigned(true)}
-                    />
-                    {!technicians.data.length && <p>No active technicians available.</p>}
+                    <Assignment item={item} technicians={technicians.data} />
+                    {!technicians.data.length && (
+                      <p className="m-0 text-xs text-muted-foreground">
+                        No active technicians available.
+                      </p>
+                    )}
                   </>
                 )}
               </MaintenanceCaseCard>
-            </div>
-          ))}
-        </div>
-      )}
-      {assigned && <p role="status">Technician assigned successfully.</p>}
-    </section>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

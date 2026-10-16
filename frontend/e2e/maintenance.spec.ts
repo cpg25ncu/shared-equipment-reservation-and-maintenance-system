@@ -117,6 +117,6 @@ test('maintainer signs in, starts own case, diagnoses and resolves it', async ({
   await expect(page.getByRole('button', { name: 'Record Diagnosis', exact: true })).toHaveCount(0);
   await expect(page.getByText('06 Oct 2026, 10:30 SGT').first()).toBeVisible();
   await page.getByRole('link', { name: '← Maintenance workspace' }).click();
-  await expect(page.getByRole('region', { name: 'RESOLVED', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Resolved', exact: true })).toBeVisible();
   await expect(page.getByText('Motor replaced and tested')).toBeVisible();
 });

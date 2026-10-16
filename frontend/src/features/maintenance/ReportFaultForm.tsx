@@ -3,10 +3,15 @@ import { Link, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
+import { CircleCheck } from 'lucide-react';
 import { useAuth } from '@/app/AuthProvider';
+import { ErrorState, Notice } from '@/components/Feedback';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { ErrorState } from '@/components/Feedback';
+import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { message } from '@/api/client';
 import { enumLabel, faultCategories, faultSchema, hasAnyRole, priorities, uuid } from './format';
 import { useReportFault } from './queries';
@@ -26,103 +31,110 @@ export function ReportFaultForm() {
       priority: 'MEDIUM',
     },
   });
+  const errors = form.formState.errors;
   return (
-    <section className="maintenance-panel">
-      <h2>Report a fault</h2>
-      <p className="muted">Tell us what happened so the equipment can be assessed.</p>
-      <form
-        noValidate
-        onSubmit={form.handleSubmit(async (values) => {
-          setCreated('');
-          try {
-            const item = await mutation.mutateAsync({
-              equipmentId: values.equipmentId,
-              ...(values.loanId ? { loanId: values.loanId } : {}),
-              faultDescription: values.faultDescription,
-              faultCategory: values.faultCategory,
-              priority: values.priority,
-            });
-            setCreated(item.maintenanceCaseId);
-            form.reset({
-              equipmentId: '',
-              loanId: '',
-              faultDescription: '',
-              faultCategory: 'OTHER',
-              priority: 'MEDIUM',
-            });
-          } catch {
-            /* ProblemDetail is rendered below. */
-          }
-        })}
-      >
-        <label htmlFor="fault-equipment">Equipment ID</label>
-        <Input
-          id="fault-equipment"
-          {...form.register('equipmentId')}
-          aria-invalid={!!form.formState.errors.equipmentId}
-          aria-describedby="equipment-help fault-equipment-error"
-          placeholder="Equipment UUID"
-        />
-        <p id="equipment-help" className="muted">
-          <Link to="/equipment">Find equipment</Link> and choose Report fault to select it here.
-        </p>
-        <p id="fault-equipment-error" className="field-error">
-          {form.formState.errors.equipmentId?.message}
-        </p>
-        <label htmlFor="fault-loan">Loan ID (optional)</label>
-        <Input
-          id="fault-loan"
-          {...form.register('loanId')}
-          aria-invalid={!!form.formState.errors.loanId}
-          aria-describedby="fault-loan-error"
-        />
-        <p id="fault-loan-error" className="field-error">
-          {form.formState.errors.loanId?.message}
-        </p>
-        <label htmlFor="fault-category">Fault category</label>
-        <select id="fault-category" className="input" {...form.register('faultCategory')}>
-          {faultCategories.map((category) => (
-            <option key={category} value={category}>
-              {enumLabel(category)}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="fault-priority">Priority</label>
-        <select id="fault-priority" className="input" {...form.register('priority')}>
-          {priorities.map((priority) => (
-            <option key={priority} value={priority}>
-              {enumLabel(priority)}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="fault-description">Fault description</label>
-        <textarea
-          id="fault-description"
-          className="input"
-          rows={4}
-          {...form.register('faultDescription')}
-          aria-invalid={!!form.formState.errors.faultDescription}
-          aria-describedby="fault-description-error"
-        />
-        <p id="fault-description-error" className="field-error">
-          {form.formState.errors.faultDescription?.message}
-        </p>
-        <Button disabled={mutation.isPending}>
-          {mutation.isPending ? 'Reporting…' : 'Submit fault report'}
-        </Button>
-      </form>
-      {mutation.isError && <ErrorState message={message(mutation.error)} />}
-      {created && (
-        <p role="status" className="maintenance-success">
-          Fault reported successfully. Case ID: {created}
-          {hasAnyRole(user?.roles, 'CUSTODIAN', 'ADMIN') && (
-            <>
-              {' '}
-              · <Link to={'/maintenance/cases/' + created}>View case</Link>
-            </>
-          )}
-        </p>
-      )}
-    </section>
+    <Card>
+      <CardHeader>
+        <CardTitle>Report a fault</CardTitle>
+        <CardDescription>Tell us what happened so the equipment can be assessed.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <form
+          noValidate
+          className="grid gap-4 sm:grid-cols-2"
+          onSubmit={form.handleSubmit(async (values) => {
+            setCreated('');
+            try {
+              const item = await mutation.mutateAsync({
+                equipmentId: values.equipmentId,
+                ...(values.loanId ? { loanId: values.loanId } : {}),
+                faultDescription: values.faultDescription,
+                faultCategory: values.faultCategory,
+                priority: values.priority,
+              });
+              setCreated(item.maintenanceCaseId);
+              form.reset({
+                equipmentId: '',
+                loanId: '',
+                faultDescription: '',
+                faultCategory: 'OTHER',
+                priority: 'MEDIUM',
+              });
+            } catch {
+              /* ProblemDetail is rendered below. */
+            }
+          })}
+        >
+          <Field
+            label="Equipment ID"
+            id="fault-equipment"
+            error={errors.equipmentId?.message}
+            hint={
+              <>
+                <Link to="/equipment" className="text-primary underline underline-offset-4">
+                  Find equipment
+                </Link>{' '}
+                and choose Report fault to select it here.
+              </>
+            }
+          >
+            <Input placeholder="Equipment UUID" {...form.register('equipmentId')} />
+          </Field>
+          <Field label="Loan ID (optional)" id="fault-loan" error={errors.loanId?.message}>
+            <Input {...form.register('loanId')} />
+          </Field>
+          <Field label="Fault category" id="fault-category">
+            <Select {...form.register('faultCategory')}>
+              {faultCategories.map((category) => (
+                <option key={category} value={category}>
+                  {enumLabel(category)}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Priority" id="fault-priority">
+            <Select {...form.register('priority')}>
+              {priorities.map((priority) => (
+                <option key={priority} value={priority}>
+                  {enumLabel(priority)}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field
+            label="Fault description"
+            id="fault-description"
+            className="sm:col-span-2"
+            error={errors.faultDescription?.message}
+          >
+            <Textarea rows={4} {...form.register('faultDescription')} />
+          </Field>
+          <Button className="justify-self-start" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Reporting…' : 'Submit fault report'}
+          </Button>
+        </form>
+        {mutation.isError && <ErrorState message={message(mutation.error)} />}
+        {created && (
+          <Notice tone="success" role="status">
+            <CircleCheck size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
+            <span>
+              Fault reported successfully. Case ID: {created}
+              {hasAnyRole(user?.roles, 'CUSTODIAN', 'ADMIN') && (
+                <>
+                  {' '}
+                  ·{' '}
+                  <Link
+                    to={'/maintenance/cases/' + created}
+                    className="font-semibold underline underline-offset-4"
+                  >
+                    View case
+                  </Link>
+                </>
+              )}
+            </span>
+          </Notice>
+        )}
+      </CardContent>
+    </Card>
   );
 }
