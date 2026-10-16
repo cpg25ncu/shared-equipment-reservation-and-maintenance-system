@@ -1,0 +1,614 @@
+{
+  "takenAt": "2026-10-16T17:01:49.801Z",
+  "baseURL": "http://127.0.0.1:5179",
+  "results": [
+    {
+      "device": "desktop",
+      "account": "borrower",
+      "route": "/",
+      "file": "desktop-borrower-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "borrower",
+      "route": "/equipment",
+      "file": "desktop-borrower-equipment.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "borrower",
+      "route": "/equipment/20000000-0000-0000-0000-000000000002/reserve",
+      "file": "desktop-borrower-equipment-detail-reserve.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "borrower",
+      "route": "/reservations",
+      "file": "desktop-borrower-reservations.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "borrower",
+      "route": "/loans",
+      "file": "desktop-borrower-loans.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "borrower",
+      "route": "/maintenance",
+      "file": "desktop-borrower-maintenance.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "borrower",
+      "route": "/notifications",
+      "file": "desktop-borrower-notifications.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "borrower",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "desktop",
+      "account": "approver",
+      "route": "/",
+      "file": "desktop-approver-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "approver",
+      "route": "/approvals",
+      "file": "desktop-approver-approvals.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "approver",
+      "route": "/approvals/571b615d-0314-4626-a415-b14972396a46",
+      "file": "desktop-approver-approvals-detail.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "approver",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "desktop",
+      "account": "custodian",
+      "route": "/",
+      "file": "desktop-custodian-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "custodian",
+      "route": "/loans",
+      "file": "desktop-custodian-loans.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "custodian",
+      "route": "/manage/equipment",
+      "file": "desktop-custodian-manage-equipment.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "custodian",
+      "route": "/maintenance",
+      "file": "desktop-custodian-maintenance.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "custodian",
+      "route": "/overdue",
+      "file": "desktop-custodian-overdue.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "custodian",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "desktop",
+      "account": "maintainer",
+      "route": "/",
+      "file": "desktop-maintainer-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "maintainer",
+      "route": "/maintenance",
+      "file": "desktop-maintainer-maintenance.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "maintainer",
+      "route": "/maintenance/cases/2db1a318-4657-4226-ab39-7e6c8287eaf6",
+      "file": "desktop-maintainer-maintenance-cases-detail.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "maintainer",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "desktop",
+      "account": "admin",
+      "route": "/",
+      "file": "desktop-admin-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "admin",
+      "route": "/maintenance/report",
+      "file": "desktop-admin-maintenance-report.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "admin",
+      "route": "/reports",
+      "file": "desktop-admin-reports.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "admin",
+      "route": "/admin/users",
+      "file": "desktop-admin-admin-users.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 1440,
+        "document": 1440
+      },
+      "alerts": 0
+    },
+    {
+      "device": "desktop",
+      "account": "admin",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "tablet",
+      "account": "borrower",
+      "route": "/",
+      "file": "tablet-borrower-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "borrower",
+      "route": "/equipment",
+      "file": "tablet-borrower-equipment.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "borrower",
+      "route": "/equipment/20000000-0000-0000-0000-000000000002/reserve",
+      "file": "tablet-borrower-equipment-detail-reserve.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "borrower",
+      "route": "/reservations",
+      "file": "tablet-borrower-reservations.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "borrower",
+      "route": "/loans",
+      "file": "tablet-borrower-loans.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "borrower",
+      "route": "/maintenance",
+      "file": "tablet-borrower-maintenance.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "borrower",
+      "route": "/notifications",
+      "file": "tablet-borrower-notifications.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "borrower",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "tablet",
+      "account": "approver",
+      "route": "/",
+      "file": "tablet-approver-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "approver",
+      "route": "/approvals",
+      "file": "tablet-approver-approvals.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "approver",
+      "route": "/approvals/571b615d-0314-4626-a415-b14972396a46",
+      "file": "tablet-approver-approvals-detail.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "approver",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "tablet",
+      "account": "custodian",
+      "route": "/",
+      "file": "tablet-custodian-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "custodian",
+      "route": "/loans",
+      "file": "tablet-custodian-loans.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "custodian",
+      "route": "/manage/equipment",
+      "file": "tablet-custodian-manage-equipment.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "custodian",
+      "route": "/maintenance",
+      "file": "tablet-custodian-maintenance.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "custodian",
+      "route": "/overdue",
+      "file": "tablet-custodian-overdue.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "custodian",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "tablet",
+      "account": "maintainer",
+      "route": "/",
+      "file": "tablet-maintainer-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "maintainer",
+      "route": "/maintenance",
+      "file": "tablet-maintainer-maintenance.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "maintainer",
+      "route": "/maintenance/cases/2db1a318-4657-4226-ab39-7e6c8287eaf6",
+      "file": "tablet-maintainer-maintenance-cases-detail.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "maintainer",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    },
+    {
+      "device": "tablet",
+      "account": "admin",
+      "route": "/",
+      "file": "tablet-admin-overview.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "admin",
+      "route": "/maintenance/report",
+      "file": "tablet-admin-maintenance-report.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "admin",
+      "route": "/reports",
+      "file": "tablet-admin-reports.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "admin",
+      "route": "/admin/users",
+      "file": "tablet-admin-admin-users.jpg",
+      "fits": true,
+      "width": {
+        "viewport": 768,
+        "document": 768
+      },
+      "alerts": 0
+    },
+    {
+      "device": "tablet",
+      "account": "admin",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ]
+    }
+  ]
+}
