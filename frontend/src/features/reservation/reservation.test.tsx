@@ -277,6 +277,34 @@ describe('reserve equipment (UC01)', () => {
   });
 });
 describe('my reservations (UC01)', () => {
+  it('shows the first eight ID characters on every row and preserves accessible controls', async () => {
+    const cameraId = 'a1b2c3d4-1234-4567-89ab-123456789abc';
+    const tripodId = 'e5f6a7b8-9876-4567-89ab-987654321abc';
+    withMine([
+      { ...reservation, reservationId: cameraId },
+      {
+        ...reservation,
+        reservationId: tripodId,
+        equipmentName: 'Tripod',
+        status: 'FULFILLED',
+        cancellable: false,
+      },
+    ]);
+    mount('/reservations');
+    const table = await screen.findByRole('table', { name: 'Your reservations' });
+    const camera = (await within(table).findByText('Canon EOS R6')).closest('tr')!;
+    const tripod = within(table).getByText('Tripod').closest('tr')!;
+    expect(within(camera).getByText('Reservation a1b2c3d4')).toBeVisible();
+    expect(within(tripod).getByText('Reservation e5f6a7b8')).toBeVisible();
+    expect(table).not.toHaveTextContent(cameraId);
+    expect(table).not.toHaveTextContent(tripodId);
+    expect(
+      within(camera).getByRole('button', { name: 'Cancel reservation for Canon EOS R6' }),
+    ).toBeVisible();
+    expect(within(tripod).queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Show' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'New reservation' })).toBeVisible();
+  });
   it('cancels after confirmation and refreshes the list', async () => {
     let cancelled = false;
     server.use(
