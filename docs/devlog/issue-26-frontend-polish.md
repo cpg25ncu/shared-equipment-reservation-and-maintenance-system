@@ -63,7 +63,7 @@ See [the verification record](../evidence/visual-polish-20261017/README.md).
 
 ### Follow-ups
 
-- Backend, not this task: notification texts from the server format dates in the JVM default locale, so on this Windows machine they read "17 10月 2026". Production containers may differ; worth checking before the demo.
+- Backend, not this task: notification texts from the server formatted dates in the JVM default locale, so on this Windows machine they read "17 10月 2026". Fixed separately in PR #96 (`NotificationText` uses `Locale.ENGLISH`).
 - Admin tables at tablet width (above).
 
 ### Authorship
