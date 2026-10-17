@@ -1,0 +1,777 @@
+{
+  "owner": "Liu Tongyao (@cpg25ncu)",
+  "preparedBy": "Codex agent under the repository owner's instruction; no member sign-off claimed",
+  "baseline": "2993b78eef24c15a96a1ba77536488c5eb0bc4e8",
+  "deployedSha": "2993b78eef24c15a96a1ba77536488c5eb0bc4e8",
+  "deployRun": "https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/39010686818/attempts/2",
+  "browserStartedAt": "2026-10-17T07:02:32.215Z",
+  "finishedAt": "2026-10-17T11:14:19.497Z",
+  "environment": {
+    "os": "Windows",
+    "node": "24.20.0",
+    "playwright": "1.63.0",
+    "chromium": "153.0.8010.12",
+    "docker": "29.8.2",
+    "zap": "2.17.0"
+  },
+  "results": {
+    "UC01": "passed",
+    "UC02": "passed",
+    "UC03": "passed",
+    "UC04": "passed",
+    "UC05": "passed",
+    "Admin": "passed"
+  },
+  "accounts": [
+    {
+      "email": "acc-1018-approver@serms.test",
+      "roles": [
+        "APPROVER"
+      ],
+      "accountStatus": "ACTIVE"
+    },
+    {
+      "email": "acc-1018-borrower2@serms.test",
+      "roles": [
+        "BORROWER"
+      ],
+      "accountStatus": "ACTIVE"
+    },
+    {
+      "email": "acc-1018-borrower@serms.test",
+      "roles": [
+        "BORROWER"
+      ],
+      "accountStatus": "ACTIVE"
+    },
+    {
+      "email": "acc-1018-storekeeper@serms.test",
+      "roles": [
+        "CUSTODIAN"
+      ],
+      "accountStatus": "ACTIVE"
+    },
+    {
+      "email": "acc-1018-technician@serms.test",
+      "roles": [
+        "MAINTAINER"
+      ],
+      "accountStatus": "ACTIVE"
+    }
+  ],
+  "equipment": {
+    "camera": {
+      "id": "77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4",
+      "name": "ACC-1018 Camera",
+      "tag": "ACC-1018-CAM",
+      "requiresApproval": false
+    },
+    "scope": {
+      "id": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+      "name": "ACC-1018 Oscilloscope",
+      "tag": "ACC-1018-OSC",
+      "requiresApproval": true
+    }
+  },
+  "reservations": {
+    "camera": {
+      "reservationId": "4258a349-2c24-4cfc-b0f5-c72a7cec0c70",
+      "equipmentId": "77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4",
+      "startAt": "2026-10-17T07:07:00Z",
+      "endAt": "2026-10-17T07:37:00Z",
+      "status": "CONFIRMED"
+    },
+    "cancel": {
+      "reservationId": "9eb2fc4d-7c71-4cba-b8ac-21145a325b8a",
+      "equipmentId": "77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4",
+      "startAt": "2026-10-18T07:07:00Z",
+      "endAt": "2026-10-18T08:07:00Z",
+      "status": "CANCELLED"
+    },
+    "approve": {
+      "reservationId": "83350c17-fa93-4013-8394-631c0187c358",
+      "equipmentId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+      "startAt": "2026-10-17T07:10:00Z",
+      "endAt": "2026-10-17T07:45:00Z",
+      "status": "CONFIRMED"
+    },
+    "reject": {
+      "reservationId": "1c84d464-50ef-436a-93e9-f77461ae709c",
+      "equipmentId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+      "startAt": "2026-10-18T07:07:00Z",
+      "endAt": "2026-10-18T08:07:00Z",
+      "status": "REJECTED"
+    },
+    "released": {
+      "reservationId": "c9b6a0c8-62a1-498c-802d-d09a55c59d66",
+      "equipmentId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+      "startAt": "2026-10-18T07:07:00Z",
+      "endAt": "2026-10-18T08:07:00Z",
+      "status": "CANCELLED"
+    },
+    "afterRepair": {
+      "reservationId": "79c13fb4-4286-4296-b938-5fb3b4e3c477",
+      "equipmentId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+      "startAt": "2026-10-18T07:07:00Z",
+      "endAt": "2026-10-18T08:07:00Z",
+      "status": "CANCELLED"
+    }
+  },
+  "reservationCheckoutNote": "Reservation snapshots are observed at booking/decision/cancellation; successful checkout fulfils camera and approve reservations. Final loan states below are authoritative for handover completion.",
+  "decisions": {
+    "approve": {
+      "approvalId": "70f03384-64fd-427e-a603-caf8576087ff",
+      "reservationId": "83350c17-fa93-4013-8394-631c0187c358",
+      "approverId": "db446809-792c-49de-b3c5-14f939a5a286",
+      "decision": "APPROVED",
+      "comment": "ACC-1018 approved for deployed acceptance.",
+      "decidedAt": "2026-10-17T07:05:38.060089Z"
+    },
+    "reject": {
+      "approvalId": "4604bff4-3252-4e4e-9442-2637b94d3b12",
+      "reservationId": "1c84d464-50ef-436a-93e9-f77461ae709c",
+      "approverId": "db446809-792c-49de-b3c5-14f939a5a286",
+      "decision": "REJECTED",
+      "comment": "ACC-1018 rejected to verify reason and slot release.",
+      "decidedAt": "2026-10-17T07:05:38.676980Z"
+    }
+  },
+  "overlap": {
+    "status": 409,
+    "problemType": "/problems/reservation-conflict",
+    "detail": "This equipment is already reserved for part of that time. Choose another time slot."
+  },
+  "queueSearch": [
+    {
+      "query": "83350c17",
+      "found": true,
+      "reservationId": "83350c17-fa93-4013-8394-631c0187c358"
+    },
+    {
+      "query": "acc-1018 borrower",
+      "found": true,
+      "reservationId": "83350c17-fa93-4013-8394-631c0187c358"
+    },
+    {
+      "query": "ACC-1018-OSC",
+      "found": true,
+      "reservationId": "83350c17-fa93-4013-8394-631c0187c358"
+    }
+  ],
+  "loans": {
+    "approve": {
+      "loanId": "977e12b7-9c25-4414-82ad-36ed90aa7014",
+      "reservationId": "83350c17-fa93-4013-8394-631c0187c358",
+      "equipmentId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+      "equipmentName": "ACC-1018 Oscilloscope",
+      "assetTag": "ACC-1018-OSC",
+      "borrowerId": "5a2769f5-e3cd-414a-a094-aea0e0596d05",
+      "borrowerName": "ACC-1018 borrower",
+      "checkoutBy": "3104f7c3-e26d-4718-974e-f87e11611aac",
+      "returnBy": "3104f7c3-e26d-4718-974e-f87e11611aac",
+      "checkedOutAt": "2026-10-17T07:10:00.611791Z",
+      "dueAt": "2026-10-17T07:45:00Z",
+      "returnedAt": "2026-10-17T07:11:40.903267Z",
+      "status": "RETURNED",
+      "returnCondition": "DAMAGED",
+      "returnNote": "ACC-1018 simulated casing damage for deployed maintenance acceptance.",
+      "version": 1,
+      "overdue": false
+    },
+    "camera": {
+      "loanId": "b7548f58-b631-41b8-bb2c-d277bc205074",
+      "reservationId": "4258a349-2c24-4cfc-b0f5-c72a7cec0c70",
+      "equipmentId": "77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4",
+      "equipmentName": "ACC-1018 Camera",
+      "assetTag": "ACC-1018-CAM",
+      "borrowerId": "5a2769f5-e3cd-414a-a094-aea0e0596d05",
+      "borrowerName": "ACC-1018 borrower",
+      "checkoutBy": "3104f7c3-e26d-4718-974e-f87e11611aac",
+      "returnBy": "3104f7c3-e26d-4718-974e-f87e11611aac",
+      "checkedOutAt": "2026-10-17T07:27:13.740010Z",
+      "dueAt": "2026-10-17T07:37:00Z",
+      "returnedAt": "2026-10-17T11:14:06.217576Z",
+      "status": "RETURNED",
+      "returnCondition": "GOOD",
+      "returnNote": "ACC-1018 overdue acceptance complete; received in good condition.",
+      "version": 1,
+      "overdue": true
+    }
+  },
+  "maintenanceCreated": {
+    "maintenanceCaseId": "3b4e952f-4f48-4402-8914-cc5af3d0374e",
+    "equipmentId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+    "equipmentName": "ACC-1018 Oscilloscope",
+    "equipmentAssetTag": "ACC-1018-OSC",
+    "reportedBy": "3104f7c3-e26d-4718-974e-f87e11611aac",
+    "reportedByName": "ACC-1018 storekeeper",
+    "assignedTo": null,
+    "assignedToName": null,
+    "loanId": "977e12b7-9c25-4414-82ad-36ed90aa7014",
+    "status": "OPEN",
+    "faultDescription": "ACC-1018 simulated casing damage for deployed maintenance acceptance.",
+    "faultCategory": "PHYSICAL_DAMAGE",
+    "priority": "HIGH",
+    "resolutionNote": null,
+    "reportedAt": "2026-10-17T07:11:40.916549Z",
+    "resolvedAt": null,
+    "version": 0
+  },
+  "maintenanceFinal": {
+    "maintenanceCaseId": "3b4e952f-4f48-4402-8914-cc5af3d0374e",
+    "equipmentId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+    "equipmentName": "ACC-1018 Oscilloscope",
+    "equipmentAssetTag": "ACC-1018-OSC",
+    "reportedBy": "3104f7c3-e26d-4718-974e-f87e11611aac",
+    "reportedByName": "ACC-1018 storekeeper",
+    "assignedTo": "80d1328c-b41a-4268-bbbd-50253a6acab7",
+    "assignedToName": "ACC-1018 technician",
+    "loanId": "977e12b7-9c25-4414-82ad-36ed90aa7014",
+    "status": "RESOLVED",
+    "faultDescription": "ACC-1018 simulated casing damage for deployed maintenance acceptance.",
+    "faultCategory": "PHYSICAL_DAMAGE",
+    "priority": "HIGH",
+    "resolutionNote": "ACC-1018 simulated repair completed; equipment passes visual and functional checks.",
+    "reportedAt": "2026-10-17T07:11:40.916549Z",
+    "resolvedAt": "2026-10-17T07:11:48.089383Z",
+    "version": 3
+  },
+  "borrowerTechnicianDenial": {
+    "status": 403,
+    "type": "/problems/forbidden",
+    "detail": "You do not have permission for this action."
+  },
+  "markReadStatus": 204,
+  "decisionInbox": [
+    {
+      "id": "700ab9a7-091b-4391-96cf-04bd22c55a27",
+      "type": "BUSINESS_EVENT",
+      "content": "Collect ACC-1018 Oscilloscope at 17 Oct 2026, 15:10 SGT.",
+      "deliveredAt": "2026-10-17T07:05:56.397905Z",
+      "readAt": null
+    },
+    {
+      "id": "a6c20a26-d6c6-44da-92ed-5338b8421784",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Oscilloscope was rejected. Reason: ACC-1018 rejected to verify reason and slot release.",
+      "deliveredAt": "2026-10-17T07:05:56.380908Z",
+      "readAt": null
+    },
+    {
+      "id": "5b2d6507-ef3a-4705-88dd-2eb917e3b7f6",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Oscilloscope has been confirmed.",
+      "deliveredAt": "2026-10-17T07:05:56.359334Z",
+      "readAt": null
+    },
+    {
+      "id": "0315b9de-7a96-4b44-9e5a-75201e729f84",
+      "type": "BUSINESS_EVENT",
+      "content": "Collect ACC-1018 Camera at 17 Oct 2026, 15:07 SGT.",
+      "deliveredAt": "2026-10-17T07:04:56.317766Z",
+      "readAt": null
+    },
+    {
+      "id": "af1692dd-af9d-48ac-bf02-4e0bdf675db9",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Camera was cancelled.",
+      "deliveredAt": "2026-10-17T07:04:56.229148Z",
+      "readAt": null
+    },
+    {
+      "id": "209bee09-6756-49b4-b190-5bf925b6b632",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Camera is confirmed. Collect it from 18 Oct 2026, 15:07 SGT.",
+      "deliveredAt": "2026-10-17T07:04:56.197388Z",
+      "readAt": null
+    },
+    {
+      "id": "e90d845c-0121-4535-b5e1-54b7f97f5195",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Camera is confirmed. Collect it from 17 Oct 2026, 15:07 SGT.",
+      "deliveredAt": "2026-10-17T07:04:55.654487Z",
+      "readAt": null
+    }
+  ],
+  "finalInbox": [
+    {
+      "id": "a753d951-096b-4d92-a824-f472dc5989f1",
+      "type": "OVERDUE",
+      "content": "Your loan of ACC-1018 Camera was due at 17 Oct 2026, 15:37 SGT. Please return it.",
+      "deliveredAt": "2026-10-17T07:37:57.016432Z",
+      "readAt": null
+    },
+    {
+      "id": "c0e82405-11b5-43d7-8c3b-e57afbdf2678",
+      "type": "DUE_SOON",
+      "content": "Your loan of ACC-1018 Camera is due at 17 Oct 2026, 15:37 SGT.",
+      "deliveredAt": "2026-10-17T07:27:56.873960Z",
+      "readAt": null
+    },
+    {
+      "id": "adae5877-6415-4024-8f8b-67e9cedb6022",
+      "type": "BUSINESS_EVENT",
+      "content": "Your loan of ACC-1018 Camera is due at 17 Oct 2026, 15:37 SGT.",
+      "deliveredAt": "2026-10-17T07:27:26.837152Z",
+      "readAt": null
+    },
+    {
+      "id": "2a491317-515b-479d-80e1-808b409dce37",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Oscilloscope was cancelled.",
+      "deliveredAt": "2026-10-17T07:11:56.676022Z",
+      "readAt": null
+    },
+    {
+      "id": "5d4d6354-8c99-4c8e-ae7b-66e4f5d7b499",
+      "type": "BUSINESS_EVENT",
+      "content": "Your loan of ACC-1018 Oscilloscope was returned with reported damage.",
+      "deliveredAt": "2026-10-17T07:11:56.597329Z",
+      "readAt": null
+    },
+    {
+      "id": "027e7896-498d-4d7e-9cf8-ae82defd3d13",
+      "type": "DUE_SOON",
+      "content": "Your loan of ACC-1018 Oscilloscope is due at 17 Oct 2026, 15:45 SGT.",
+      "deliveredAt": "2026-10-17T07:10:56.543437Z",
+      "readAt": null
+    },
+    {
+      "id": "d0f7e845-1564-4401-9d9d-8a79d891f373",
+      "type": "BUSINESS_EVENT",
+      "content": "Your loan of ACC-1018 Oscilloscope is due at 17 Oct 2026, 15:45 SGT.",
+      "deliveredAt": "2026-10-17T07:10:26.512045Z",
+      "readAt": null
+    },
+    {
+      "id": "700ab9a7-091b-4391-96cf-04bd22c55a27",
+      "type": "BUSINESS_EVENT",
+      "content": "Collect ACC-1018 Oscilloscope at 17 Oct 2026, 15:10 SGT.",
+      "deliveredAt": "2026-10-17T07:05:56.397905Z",
+      "readAt": "2026-10-17T07:06:42.731261Z"
+    },
+    {
+      "id": "a6c20a26-d6c6-44da-92ed-5338b8421784",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Oscilloscope was rejected. Reason: ACC-1018 rejected to verify reason and slot release.",
+      "deliveredAt": "2026-10-17T07:05:56.380908Z",
+      "readAt": null
+    },
+    {
+      "id": "5b2d6507-ef3a-4705-88dd-2eb917e3b7f6",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Oscilloscope has been confirmed.",
+      "deliveredAt": "2026-10-17T07:05:56.359334Z",
+      "readAt": null
+    },
+    {
+      "id": "0315b9de-7a96-4b44-9e5a-75201e729f84",
+      "type": "BUSINESS_EVENT",
+      "content": "Collect ACC-1018 Camera at 17 Oct 2026, 15:07 SGT.",
+      "deliveredAt": "2026-10-17T07:04:56.317766Z",
+      "readAt": null
+    },
+    {
+      "id": "af1692dd-af9d-48ac-bf02-4e0bdf675db9",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Camera was cancelled.",
+      "deliveredAt": "2026-10-17T07:04:56.229148Z",
+      "readAt": null
+    },
+    {
+      "id": "209bee09-6756-49b4-b190-5bf925b6b632",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Camera is confirmed. Collect it from 18 Oct 2026, 15:07 SGT.",
+      "deliveredAt": "2026-10-17T07:04:56.197388Z",
+      "readAt": null
+    },
+    {
+      "id": "e90d845c-0121-4535-b5e1-54b7f97f5195",
+      "type": "BUSINESS_EVENT",
+      "content": "Your reservation for ACC-1018 Camera is confirmed. Collect it from 17 Oct 2026, 15:07 SGT.",
+      "deliveredAt": "2026-10-17T07:04:55.654487Z",
+      "readAt": null
+    }
+  ],
+  "overdue": {
+    "checkedAt": "2026-10-17T11:13:56.961Z",
+    "minimumWaitMs": 125000,
+    "scannerIntervalMs": 60000,
+    "projection": {
+      "loanId": "b7548f58-b631-41b8-bb2c-d277bc205074",
+      "reservationId": "4258a349-2c24-4cfc-b0f5-c72a7cec0c70",
+      "borrowerName": "ACC-1018 borrower",
+      "equipmentName": "ACC-1018 Camera",
+      "dueAt": "2026-10-17T07:37:00Z",
+      "overdueSeconds": 13015
+    },
+    "reminder": {
+      "id": "a753d951-096b-4d92-a824-f472dc5989f1",
+      "type": "OVERDUE",
+      "content": "Your loan of ACC-1018 Camera was due at 17 Oct 2026, 15:37 SGT. Please return it.",
+      "deliveredAt": "2026-10-17T07:37:57.016432Z",
+      "readAt": null
+    },
+    "removedAfterReturn": true
+  },
+  "cameraMinutesRemainingAtCheckout": 9.771,
+  "retired": {
+    "camera": {
+      "equipmentId": "77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4",
+      "assetTag": "ACC-1018-CAM",
+      "serialNumber": "ACC-1018-CAM-SERIAL",
+      "name": "ACC-1018 Camera",
+      "description": "ACC-1018 deployed acceptance fixture; retire after all loans are returned.",
+      "category": "ACC-1018 Acceptance",
+      "location": "ACC-1018 Test Lab",
+      "condition": "GOOD",
+      "status": "RETIRED",
+      "requiresApproval": false,
+      "maxBorrowDuration": "PT48H",
+      "version": 3
+    },
+    "scope": {
+      "equipmentId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+      "assetTag": "ACC-1018-OSC",
+      "serialNumber": "ACC-1018-OSC-SERIAL",
+      "name": "ACC-1018 Oscilloscope",
+      "description": "ACC-1018 deployed acceptance fixture; retire after all loans are returned.",
+      "category": "ACC-1018 Acceptance",
+      "location": "ACC-1018 Test Lab",
+      "condition": "GOOD",
+      "status": "RETIRED",
+      "requiresApproval": true,
+      "maxBorrowDuration": "PT48H",
+      "version": 4
+    }
+  },
+  "retiredExcludedFromSearch": true,
+  "audit": {
+    "RESERVATION_SUBMIT": [
+      {
+        "auditId": "dcf9ed2d-def2-4a27-b020-1bcbb95ca4ee",
+        "actorId": "5a2769f5-e3cd-414a-a094-aea0e0596d05",
+        "actorName": "ACC-1018 borrower",
+        "action": "RESERVATION_SUBMIT",
+        "entityType": "Reservation",
+        "entityId": "83350c17-fa93-4013-8394-631c0187c358",
+        "outcome": "SUCCESS",
+        "changeSummary": "status=PENDING_APPROVAL; equipment=0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7; slot=2026-10-17T07:10:00Z/2026-10-17T07:45:00Z",
+        "occurredAt": "2026-10-17T07:04:39.716697Z"
+      },
+      {
+        "auditId": "e2321c48-761c-403d-88c1-4d75ee564a3d",
+        "actorId": "5a2769f5-e3cd-414a-a094-aea0e0596d05",
+        "actorName": "ACC-1018 borrower",
+        "action": "RESERVATION_SUBMIT",
+        "entityType": "Reservation",
+        "entityId": "4258a349-2c24-4cfc-b0f5-c72a7cec0c70",
+        "outcome": "SUCCESS",
+        "changeSummary": "status=CONFIRMED; equipment=77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4; slot=2026-10-17T07:07:00Z/2026-10-17T07:37:00Z",
+        "occurredAt": "2026-10-17T07:04:37.367011Z"
+      }
+    ],
+    "RESERVATION_DECIDE": [
+      {
+        "auditId": "5101d72d-50dd-434b-b75b-fe6eb99c321a",
+        "actorId": "db446809-792c-49de-b3c5-14f939a5a286",
+        "actorName": "ACC-1018 approver",
+        "action": "RESERVATION_DECIDE",
+        "entityType": "Reservation",
+        "entityId": "1c84d464-50ef-436a-93e9-f77461ae709c",
+        "outcome": "SUCCESS",
+        "changeSummary": "REJECTED",
+        "occurredAt": "2026-10-17T07:05:38.676980Z"
+      },
+      {
+        "auditId": "5bcb5dc5-a010-493c-a395-71976397ec56",
+        "actorId": "db446809-792c-49de-b3c5-14f939a5a286",
+        "actorName": "ACC-1018 approver",
+        "action": "RESERVATION_DECIDE",
+        "entityType": "Reservation",
+        "entityId": "83350c17-fa93-4013-8394-631c0187c358",
+        "outcome": "SUCCESS",
+        "changeSummary": "APPROVED",
+        "occurredAt": "2026-10-17T07:05:38.060089Z"
+      }
+    ],
+    "LOAN_CHECKOUT": [
+      {
+        "auditId": "5d478841-ece6-4702-92ea-b1f75449ed9f",
+        "actorId": "3104f7c3-e26d-4718-974e-f87e11611aac",
+        "actorName": "ACC-1018 storekeeper",
+        "action": "LOAN_CHECKOUT",
+        "entityType": "Loan",
+        "entityId": "b7548f58-b631-41b8-bb2c-d277bc205074",
+        "outcome": "SUCCESS",
+        "changeSummary": "Confirmed physical handover to 5a2769f5-e3cd-414a-a094-aea0e0596d05",
+        "occurredAt": "2026-10-17T07:27:13.740010Z"
+      },
+      {
+        "auditId": "97f1e748-fc93-4f6a-979e-d98fb7e10662",
+        "actorId": "3104f7c3-e26d-4718-974e-f87e11611aac",
+        "actorName": "ACC-1018 storekeeper",
+        "action": "LOAN_CHECKOUT",
+        "entityType": "Loan",
+        "entityId": "977e12b7-9c25-4414-82ad-36ed90aa7014",
+        "outcome": "SUCCESS",
+        "changeSummary": "Confirmed physical handover to 5a2769f5-e3cd-414a-a094-aea0e0596d05",
+        "occurredAt": "2026-10-17T07:10:00.611791Z"
+      }
+    ],
+    "LOAN_RETURN": [
+      {
+        "auditId": "84dde39a-1814-4051-a415-defd2e8ee8a2",
+        "actorId": "3104f7c3-e26d-4718-974e-f87e11611aac",
+        "actorName": "ACC-1018 storekeeper",
+        "action": "LOAN_RETURN",
+        "entityType": "Loan",
+        "entityId": "b7548f58-b631-41b8-bb2c-d277bc205074",
+        "outcome": "SUCCESS",
+        "changeSummary": "condition=GOOD; late=true; maintenanceCase=null",
+        "occurredAt": "2026-10-17T11:14:06.217576Z"
+      },
+      {
+        "auditId": "433f7677-60bc-4355-a246-7b36386ad0d8",
+        "actorId": "3104f7c3-e26d-4718-974e-f87e11611aac",
+        "actorName": "ACC-1018 storekeeper",
+        "action": "LOAN_RETURN",
+        "entityType": "Loan",
+        "entityId": "977e12b7-9c25-4414-82ad-36ed90aa7014",
+        "outcome": "SUCCESS",
+        "changeSummary": "condition=DAMAGED; late=false; maintenanceCase=3b4e952f-4f48-4402-8914-cc5af3d0374e",
+        "occurredAt": "2026-10-17T07:11:40.903267Z"
+      }
+    ],
+    "MAINTENANCE_RESOLVE": [
+      {
+        "auditId": "d8b1e1b8-09b1-43d9-b4d0-d5f7385247c4",
+        "actorId": "80d1328c-b41a-4268-bbbd-50253a6acab7",
+        "actorName": "ACC-1018 technician",
+        "action": "MAINTENANCE_RESOLVE",
+        "entityType": "MaintenanceCase",
+        "entityId": "3b4e952f-4f48-4402-8914-cc5af3d0374e",
+        "outcome": "SUCCESS",
+        "changeSummary": "ACC-1018 simulated repair completed; equipment passes visual and functional checks.",
+        "occurredAt": "2026-10-17T07:11:48.089383Z"
+      }
+    ],
+    "EQUIPMENT_REGISTER": [
+      {
+        "auditId": "e48a80a2-5723-4f8c-81c7-fc875bb75a8e",
+        "actorId": "5a4ed2c5-d62b-435b-9c4b-ce15ab10637c",
+        "actorName": "admin",
+        "action": "EQUIPMENT_REGISTER",
+        "entityType": "Equipment",
+        "entityId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+        "outcome": "SUCCESS",
+        "changeSummary": "assetTag=ACC-1018-OSC",
+        "occurredAt": "2026-10-17T07:03:40.911790Z"
+      },
+      {
+        "auditId": "7f197b43-5391-4efa-8108-f28ff47be078",
+        "actorId": "5a4ed2c5-d62b-435b-9c4b-ce15ab10637c",
+        "actorName": "admin",
+        "action": "EQUIPMENT_REGISTER",
+        "entityType": "Equipment",
+        "entityId": "77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4",
+        "outcome": "SUCCESS",
+        "changeSummary": "assetTag=ACC-1018-CAM",
+        "occurredAt": "2026-10-17T07:03:40.543776Z"
+      }
+    ],
+    "EQUIPMENT_RETIRE": [
+      {
+        "auditId": "362dd146-a31e-4422-91ab-a0ffcc6d845a",
+        "actorId": "5a4ed2c5-d62b-435b-9c4b-ce15ab10637c",
+        "actorName": "admin",
+        "action": "EQUIPMENT_RETIRE",
+        "entityType": "Equipment",
+        "entityId": "0f57e3ff-ff65-4b38-ab3f-ff5315ddeef7",
+        "outcome": "SUCCESS",
+        "changeSummary": "status=AVAILABLE -> RETIRED",
+        "occurredAt": "2026-10-17T11:14:13.556246Z"
+      },
+      {
+        "auditId": "4413d1c8-a93f-468c-8f30-470d72e991ab",
+        "actorId": "5a4ed2c5-d62b-435b-9c4b-ce15ab10637c",
+        "actorName": "admin",
+        "action": "EQUIPMENT_RETIRE",
+        "entityType": "Equipment",
+        "entityId": "77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4",
+        "outcome": "SUCCESS",
+        "changeSummary": "status=AVAILABLE -> RETIRED",
+        "occurredAt": "2026-10-17T11:14:13.125320Z"
+      }
+    ]
+  },
+  "reports": {
+    "status": 200,
+    "loadedAt": "2026-10-17T07:07:47.267Z",
+    "keys": [
+      "from",
+      "to",
+      "measuredUntil",
+      "generatedAt",
+      "reservationsByCategory",
+      "equipmentUtilisation",
+      "utilisationByCategory",
+      "overdueNow",
+      "overdueByCategory",
+      "maintenance",
+      "maintenanceByEquipment"
+    ]
+  },
+  "health": {
+    "status": 200,
+    "body": {
+      "groups": [
+        "liveness",
+        "readiness"
+      ],
+      "status": "UP"
+    },
+    "headers": {
+      "strict-transport-security": "max-age=15552000",
+      "x-frame-options": "DENY",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "strict-origin-when-cross-origin",
+      "server": "nginx"
+    }
+  },
+  "cookies": [
+    {
+      "name": "JSESSIONID",
+      "secure": true,
+      "httpOnly": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "XSRF-TOKEN",
+      "secure": true,
+      "httpOnly": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "verifiedLogoutResponses": [
+    {
+      "role": "borrower",
+      "status": 204,
+      "at": "2026-10-17T07:05:10.567Z"
+    },
+    {
+      "role": "borrower2",
+      "status": 204,
+      "at": "2026-10-17T07:05:13.593Z"
+    },
+    {
+      "role": "approver",
+      "status": 204,
+      "at": "2026-10-17T07:05:35.883Z"
+    },
+    {
+      "role": "approver",
+      "status": 204,
+      "at": "2026-10-17T07:06:07.182Z"
+    },
+    {
+      "role": "borrower2",
+      "status": 204,
+      "at": "2026-10-17T07:06:10.847Z"
+    },
+    {
+      "role": "borrower",
+      "status": 204,
+      "at": "2026-10-17T07:06:41.105Z"
+    },
+    {
+      "role": "borrower",
+      "status": 204,
+      "at": "2026-10-17T07:06:44.151Z"
+    },
+    {
+      "role": "storekeeper",
+      "status": 204,
+      "at": "2026-10-17T07:07:43.564Z"
+    },
+    {
+      "role": "admin",
+      "status": 204,
+      "at": "2026-10-17T07:07:47.778Z"
+    },
+    {
+      "role": "storekeeper",
+      "status": 204,
+      "at": "2026-10-17T07:11:43.183Z"
+    },
+    {
+      "role": "borrower",
+      "status": 204,
+      "at": "2026-10-17T07:11:45.945Z"
+    },
+    {
+      "role": "technician",
+      "status": 204,
+      "at": "2026-10-17T07:11:49.586Z"
+    },
+    {
+      "role": "borrower",
+      "status": 204,
+      "at": "2026-10-17T07:27:01.171Z"
+    },
+    {
+      "role": "storekeeper",
+      "status": 204,
+      "at": "2026-10-17T11:13:57.207Z"
+    },
+    {
+      "role": "borrower",
+      "status": 204,
+      "at": "2026-10-17T11:14:04.101Z"
+    },
+    {
+      "role": "storekeeper",
+      "status": 204,
+      "at": "2026-10-17T11:14:08.406Z"
+    },
+    {
+      "role": "admin",
+      "status": 204,
+      "at": "2026-10-17T13:23:53.297Z"
+    }
+  ],
+  "finalLogout": {
+    "status": 204,
+    "at": "2026-10-17T13:23:59.686Z"
+  },
+  "finalLoanHistory": {
+    "loanId": "b7548f58-b631-41b8-bb2c-d277bc205074",
+    "reservationId": "4258a349-2c24-4cfc-b0f5-c72a7cec0c70",
+    "equipmentId": "77ff58b4-1d76-476b-a1f0-1a4d9f8d30c4",
+    "equipmentName": "ACC-1018 Camera",
+    "assetTag": "ACC-1018-CAM",
+    "borrowerId": "5a2769f5-e3cd-414a-a094-aea0e0596d05",
+    "borrowerName": "ACC-1018 borrower",
+    "checkoutBy": "3104f7c3-e26d-4718-974e-f87e11611aac",
+    "returnBy": "3104f7c3-e26d-4718-974e-f87e11611aac",
+    "checkedOutAt": "2026-10-17T07:27:13.740010Z",
+    "dueAt": "2026-10-17T07:37:00Z",
+    "returnedAt": "2026-10-17T11:14:06.217576Z",
+    "status": "RETURNED",
+    "returnCondition": "GOOD",
+    "returnNote": "ACC-1018 overdue acceptance complete; received in good condition.",
+    "version": 1,
+    "overdue": true
+  },
+  "notRun": [
+    "scheduled 2026-10-18 backup confirmation (requires server access)",
+    "physical handover or actual hardware repair",
+    "load/concurrency tests",
+    "active scan",
+    "authenticated ZAP coverage",
+    "full authorization matrix and security/session-revocation regressions",
+    "independent member check",
+    "merge/deployment of this documentation PR",
+    "team Done"
+  ]
+}
