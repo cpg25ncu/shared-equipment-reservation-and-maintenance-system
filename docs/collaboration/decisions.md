@@ -20,11 +20,13 @@ References: [Gateflow AGENTS](https://github.com/bibi45c/gateflow/blob/f91482416
 
 ## D-001 Merge Permissions and Member Checks
 
-Sources: [README](../../README.md#collaboration-and-releases) allows Write collaborators to merge after green CI without another approval; the [Sprint plan](../agile/sprint-plan.md) requires at least one member check; the [historical data delivery record](../sprint1-zhoufanhao.md) also retains review requirements.
+Sources at decision time: [README](../../README.md#collaboration-and-releases) allowed Write collaborators to merge after green CI without another approval; the [Sprint plan](../agile/sprint-plan.md) requires at least one member check; the [historical data delivery record](../sprint1-zhoufanhao.md) also retains review requirements.
 
 Status: **Confirmed by the user in that conversation**. Decision: retain self-merging; member checks serve team acceptance without a new mandatory GitHub approving-review gate.
 
 Implementation: clarify PR/DoD descriptions in the current Sprint plan only. README merge permissions and historical records are not rewritten. Affected-owner contract confirmation, green CI, and team Done check/deployment evidence remain required. GitHub branch protection was not changed.
+
+Documentation location update (2026-10-17): the user requested a concise README with detailed content moved to the appropriate guides. The unchanged merge permissions and affected-owner confirmation rule are now maintained in [CONTRIBUTING](../../.github/CONTRIBUTING.md#prs-and-team-acceptance); the README retains navigation for existing links. This move does not add an approval gate or alter this decision.
 
 ## D-002 Shared Responsibility Source Differences
 

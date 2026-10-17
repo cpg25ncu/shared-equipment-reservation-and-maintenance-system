@@ -5,7 +5,7 @@ description: Check SERMS PR merge conditions and dependency updates, recording m
 
 # Merge Checks and Completion
 
-Sources: [README merge policy](../../../README.md#collaboration-and-releases), [PRs and team acceptance](../../../.github/CONTRIBUTING.md#prs-and-team-acceptance), [Sprint DoD](../../../docs/agile/sprint-plan.md#2-definition-of-done), [Testing](../../../docs/testing.md).
+Sources: [PRs, merge permissions and team acceptance](../../../.github/CONTRIBUTING.md#prs-and-team-acceptance), [Sprint DoD](../../../docs/agile/sprint-plan.md#2-definition-of-done), [Testing](../../../docs/testing.md).
 
 1. Read latest PR HEAD, target branch, and CI results; verify scope, dependencies, contract confirmation, and actual permissions. Preserve Write collaborators' self-merge policy without appointing a sole integrator.
 2. State missing checks/acceptance. For dependency-branch tasks, verify merge order, retargeting, and the updated combination; old HEAD/base passes do not cover the new combination.
