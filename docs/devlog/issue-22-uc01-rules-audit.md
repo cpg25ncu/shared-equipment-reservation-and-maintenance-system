@@ -89,3 +89,69 @@ Base `b72ee5b` plus this change set, in a separate worktree; Windows 11, Java 25
 ### Authorship
 
 Implementation, tests and this section were produced by an AI agent (Claude Code) under Liu Tongyao's instruction. No teammate review is claimed.
+
+## 2026-10-17 Borrower reservation reference follow-up (Refs #22)
+
+### Scope and ownership
+
+Human owner: Liu Tongyao (@cpg25ncu, repository owner). Agent-prepared by Codex under the
+owner's explicit production-observation follow-up task; this session is the sole writer.
+Branch: `fix/liu-tongyao-my-reservations-reference`.
+Worktree: `C:/Users/14824/.codex/worktrees/serms-reservation-reference-20261017/SWE5006_Group_Project`.
+Fetched main, dependency and rule baseline: `eaafb3686e7e2178d4e40e9c8a2e91824e6ed4d4`
+(2026-10-17). Initial HEAD was that baseline; delivered HEAD and hosted results are recorded
+on the PR. The independent equipment-audit PR is not a dependency.
+
+Authorized paths are MyReservationsPage.tsx, its existing reservation component test file,
+and this dated log section. API/backend, generated schema, shared components, browser scripts,
+other worktrees (including D:/ChatGPT/serms-worktrees), merge and production operations are excluded.
+Rules actually read: AGENTS.md, .github/CONTRIBUTING.md, docs/tech-stack.md, docs/testing.md,
+docs/contracts/README.md, docs/contracts/equipment-and-reservation.md, docs/collaboration/ownership.md,
+docs/collaboration/agent-workflow.md, relevant docs/collaboration/decisions.md entries,
+.agents/skills/{serms-task,serms-worktree,serms-verify,serms-pr}/SKILL.md,
+.github/pull_request_template.md and docs/devlog/README.md. The production observation was read
+in docs/devlog/issue-10-server-release.md. User authorization covers implementation, checks,
+commits, push and PR creation; explicitly no merge.
+
+### What was built and design
+
+Each row now shows `Reservation <first 8 characters>` below the equipment metadata using
+the existing DataTable and cell-sub style. The prefix keeps the ID's original case and characters,
+matching the beginning of the UUID shown with the Reservation label on Loans and returns.
+The generated frontend/src/api/schema.d.ts ReservationView requires reservationId as a UUID
+string; no API change or type regeneration is needed. Existing table caption, equipment names,
+filter label, links, cancel button names and confirmation controls stay intact.
+
+The new component case uses two distinct UUID prefixes, including a fulfilled non-cancellable
+row, and asserts visible references plus existing accessible table/filter/link/action names.
+No new design pattern or dependency was needed.
+
+### Verification and problems
+
+Windows; Node 24.20.0, pnpm 11.19.0. Commands ran in this isolated worktree on the baseline
+plus the two delivered frontend source/test files; the log was appended afterwards.
+
+| Working directory and command | Result |
+| --- | --- |
+| frontend/: pnpm install --frozen-lockfile | Passed, lockfile unchanged |
+| frontend/: pnpm lint | Passed |
+| frontend/: pnpm typecheck | Passed |
+| frontend/: pnpm test | Passed: 17 files, 183 tests |
+| frontend/: pnpm build | Passed; existing bundle-size/annotation warnings |
+| frontend/: pnpm test:e2e (CI=true, own server on free 5173) | Passed: 16 desktop/mobile mocked browser scenarios |
+| root: node --test scripts/role-access.test.mjs | Passed: 9 tests |
+| root: git diff --check | Passed |
+
+The first full component run passed 182 cases and failed the new case because the table's
+loading skeleton exists before its equipment rows. Awaiting the equipment text corrected the
+new test's race; the full rerun above passed. An initial dependency-install command ran from
+the repository root (no package.json); it was corrected to frontend/ before verification.
+Private command logs remain in frontend/.cache/followup/ and the Playwright report is in
+frontend/playwright-report/. These are mock/component/browser checks, not deployed acceptance.
+
+### Acceptance and authorship
+
+No contract, policy, data model or production change. Hosted CI must pass all 16 checks on the
+PR head; the PR records that separate evidence. Keep the PR unmerged as requested. Deployment,
+member checks and team Done remain pending with the human owner. Implementation, tests and
+this section are agent-prepared; no human review, hours or approval is claimed.

@@ -64,6 +64,9 @@ export function MyReservationsPage() {
             <small className="cell-sub">
               {info.row.original.assetTag} · {info.row.original.location}
             </small>
+            <small className="cell-sub">
+              Reservation {info.row.original.reservationId.slice(0, 8)}
+            </small>
             {info.row.original.purpose && (
               <small className="cell-sub">{info.row.original.purpose}</small>
             )}
