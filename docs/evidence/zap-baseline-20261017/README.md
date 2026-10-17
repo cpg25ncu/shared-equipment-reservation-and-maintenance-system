@@ -1,13 +1,17 @@
 # Second passive ZAP baseline — 2026-10-17
 
-Agent-executed under Liu Tongyao's direct authorization, against https://serms.midas.cyou at deployed `2993b78eef24c15a96a1ba77536488c5eb0bc4e8`. ZAP 2.17.0 report generated 15:00:08 SGT. Existing image ID: `sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6`.
+Target: https://serms.midas.cyou. Deployed SHA: `2993b78eef24c15a96a1ba77536488c5eb0bc4e8`. Owner-authorized production baseline; agent-executed. Report generated at 15:00:08 SGT (07:00:08 UTC).
+
+Docker 29.8.2; existing image `zaproxy/zap-stable:2.17.0`, image ID `sha256:5ccfff9a411743ab2615136a2edd7416bec9ce41572fa94e935df38c14adb2b6`. No other image was pulled, and no unrelated container was stopped or pruned. Docker Desktop was started because its local engine was not running.
+
+Command from the primary checkout (the scratch directory is git-ignored):
 
 ```powershell
 docker run --rm --pull never -v 'D:/ChatGPT/SWE5006_Group_Project/.cache/prod-acceptance/zap-20261017:/zap/wrk:rw' zaproxy/zap-stable:2.17.0 zap-baseline.py -t https://serms.midas.cyou -r zap-baseline.html -J zap-baseline.json -w zap-baseline.md -I
 ```
 
-Exit 0 with -I: **0 FAIL / 5 WARN / 62 PASS**, six URLs found; anonymous passive baseline only, no active scan or authenticated coverage. -I makes warnings non-fatal. No other image was pulled; no unrelated container was stopped or pruned. Docker Desktop was started because its local engine was stopped.
+Exit 0 with `-I`; **0 FAIL / 5 WARN / 62 PASS**, six URLs found. `-I` makes warnings non-fatal; it does not mean that there are no warnings. No active scan or authenticated session was used. Standard spider discovery of this SPA does not cover the signed-in role/API surface.
 
-Compared with [the previous baseline](../zap-baseline-20261016/zap-baseline.json), alert references 10063-1 (Permissions-Policy), 90004-3 (COOP), 90004-1 (CORP), and 10036-2 (server version) are absent. COEP remains under 90004. Other remaining families are CSP style-src unsafe-inline, cache directives/storage behavior and the informational modern-web-application alert. The six current alert references include two informational variants of 10049.
+The [development log comparison](../../devlog/issue-10-server-release.md#second-passive-zap-baseline) compares the [previous baseline](../zap-baseline-20261016/zap-baseline.json) with the [current JSON](zap-baseline.json). COOP, CORP, Permissions-Policy and Server-version alert references disappeared. COEP remains under the shared 90004 rule. Five warning rule families correspond to six individual alert references because 10049 has two informational variants.
 
-Reports: [HTML](zap-baseline.html), [JSON](zap-baseline.json), [Markdown](zap-baseline.md).
+Reports: [HTML](zap-baseline.html), [JSON](zap-baseline.json), [Markdown](zap-baseline.md). These are reviewed anonymous reports; browser credentials, cookies and traces were not exported.

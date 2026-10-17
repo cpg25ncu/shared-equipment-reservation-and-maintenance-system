@@ -98,49 +98,68 @@ Server work and this entry: Shi Wenqi. Commands were prepared and run with an AI
 
 ## 2026-10-17 Deployed acceptance and second passive ZAP baseline
 
-### Interim results — real-time overdue check still pending
+### Scope, authorization and environment
 
-Owner: Liu Tongyao (@cpg25ncu). Agent-prepared and executed under his direct authorization on his production system, after the remaining #10 work moved to him on 2026-10-17. Shi Wenqi's existing server and #17/#20 evidence above retains its authorship. Refs #10; no Issue checkbox or status was changed.
+Owner: Liu Tongyao (@cpg25ncu), who took over the remaining #10 work on 2026-10-17 and directly authorized this production acceptance run on his system. Execution and this entry were prepared by a Codex agent under his supervision; Shi Wenqi's earlier server work and signed-in #17/#20 check retain their authorship. Refs #10. No checklist item or Issue was closed by the agent.
 
-- Worktree: `C:/Users/14824/.codex/worktrees/serms-deployed-acceptance/SWE5006_Group_Project`, branch `docs/liu-tongyao-deployed-acceptance`, sole writer this Codex session. Baseline/deployed SHA `2993b78eef24c15a96a1ba77536488c5eb0bc4e8`, confirmed by the [Deploy attempt 2 Released log](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/39010686818/attempts/2). The agent stopped until the owner completed this release, then checked main again before sign-in. The agent did not change production configuration or execute server commands.
-- Windows, Node 24.20.0, existing frontend Playwright 1.63.0, Chromium 153.0.8010.12, Docker 29.8.2. Rules/skills read: AGENTS, CONTRIBUTING, serms-worktree/verify/pr, PR template, server-release, this devlog, demo-script, UC01-UC04/notification-design, relevant equipment/reservation/auth/approval/admin/loan contracts, ownership, agent-workflow, testing, technology-stack and latest #10 comments.
-- Scope: this devlog/evidence only; real production UI with sequential role contexts. No interception, mocked APIs/clocks, SQL, SSH, demo-data SQL, load test, active scan, account deactivation or change to other users' records. Passwords/admin credentials were never logged or exported; local scripts and generated initial passwords remain in ignored .cache/prod-acceptance.
+- Worktree: `C:/Users/14824/.codex/worktrees/serms-deployed-acceptance/SWE5006_Group_Project`; branch `docs/liu-tongyao-deployed-acceptance`; sole writer: this Codex session. Baseline/fetched main and deployed SHA: `2993b78eef24c15a96a1ba77536488c5eb0bc4e8`. The primary checkout stayed detached at `74103d5c7b4f32dfb02d7514666d845a2b878db8`; its unrelated untracked document was preserved.
+- [Deploy attempt 2](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/39010686818/attempts/2) logged `Released 2993b78eef24c15a96a1ba77536488c5eb0bc4e8` at 14:53:27 SGT. Before that release, the agent stopped because the latest released SHA was `cef0e10cd901d6c4e52d2858e5b62fc2821b7a32` while main was newer. No production test or mutation ran before the owner completed deployment. The agent did not enable a release gate or run a server command.
+- Windows; Node 24.20.0; existing frontend Playwright 1.63.0 with Chromium 153.0.8010.12; Docker 29.8.2; ZAP 2.17.0. Business-flow acceptance ran from 15:02:32 SGT until 17/10/2026, 19:14:19 SGT against public HTTPS production. Read-only evidence review and final logout continued until 17/10/2026, 21:23:59 SGT.
+- Actual UI/session/CSRF operations, one browser context at a time; no interception, fake clock, demo-data SQL, SQL, SSH, server mutation commands, load tests or active scans. Only the specified test accounts and ACC-1018 equipment/category/bookings/loans/case were created. Administrator credentials stayed in the owner terminal and its child process environment; initial test passwords stay only in ignored `.cache/prod-acceptance/accounts.json` and process memory.
+- Rules actually read: AGENTS, CONTRIBUTING, the PR template; serms-worktree/verify/pr skills; server-release and this devlog; demo-script; UC01-UC04 and notification-design; the contract index and equipment/reservation, auth/approval, admin and checkout/return contracts; ownership, agent-workflow, testing and relevant technology-stack requirements; #10 comments through the 14:05 SGT reassignment. Allowed tracked scope: this dated entry and the two evidence folders only; no policy, contract, application or workflow change.
 
-| Flow | Result at this interim commit |
-| --- | --- |
-| UC01 | Passed: search, immediate CONFIRMED, My reservations, cancellation and borrower2 overlap 409 |
-| UC02 | Passed: pending requests, approve, reject with saved reason, exact rejected slot reused by borrower2 and then cancelled |
-| UC03 | Partial: queue searches by ID prefix/borrower/asset tag; early checkout disabled; actual checkout after start and DAMAGED return passed. GOOD return not run yet |
-| UC04 | Passed: linked PHYSICAL_DAMAGE/HIGH case, assignment, technician start/diagnosis/repair/resolve, AVAILABLE and new booking (then cancelled); borrower start denied 403 |
-| UC05 | Partial: approval decision inbox and mark-as-read 204 passed; real overdue and final loan-event checks not run yet |
-| Admin | Partial: five ACTIVE single-role accounts, Reports 200 and health UP passed; final audit/retirement not run yet |
+### Deployed flow results
 
-The camera's 30-minute reservation runs 15:07-15:37 SGT. Checkout is scheduled for 15:27 so due time is about ten minutes later. The overdue check must wait until at least 15:39, covering two 60000 ms scanner intervals after due time. The first scheduled server backup on 2026-10-18 02:15 SGT, physical equipment inspection, active/authenticated scans and member acceptance are not verified. No team Done is claimed. The documentation PR remains draft while these checks are pending.
+| Flow | Result | Observed behavior |
+| --- | --- | --- |
+| UC01 | Passed | Borrower searched ACC-1018, reserved the no-approval camera with 201/CONFIRMED, saw its ID prefix in My reservations, and cancelled a separate reservation. Borrower2's overlapping slot returned 409 reservation-conflict with the UI explanation. |
+| UC02 | Passed | Approval-required requests began PENDING_APPROVAL. The approver confirmed one and rejected another with the saved reason. Borrower2 then successfully reserved the exact rejected interval and cancelled the replacement, proving slot release. |
+| UC03 | Passed | Storekeeper found the confirmed reservation by ID prefix, case-insensitive borrower name and asset tag. Early checkout was disabled. Both actual checkouts occurred after start; the scope returned DAMAGED with a note and the camera returned GOOD after the overdue check. Both final loans are RETURNED. |
+| UC04 | Passed | Damaged return created OPEN/PHYSICAL_DAMAGE/HIGH with the matching loan. Storekeeper assigned the single-role technician, who started, recorded diagnosis and repair, and resolved the case. Equipment became AVAILABLE; a new reservation succeeded and was cancelled. Borrower saw no technician actions and a real browser POST start probe with valid CSRF returned 403; the case remained ASSIGNED until the technician started it. |
+| UC05 | Passed | Borrower inbox showed approval confirmation, rejection reason and loan checkout/return notices; mark-as-read returned 204 and rendered Reviewed. After the real due time plus more than two scanner intervals, storekeeper Overdue contained the camera loan and borrower inbox contained an OVERDUE reminder. The subsequent GOOD return removed it from Overdue. |
+| Administrator | Passed | Users and roles listed all five new ACTIVE single-role accounts. Audit filters showed this run's reservation, decision, loan, maintenance and equipment rows, matching captured entity IDs. Reports loaded with HTTP 200. |
+| HTTPS/session smoke | Passed | Health 200/UP; direct React routes and real sign-in worked. JSESSIONID was Secure/HttpOnly/SameSite=Lax; XSRF-TOKEN was Secure/SameSite=Lax. Sequential role changes included observed 204 logout responses. Cookie values were never retained. |
 
-Accounts created (emails only); all remain active and the two earlier acceptance accounts were left unchanged:
+### Real-time overdue evidence and retained fixtures
 
-- acc-1018-borrower@serms.test
-- acc-1018-borrower2@serms.test
+The minimum reservation is 30 minutes. The camera was reserved for **15:07-15:37 SGT**, and checkout was deliberately delayed until 17/10/2026, 15:27:13 SGT (9.77 minutes before due). The storekeeper projection was checked at 17/10/2026, 19:13:56 SGT, with 13015 overdue seconds, after at least two 60000 ms scanner intervals. The OVERDUE notice was delivered at 17/10/2026, 15:37:57 SGT. GOOD return at 17/10/2026, 19:14:06 SGT recorded late=true and the loan disappeared from the overdue projection. No clock, server configuration or database value was changed to accelerate this check.
+
+Both `ACC-1018-CAM` and `ACC-1018-OSC` were retired only after their loans were returned; the maintenance case was RESOLVED. A final catalogue search found no ACC-1018 equipment. Temporary future reservations were cancelled or rejected; fulfilled reservation history retains its original slot by contract. The category and append-only audit/business history remain. No account was deactivated, including the two pre-existing acceptance accounts.
+
+Accounts created (emails only; each has the one role implied by its name):
+
 - acc-1018-approver@serms.test
+- acc-1018-borrower2@serms.test
+- acc-1018-borrower@serms.test
 - acc-1018-storekeeper@serms.test
 - acc-1018-technician@serms.test
 
+### Problems and remaining acceptance
+
+No application defect was reproduced in the requested deployed scenarios. Browser harness synchronization/selectors were adjusted to the existing rendered UI, and affected steps were rerun; these harness adjustments did not change production code. Notifications describe approval as confirmation, and a checkout notice gives the loan due time; assertions used those observed messages.
+
+Not run: server-side scheduled-backup confirmation for 2026-10-18 02:15 SGT; physical equipment inspection/repair; load/concurrency or full security/session-revocation regressions; active or authenticated ZAP scan; independent team-member check. These results do not establish those items. No server access, production policy/configuration change, PR merge, Issue closure or team Done is claimed. The owner retains merge and closure decisions; local evidence, hosted CI and actual member acceptance remain separate.
+
 ### Second passive ZAP baseline
 
-Existing ZAP 2.17.0 image, six discovered URLs, anonymous passive baseline, exit 0 with -I.
+The requested existing `zaproxy/zap-stable:2.17.0` image ran `zap-baseline.py` against public HTTPS, with HTML/JSON/Markdown outputs and `-I`; no active scan, extra image pull, unrelated-container stop or prune. The run found six URLs and exited 0 with **0 FAIL / 5 WARN / 62 PASS**, compared with **0 FAIL / 7 WARN / 60 PASS** previously. Warnings are counted by rule family; the current JSON contains six alert references (1 medium, 1 low, 4 informational), versus nine (1 medium, 5 low, 3 informational) previously.
 
-| Check | Previous baseline | Second baseline |
+| Rule / alert reference | Previous baseline | Second baseline |
 | --- | --- | --- |
-| FAIL / WARN / PASS rule families | 0 / 7 / 60 | 0 / 5 / 62 |
-| Permissions-Policy 10063-1 | Missing | Absent; rule PASS |
-| COOP 90004-3 / CORP 90004-1 | Missing | Both absent |
-| Server version 10036-2 | nginx/1.18.0 (Ubuntu) | Absent; rule PASS; health returns generic nginx |
-| COEP 90004-2 | Missing | Remains |
-| CSP unsafe-inline 10055-6 | Medium | Remains |
-| Cache/storage and modern SPA information | Present | Present; 10049 now has cacheable and non-cacheable variants |
+| Permissions-Policy 10063-1 | Missing, 4 instances | Absent; rule 10063 PASS |
+| COOP 90004-3 | Missing/invalid, 3 instances | Absent |
+| CORP 90004-1 | Missing/invalid, 4 instances | Absent |
+| Server version 10036-2 | nginx/1.18.0 (Ubuntu), 5 instances | Absent; rule 10036 PASS; signed-in health header is generic nginx |
+| COEP 90004-2 | Missing/invalid, 3 instances | Remains, 3 instances; keeps rule family 90004 at WARN |
+| CSP style-src unsafe-inline 10055-6 | Medium, 3 instances | Remains, 3 instances |
+| Cache directives 10015 | Informational, 2 instances | Remains, 2 instances |
+| Storage/cache behavior 10049 | Cacheable, 5 instances | Cacheable 2; storable but non-cacheable 3 (two informational references under one rule) |
+| Modern web application 10109 | Informational, 3 instances | Remains, 3 instances |
 
-Nine individual alert references previously (1 medium, 5 low, 3 informational), six now (1 medium, 1 low, 4 informational). Rule 90004 remains WARN because COEP is still missing. The removed alerts match #89 and Shi Wenqi's server_tokens change. No hardening change was made in this task. -I permits warning exit status; this is not a clean-security or authenticated-coverage claim.
+The removed alert references match the intended #89 response headers and Shi Wenqi's host server_tokens change. Remaining warnings are recorded for follow-up; no hardening change was made in this task. This anonymous baseline's SPA discovery does not cover authenticated role pages/APIs; the signed-in browser acceptance is separate evidence. `-I` permits warning exit status and is not a clean-security claim.
 
-[Browser evidence](../evidence/deployed-acceptance-20261017/README.md); [second ZAP command/reports](../evidence/zap-baseline-20261017/README.md); [previous ZAP JSON](../evidence/zap-baseline-20261016/zap-baseline.json). Hosted CI, member checks, deployed acceptance, merge and Done remain separate.
+Evidence: [deployed screenshots and observed identifiers](../evidence/deployed-acceptance-20261017/README.md); [second ZAP command and reports](../evidence/zap-baseline-20261017/README.md); [previous ZAP JSON](../evidence/zap-baseline-20261016/zap-baseline.json). Hosted checks and documentation PR HEAD are recorded in the PR after commit, separately from the deployed application SHA.
 
-Authorship: Codex agent under Liu Tongyao's instruction/supervision. No member signature, hours or approval is inferred. Final overdue, cleanup and audit results will replace this interim section.
+### Authorship
+
+Acceptance execution and this entry: Codex agent under Liu Tongyao's direct instruction and supervision. No teammate signature, hours, review approval or member acceptance is inferred.
