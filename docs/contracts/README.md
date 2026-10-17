@@ -1,6 +1,6 @@
 # SERMS Interface Contract Index
 
-Repository contracts remain authoritative; changes require a PR and affected-owner confirmation, per [README](../../README.md#collaboration-and-releases). This index does not change contract content.
+Repository contracts remain authoritative; changes require a PR and affected-owner confirmation, per [CONTRIBUTING](../../.github/CONTRIBUTING.md#prs-and-team-acceptance). This index does not change contract content.
 
 | Contract / integration record | Modules | Reading purpose |
 | --- | --- | --- |
