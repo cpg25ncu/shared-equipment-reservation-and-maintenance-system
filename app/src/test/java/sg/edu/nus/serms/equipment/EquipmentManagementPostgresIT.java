@@ -48,6 +48,7 @@ class EquipmentManagementPostgresIT {
   @Autowired JdbcTemplate jdbc;
   @Autowired EquipmentManagementService management;
   @Autowired MockMvc mvc;
+  @Autowired org.springframework.transaction.PlatformTransactionManager transactions;
   SermsFixtures fixtures;
   UUID custodian;
   SermsUserPrincipal operator;
@@ -98,6 +99,72 @@ class EquipmentManagementPostgresIT {
         retired.version()))).isInstanceOf(EquipmentManagementException.class);
     assertThat(jdbc.queryForObject("SELECT count(*) FROM serms.audit_log WHERE entity_id=?", Long.class,
         created.equipmentId())).isEqualTo(3);
+  }
+
+  private String updateSummary(UUID id) {
+    return jdbc.queryForObject("SELECT change_summary FROM serms.audit_log WHERE entity_id=?"
+        + " AND action='EQUIPMENT_UPDATE' ORDER BY occurred_at DESC LIMIT 1", String.class, id);
+  }
+
+  @Test void updateAuditListsAllChangedMasterDataFieldsAndNormalizesValues() {
+    String category = "Managed-" + UUID.randomUUID(), nextCategory = category + "-next";
+    management.createCategory(category);
+    management.createCategory(nextCategory);
+    String tag = "TAG-" + UUID.randomUUID(), nextTag = tag + "-next", serial = "SER-" + UUID.randomUUID();
+    var created = management.register(input(tag, null, category, null));
+    var updated = management.update(created.equipmentId(), new EquipmentInput(" " + nextTag + " ",
+        " " + serial + " ", " Field camera ", " ", nextCategory, " Media Lab ", "FAIR", true, null,
+        created.version()));
+    assertThat(updateSummary(created.equipmentId())).isEqualTo(
+        "assetTag=" + tag + " -> " + nextTag
+        + "; serialNumber=null -> " + serial
+        + "; name=Managed camera -> Field camera"
+        + "; description=Studio camera -> null"
+        + "; category=" + category + " -> " + nextCategory
+        + "; location=Store room -> Media Lab"
+        + "; condition=GOOD -> FAIR"
+        + "; requiresApproval=false -> true"
+        + "; maxBorrowDuration=PT72H -> null");
+    var restored = management.update(created.equipmentId(), new EquipmentInput(nextTag, " ",
+        updated.name(), " New description ", nextCategory, updated.location(), "FAIR", true, "P1D",
+        updated.version()));
+    assertThat(updateSummary(created.equipmentId())).isEqualTo(
+        "serialNumber=" + serial + " -> null; description=null -> New description; maxBorrowDuration=null -> PT24H");
+    management.update(created.equipmentId(), new EquipmentInput(" " + nextTag + " ", null,
+        restored.name(), restored.description(), nextCategory, restored.location(), "FAIR", true,
+        "PT24H", restored.version()));
+    assertThat(updateSummary(created.equipmentId())).isEmpty();
+  }
+
+  @Test void locationOnlyUpdateAuditOmitsUnchangedFieldsAndRejectedUpdateWritesNothing() {
+    String category = "Managed-" + UUID.randomUUID();
+    management.createCategory(category);
+    var created = management.register(input("TAG-" + UUID.randomUUID(), null, category, null));
+    management.update(created.equipmentId(), new EquipmentInput(created.assetTag(), null, created.name(),
+        created.description(), category, "Media Lab", "GOOD", false, "P3D", created.version()));
+    assertThat(updateSummary(created.equipmentId())).isEqualTo("location=Store room -> Media Lab");
+    assertThatThrownBy(() -> management.update(created.equipmentId(), input(created.assetTag(), null,
+        category, created.version()))).isInstanceOf(EquipmentManagementException.class);
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM serms.audit_log WHERE entity_id=?"
+        + " AND action='EQUIPMENT_UPDATE'", Long.class, created.equipmentId())).isEqualTo(1);
+    assertThat(updateSummary(created.equipmentId())).isEqualTo("location=Store room -> Media Lab");
+  }
+
+  @Test void updateAndItsDetailedAuditRollBackTogether() {
+    String category = "Managed-" + UUID.randomUUID();
+    management.createCategory(category);
+    var created = management.register(input("TAG-" + UUID.randomUUID(), null, category, null));
+    var transaction = new org.springframework.transaction.support.TransactionTemplate(transactions);
+    transaction.executeWithoutResult(status -> {
+      management.update(created.equipmentId(), new EquipmentInput(created.assetTag(), null, created.name(),
+          created.description(), category, "Media Lab", "GOOD", false, "PT72H", created.version()));
+      assertThat(updateSummary(created.equipmentId())).isEqualTo("location=Store room -> Media Lab");
+      status.setRollbackOnly();
+    });
+    assertThat(jdbc.queryForObject("SELECT location FROM serms.equipment WHERE equipment_id=?",
+        String.class, created.equipmentId())).isEqualTo("Store room");
+    assertThat(jdbc.queryForObject("SELECT count(*) FROM serms.audit_log WHERE entity_id=?"
+        + " AND action='EQUIPMENT_UPDATE'", Long.class, created.equipmentId())).isZero();
   }
 
   @Test void duplicateAssetAndSerialReturnFieldConflictsAndRollbackAudit() throws Exception {
