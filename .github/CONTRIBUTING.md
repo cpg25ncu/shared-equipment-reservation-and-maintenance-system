@@ -1,6 +1,6 @@
 # SERMS Collaboration Guide
 
-This guide supplements task flow, isolated development, and handover. Existing documents continue to define technical and business rules; this guide neither reallocates responsibilities nor changes Write collaborators' right to merge their own PRs.
+This guide defines participation, task flow, isolated development, PR and merge permissions, contract-change confirmation, and handover. Technical and business rules remain in their linked sources.
 
 ## Rule Sources
 
@@ -8,7 +8,8 @@ This guide supplements task flow, isolated development, and handover. Existing d
 | --- | --- |
 | Technology choices, layering, test benches, migration targets | [Technology stack](../docs/tech-stack.md) |
 | Interfaces, events, authorization, transaction semantics | [Interface contracts](../docs/contracts/README.md) |
-| Release and merge permissions | [README collaboration and releases](../README.md#collaboration-and-releases) |
+| PRs, merge permissions, contract-change confirmation | [PRs and team acceptance](#prs-and-team-acceptance) |
+| Release gates, deployment, recovery | [Server release runbook](../docs/server-release.md#deployment-entry-points) |
 | Sprints, board, and team Done | [Sprint plan](../docs/agile/sprint-plan.md) |
 | Ownership sources and differences | [Ownership boundaries](../docs/collaboration/ownership.md) |
 | Tool delegation and multiple sessions | [Agent workflow](../docs/collaboration/agent-workflow.md) |
@@ -71,9 +72,10 @@ Do not base cleanup solely on a clean worktree. Check ignored files, unpushed co
 ## PRs and Team Acceptance
 
 - All changes use PRs; submit a feature and its test bench together. The [PR template](pull_request_template.md) records scope, dependencies, contract impact, verification, and remaining acceptance.
-- Preserve the [README merge policy](../README.md#collaboration-and-releases): Write collaborators may merge their own PRs after green CI, without new mandatory approving reviews or a sole integrator.
+- Collaborators with Write permission may merge their own PRs without another reviewer's approval, provided all CI checks pass. No sole integrator or new mandatory approving-review gate is introduced.
+- The documented `main` protection baseline is eight required security/application checks. Local commits must go through their own PR/CI before integration; verify the actual repository settings before merging.
 - Before team Done, retain at least one member's check, deployment verification, and other original DoD evidence; see the [Sprint plan](../docs/agile/sprint-plan.md#2-definition-of-done). Record these separately from GitHub merge eligibility.
-- Contract changes still require affected-owner confirmation; self-merging does not waive this.
+- Cross-module interface contracts live in [`docs/contracts/`](../docs/contracts/README.md); the repository version is authoritative. Changes require a PR and confirmation from the owners of affected modules; self-merging does not waive this.
 - Before merging, verify latest-HEAD CI, target branch, and actual combination; never lower protection or skip failing checks. Read repository settings to verify enabled gates; documenting one does not enable it.
 - Agent review is supporting evidence, not a human check or approval. Report actual merge, deployment, and acceptance status.
 

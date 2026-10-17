@@ -6,6 +6,14 @@ The user confirmed in this session that SSH access, trusted host identity and ba
 
 Update 2026-10-17 (Shi Wenqi): access has been handed over, the gated `Deploy` workflow has released `main` since 2026-10-15, and the inventory below records the observed server state. The history of the handover is in the [#10 development log](devlog/issue-10-server-release.md).
 
+## Deployment Entry Points
+
+Production packaging uses the root [Dockerfile](../Dockerfile) and [compose.yaml](../compose.yaml): `web` (nginx), `app` (Spring Boot) and `db` (PostgreSQL 18). Only the web container is published, on the host's `127.0.0.1:8789`; host nginx provides the public HTTPS reverse proxy.
+
+The [Deploy workflow](../.github/workflows/deploy.yml) runs on non-documentation pushes to `main` and on manual dispatch. Documentation-only pushes matching its `paths-ignore` filters do not start it. The release gate requires `SERMS_PRODUCTION_READY=true` and successful checks on the exact current `main` SHA; the `production` environment then requires reviewer approval before SSH execution. Merge permissions remain defined in [CONTRIBUTING](../.github/CONTRIBUTING.md#prs-and-team-acceptance).
+
+The server checkout is `/opt/agfp`. Runtime secrets stay in its server-only `.env` (mode 600), using [.env.example](../.env.example) as the template; never commit them. Deployment access credentials use the workflow's GitHub Secrets. Follow the inventory, bootstrap, gates and recovery procedures below, with the [backup runbook](runbook-backup.md) for scheduled backups and restore rehearsal.
+
 ## Private Handover Inventory
 
 Record observations and timestamps privately. Publish only non-secret evidence; never copy passwords, keys, tokens, cookies, raw environment files or expanded Compose configuration into Issues/logs.
@@ -49,7 +57,7 @@ Leaving the settings in place is harmless for later starts (an administrator exi
 1. Keep repository variable `SERMS_PRODUCTION_READY` absent/false until access, inventory, isolated restore rehearsal, local acceptance and release coordination are complete. This is a release prerequisite; branch protection and collaborator permissions are unchanged.
 2. Configure existing deployment Secrets privately and add `DEPLOY_HOST_FINGERPRINT` from trusted handover, never from an unverified first network connection. The [SSH action documents fingerprint verification](https://github.com/appleboy/ssh-action/blob/master/README.md).
 3. Merge reviewed code through the protected main process. The workflow rejects non-main execution before checkout/secrets. It allows only push/manual events and a full SHA equal to **current** main.
-4. `verify-release.mjs` waits for all eight existing required checks, collaboration-docs, release-config and release-images on that exact SHA, produced by GitHub Actions. Missing/running/skipped/cancelled/failed checks block SSH; newer reruns supersede prior successes. No arbitrary user-entered branch/SHA is deployed.
+4. `verify-release.mjs` waits for all eight existing required checks, collaboration-docs, maintenance-postgres, release-config and release-images on that exact SHA, produced by GitHub Actions. Missing/running/skipped/cancelled/failed checks block SSH; newer reruns supersede prior successes. No arbitrary user-entered branch/SHA is deployed.
 5. Hosted deployment concurrency is serialized. The server script also takes a nonblocking file lock, rejects tracked server changes, confirms main again, and preserves `.env`, data, previous image tags and history.
 6. Before changing application code, dump the confirmed running DB into the existing backup directory outside the checkout, require a nonempty dump and successful `pg_restore --list`, and record previous SHA/target SHA/backup path privately. This validates archive structure, **not** a restore rehearsal.
 7. Build before replacing containers. Compose waits for actual backend/database readiness; the web health check reaches `/api/v1/health`, replacing the synthetic static health response.
