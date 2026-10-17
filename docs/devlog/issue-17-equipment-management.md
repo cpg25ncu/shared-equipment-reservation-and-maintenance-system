@@ -136,3 +136,89 @@ PR head; those exact-head results are recorded on the PR. Member review, main in
 deployment and team acceptance remain separate. The owner requested review from @cpg25ncu and
 @Hanming1008; GitHub does not permit an author to be their own requested reviewer. Keep the PR
 unmerged and do not change Issue state. No human approval, hours or team Done is claimed.
+
+## 2026-10-17 Changed-field equipment update audit follow-up (Refs #17)
+
+### Scope and ownership
+
+Human owner: Liu Tongyao (@cpg25ncu, repository owner). Agent-prepared by Codex under the
+owner's explicit production-observation follow-up task; this session is the sole writer.
+Branch: `fix/liu-tongyao-equipment-update-audit`.
+Worktree: `C:/Users/14824/.codex/worktrees/serms-equipment-audit-20261017/SWE5006_Group_Project`.
+Fetched main, dependency and rule baseline: `eaafb3686e7e2178d4e40e9c8a2e91824e6ed4d4`
+(2026-10-17), including the #91 repository extraction. Initial HEAD was that baseline;
+delivered HEAD and hosted results are recorded on the PR. The reservation-reference PR is independent.
+
+Authorized scope: equipment service/repository code from #91, EquipmentManagementPostgresIT,
+this dated log section, and contract section 2.4 only if it describes the summary.
+Only the service, integration test and this log changed. API/schema, database columns/migrations,
+frontend, dependencies, shared scripts/workflows, other worktrees (including
+D:/ChatGPT/serms-worktrees), merge and production operations are excluded.
+Rules actually read: AGENTS.md, .github/CONTRIBUTING.md, docs/tech-stack.md, docs/testing.md,
+docs/contracts/README.md, docs/contracts/equipment-and-reservation.md, docs/collaboration/ownership.md,
+docs/collaboration/agent-workflow.md, relevant docs/collaboration/decisions.md entries,
+.agents/skills/{serms-task,serms-worktree,serms-verify,serms-pr}/SKILL.md,
+.github/pull_request_template.md and docs/devlog/README.md. The production observation was read
+in docs/devlog/issue-10-server-release.md. User authorization covers implementation, checks,
+commits, push and PR creation; explicitly no merge.
+
+### What was built and design
+
+EQUIPMENT_UPDATE compares the locked before record to the persisted after record and lists
+only changed assetTag, serialNumber, name, description, category, location, condition,
+requiresApproval and maxBorrowDuration as `field=old -> new`, separated by semicolons.
+Null appears as `null`; durations use the repository's canonical ISO-8601 representation.
+Comparing saved values avoids false changes from trimming, blank optional text or equivalent
+duration strings. A no-op still writes its existing success audit row, with an empty summary.
+The explicit field list contains equipment metadata only; request objects, authentication,
+passwords, tokens and configuration are never included.
+
+The existing service transaction, equipment lock, version check, audit columns and repository
+INSERT remain in use. The saved record is read before audit insertion and returned as before;
+any subsequent failure still rolls back both writes. Section 2.4 describes transactional audit
+writes but no summary format, so it needs no edit and no contract change is proposed.
+No new design pattern or dependency was introduced.
+
+EquipmentManagementPostgresIT adds three real-database cases: all nine changed fields and both
+optional-value directions; normalized/no-op and location-only omission; stale-update no audit;
+and an enclosing transaction rollback that removes both the location change and its audit row.
+
+### Verification and problems
+
+Windows; JDK 25.0.4 targeting Java 17, invoked through JAVA_HOME/bin/java.exe (JAVA_HOME/bin
+was prepended to PATH, avoiding Oracle javapath); Maven wrapper; native PostgreSQL 18.6 at
+D:/ProfessionalApplications/PostgreSQL18/bin. Fresh disposable cluster on free port 55521.
+Each of SERMS_APP_TEST_*, SERMS_UC03_TEST_*, SERMS_UC05_TEST_* and SERMS_EQUIPMENT_TEST_*
+had JDBC_URL, DB_USER and DB_PASSWORD set for separate fresh serms_test_app, serms_test_uc03,
+serms_test_uc05 and serms_test_equipment databases. Credential values are not recorded.
+
+Commands ran on the baseline plus the delivered service/test content before this documentation
+append and commit; no later Java changes. Windows command from app/:
+`./mvnw.cmd -B -Puc03-postgres-it clean verify` (the wrapper equivalent of `./mvnw`).
+
+| Check | Result and evidence |
+| --- | --- |
+| Complete clean verify | BUILD SUCCESS; 686 ordinary tests, 0 failures/errors/skips |
+| UC03/UC05/equipment integration profile | 41 tests, 0 failures/errors/skips; equipment 10/10 |
+| Existing service/domain coverage gate | Passed; LINE covered 1,642 / total 1,687 = 97.33%, minimum 70% |
+| git diff --check | Passed |
+| Disposable PostgreSQL shutdown | Passed; pg_ctl fast/wait reported server stopped |
+
+Reports: app/target/surefire-reports/, app/target/failsafe-reports/ and
+app/target/site/jacoco-business/. Private harness logs and stopped cluster are retained under
+.cache/equipment-followup-rerun/. No configuration, threshold or test was skipped or removed.
+
+The first private Windows harness used Start-Process -Wait for pg_ctl; it waited on the server's
+descendants even after PostgreSQL reported ready. That attempt was interrupted before Maven,
+which stopped its process tree. The corrected harness waits for pg_ctl's own process only,
+then creates four fresh databases in a fresh cluster. The full run above passed and its finally
+block stopped the cluster. The first stopped initialization remains in .cache/equipment-followup/.
+No repository harness or production process was changed.
+
+### Acceptance and authorship
+
+Hosted CI must pass all 16 checks on the PR head; the PR records that separate evidence.
+Keep the PR unmerged as requested. Deployment, member checks and team Done remain pending
+with the human owner. Frontend/local browser checks were not rerun for this backend-only PR;
+hosted checks retain their normal full scope. Implementation, tests and this section are
+agent-prepared; no human review, hours or approval is claimed.

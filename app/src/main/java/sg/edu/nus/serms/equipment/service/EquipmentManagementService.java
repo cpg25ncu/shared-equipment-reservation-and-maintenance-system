@@ -2,7 +2,9 @@ package sg.edu.nus.serms.equipment.service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import sg.edu.nus.serms.equipment.repository.EquipmentManagementRepository;
@@ -65,10 +67,9 @@ public class EquipmentManagementService {
           input.condition(), input.requiresApproval(), seconds(input.maxBorrowDuration()), input.expectedVersion());
       if (count != 1) throw new EquipmentManagementException(409, "expectedVersion", "Equipment changed. Refresh before saving.");
     } catch (DataIntegrityViolationException e) { throw uniqueConflict(e); }
-    audit(actor, "EQUIPMENT_UPDATE", id,
-        "assetTag=" + before.assetTag() + " -> " + input.assetTag().strip()
-            + "; category=" + before.category() + " -> " + input.category().strip());
-    return get(id);
+    var updated = get(id);
+    audit(actor, "EQUIPMENT_UPDATE", id, updateSummary(before, updated));
+    return updated;
   }
 
   @PreAuthorize("hasAnyRole('CUSTODIAN','ADMIN')")
@@ -117,6 +118,25 @@ public class EquipmentManagementService {
     }
     audit(actor, "EQUIPMENT_CATEGORY_RENAME", categoryId(oldName), "name=" + oldName + " -> " + newName);
     return categories();
+  }
+
+  // Compare persisted, normalized values and allow only equipment master-data fields.
+  private static String updateSummary(ManagedEquipment before, ManagedEquipment after) {
+    var changes = new ArrayList<String>();
+    changed(changes, "assetTag", before.assetTag(), after.assetTag());
+    changed(changes, "serialNumber", before.serialNumber(), after.serialNumber());
+    changed(changes, "name", before.name(), after.name());
+    changed(changes, "description", before.description(), after.description());
+    changed(changes, "category", before.category(), after.category());
+    changed(changes, "location", before.location(), after.location());
+    changed(changes, "condition", before.condition(), after.condition());
+    changed(changes, "requiresApproval", before.requiresApproval(), after.requiresApproval());
+    changed(changes, "maxBorrowDuration", before.maxBorrowDuration(), after.maxBorrowDuration());
+    return String.join("; ", changes);
+  }
+
+  private static void changed(List<String> changes, String field, Object before, Object after) {
+    if (!Objects.equals(before, after)) changes.add(field + "=" + before + " -> " + after);
   }
 
   private ManagedEquipment locked(UUID id) {
