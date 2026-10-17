@@ -4,20 +4,23 @@ Owner/executor: Liu Tongyao. Shi Wenqi retains original contribution provenance.
 
 The user confirmed in this session that SSH access, trusted host identity and backup/recovery information have **not** been handed over. This PR prepares deployment; it does not authorize or claim a production run. Complete local Issues #5–#9 and member acceptance before enabling release. The old static deployment must be inventoried before switching it to the three-service runtime.
 
+Update 2026-10-17 (Shi Wenqi): access has been handed over, the gated `Deploy` workflow has released `main` since 2026-10-15, and the inventory below records the observed server state. The history of the handover is in the [#10 development log](devlog/issue-10-server-release.md).
+
 ## Private Handover Inventory
 
 Record observations and timestamps privately. Publish only non-secret evidence; never copy passwords, keys, tokens, cookies, raw environment files or expanded Compose configuration into Issues/logs.
 
 | Item | Required observation | Current state |
 | --- | --- | --- |
-| Access | User-owned SSH configuration; verified host-key SHA256 fingerprint via a trusted channel | Not handed over |
-| Git checkout | Actual path, remote, revision, branch, tracked modifications and ignored files | `/opt/agfp` is a repository convention, unverified |
-| Runtime | Docker/Compose versions, actual Compose project, containers, image digests and listening ports | Unverified; candidate requires project `agfp` |
-| Routing | nginx site, domain, certificate renewal, upstream address and HTTPS behavior | `serms.midas.cyou` and port 8789 are documented conventions, unverified |
-| Data | Database major version/name/user, exact named volume, PGDATA/mount, schema/Flyway history, size | Unverified; existing data must never be replaced with an empty volume |
-| Environment | Required variable **names**, presence and file owner/mode; retain actual values privately | Candidate `.env.example`; require mode 600 |
-| Recovery | Backup path/schedule/retention, last successful dump, restore rehearsal on a separate database, previous application image/revision | Unverified; retain daily backups for 7 days per stack |
-| Accounts | Existing real accounts and roles, agreed migration/provisioning process | Unverified; local demo SQL is prohibited in production |
+| Access | User-owned SSH configuration; verified host-key SHA256 fingerprint via a trusted channel | Handed over to Shi Wenqi (key-based SSH). The `DEPLOY_HOST_FINGERPRINT` Secret was corrected to the key the Deploy client is offered on 2026-10-15; see the [#10 log](devlog/issue-10-server-release.md) |
+| Git checkout | Actual path, remote, revision, branch, tracked modifications and ignored files | `/opt/agfp`, detached at the released `main` SHA (`cef0e10` on 2026-10-17); no tracked modifications; only the untracked `.deploy.lock` of the release script |
+| Runtime | Docker/Compose versions, actual Compose project, containers, image digests and listening ports | Docker Compose v5.3.0, project `agfp`: `web`, `app` (images `serms-web:<sha>` / `serms-app:<sha>` built on the server) and `db` (`postgres:18-alpine`), all healthy; only `web` is published, on `127.0.0.1:8789`. The host also runs one unrelated project |
+| Routing | nginx site, domain, certificate renewal, upstream address and HTTPS behavior | Host nginx 1.18.0 terminates TLS for `serms.midas.cyou` and proxies to `127.0.0.1:8789`; `http://` redirects to `https://`. Let's Encrypt certificate renewed by the packaged certbot timer, valid until 2026-12-08. `server_tokens off` since 2026-10-17 |
+| Data | Database major version/name/user, exact named volume, PGDATA/mount, schema/Flyway history, size | PostgreSQL 18.6 in the external volume `serms-pg18`; Flyway at V007. On 2026-10-17 the database held only the bootstrap administrator and no business records |
+| Environment | Required variable **names**, presence and file owner/mode; retain actual values privately | `.env` is mode 600, owner root, with `HOST_PORT`, `SERMS_DB_NAME`, `SERMS_DB_USER`, `SERMS_DB_PASSWORD`, `SERMS_DB_VOLUME`, `SERMS_BACKUP_DIR`; the three first-administrator settings have been removed |
+| Recovery | Backup path/schedule/retention, last successful dump, restore rehearsal on a separate database, previous application image/revision | Backup directory outside the checkout. Daily `scripts/backup.sh` at 02:15 SGT (root cron, server clock UTC) since 2026-10-17, seven-day retention by the script; every release adds a pre-release dump with a `.release` record. Isolated restore rehearsal passed on 2026-10-17. Images of the previous releases stay on the host for rollback |
+| Old static site | How the pre-SERMS deployment can be restored | Its image is kept as `agfp:pre-serms-20261015`; it is not running |
+| Accounts | Existing real accounts and roles, agreed migration/provisioning process | The 2026-10-15 bootstrap administrator is `DISABLED` after its password was lost; its replacement was created by the same bootstrap (#41) on 2026-10-17 (see the [#10 log](devlog/issue-10-server-release.md)). Further accounts are created in the administration console. Local demo SQL is prohibited in production |
 
 Useful read-only commands after access is handed over: `git status --short --branch`, `git remote -v`, `git rev-parse HEAD`, `docker compose version`, `docker ps`, `docker volume ls`, `ss -lnt`, and selected nginx certificate/routing checks. Do not publish `docker inspect` environment arrays or `docker compose config` output containing secrets.
 
