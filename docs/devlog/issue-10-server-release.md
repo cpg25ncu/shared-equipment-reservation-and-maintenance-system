@@ -95,3 +95,52 @@ Observations, not failures: My reservations does not show the reservation ID (th
 ### Authorship
 
 Server work and this entry: Shi Wenqi. Commands were prepared and run with an AI coding agent under the member's instruction; results above are the observed outputs. No hours are recorded.
+
+## 2026-10-17 Deployed acceptance and second passive ZAP baseline
+
+### Interim results — real-time overdue check still pending
+
+Owner: Liu Tongyao (@cpg25ncu). Agent-prepared and executed under his direct authorization on his production system, after the remaining #10 work moved to him on 2026-10-17. Shi Wenqi's existing server and #17/#20 evidence above retains its authorship. Refs #10; no Issue checkbox or status was changed.
+
+- Worktree: `C:/Users/14824/.codex/worktrees/serms-deployed-acceptance/SWE5006_Group_Project`, branch `docs/liu-tongyao-deployed-acceptance`, sole writer this Codex session. Baseline/deployed SHA `2993b78eef24c15a96a1ba77536488c5eb0bc4e8`, confirmed by the [Deploy attempt 2 Released log](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/actions/runs/39010686818/attempts/2). The agent stopped until the owner completed this release, then checked main again before sign-in. The agent did not change production configuration or execute server commands.
+- Windows, Node 24.20.0, existing frontend Playwright 1.63.0, Chromium 153.0.8010.12, Docker 29.8.2. Rules/skills read: AGENTS, CONTRIBUTING, serms-worktree/verify/pr, PR template, server-release, this devlog, demo-script, UC01-UC04/notification-design, relevant equipment/reservation/auth/approval/admin/loan contracts, ownership, agent-workflow, testing, technology-stack and latest #10 comments.
+- Scope: this devlog/evidence only; real production UI with sequential role contexts. No interception, mocked APIs/clocks, SQL, SSH, demo-data SQL, load test, active scan, account deactivation or change to other users' records. Passwords/admin credentials were never logged or exported; local scripts and generated initial passwords remain in ignored .cache/prod-acceptance.
+
+| Flow | Result at this interim commit |
+| --- | --- |
+| UC01 | Passed: search, immediate CONFIRMED, My reservations, cancellation and borrower2 overlap 409 |
+| UC02 | Passed: pending requests, approve, reject with saved reason, exact rejected slot reused by borrower2 and then cancelled |
+| UC03 | Partial: queue searches by ID prefix/borrower/asset tag; early checkout disabled; actual checkout after start and DAMAGED return passed. GOOD return not run yet |
+| UC04 | Passed: linked PHYSICAL_DAMAGE/HIGH case, assignment, technician start/diagnosis/repair/resolve, AVAILABLE and new booking (then cancelled); borrower start denied 403 |
+| UC05 | Partial: approval decision inbox and mark-as-read 204 passed; real overdue and final loan-event checks not run yet |
+| Admin | Partial: five ACTIVE single-role accounts, Reports 200 and health UP passed; final audit/retirement not run yet |
+
+The camera's 30-minute reservation runs 15:07-15:37 SGT. Checkout is scheduled for 15:27 so due time is about ten minutes later. The overdue check must wait until at least 15:39, covering two 60000 ms scanner intervals after due time. The first scheduled server backup on 2026-10-18 02:15 SGT, physical equipment inspection, active/authenticated scans and member acceptance are not verified. No team Done is claimed. The documentation PR remains draft while these checks are pending.
+
+Accounts created (emails only); all remain active and the two earlier acceptance accounts were left unchanged:
+
+- acc-1018-borrower@serms.test
+- acc-1018-borrower2@serms.test
+- acc-1018-approver@serms.test
+- acc-1018-storekeeper@serms.test
+- acc-1018-technician@serms.test
+
+### Second passive ZAP baseline
+
+Existing ZAP 2.17.0 image, six discovered URLs, anonymous passive baseline, exit 0 with -I.
+
+| Check | Previous baseline | Second baseline |
+| --- | --- | --- |
+| FAIL / WARN / PASS rule families | 0 / 7 / 60 | 0 / 5 / 62 |
+| Permissions-Policy 10063-1 | Missing | Absent; rule PASS |
+| COOP 90004-3 / CORP 90004-1 | Missing | Both absent |
+| Server version 10036-2 | nginx/1.18.0 (Ubuntu) | Absent; rule PASS; health returns generic nginx |
+| COEP 90004-2 | Missing | Remains |
+| CSP unsafe-inline 10055-6 | Medium | Remains |
+| Cache/storage and modern SPA information | Present | Present; 10049 now has cacheable and non-cacheable variants |
+
+Nine individual alert references previously (1 medium, 5 low, 3 informational), six now (1 medium, 1 low, 4 informational). Rule 90004 remains WARN because COEP is still missing. The removed alerts match #89 and Shi Wenqi's server_tokens change. No hardening change was made in this task. -I permits warning exit status; this is not a clean-security or authenticated-coverage claim.
+
+[Browser evidence](../evidence/deployed-acceptance-20261017/README.md); [second ZAP command/reports](../evidence/zap-baseline-20261017/README.md); [previous ZAP JSON](../evidence/zap-baseline-20261016/zap-baseline.json). Hosted CI, member checks, deployed acceptance, merge and Done remain separate.
+
+Authorship: Codex agent under Liu Tongyao's instruction/supervision. No member signature, hours or approval is inferred. Final overdue, cleanup and audit results will replace this interim section.
