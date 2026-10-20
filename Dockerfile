@@ -15,6 +15,8 @@ RUN pnpm build
 FROM eclipse-temurin:17-jre-alpine AS app
 ARG RELEASE_SHA=local
 LABEL org.opencontainers.image.revision=$RELEASE_SHA
+# Floating Alpine base tags can lag behind security fixes that Trivy already reports.
+RUN apk upgrade --no-cache
 RUN addgroup -S serms && adduser -S -G serms serms
 WORKDIR /app
 COPY --from=backend-build --chown=serms:serms /build/app/target/serms-0.1.0-SNAPSHOT.jar app.jar
@@ -26,6 +28,8 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 FROM nginxinc/nginx-unprivileged:stable-alpine AS web
 ARG RELEASE_SHA=local
 LABEL org.opencontainers.image.revision=$RELEASE_SHA
+USER root
+RUN apk upgrade --no-cache
 COPY --chown=nginx:nginx web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=frontend-build --chown=nginx:nginx /build/frontend/dist/ /usr/share/nginx/html/
 USER nginx
