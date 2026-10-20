@@ -228,9 +228,11 @@ describe('reserve equipment (UC01)', () => {
     expect(issues('2030-01-10T07:00', '2030-01-10T11:00')).toContain(
       'The start time has already passed.',
     );
-    expect(issues('2030-01-10T09:00', '2030-01-10T09:20')).toContain(
-      'A reservation must last at least 30 minutes.',
-    );
+    // No minimum length: any end after the start is accepted, down to one minute.
+    expect(issues('2030-01-10T09:00', '2030-01-10T09:01')).toEqual([]);
+    expect(issues('2030-01-10T09:00', '2030-01-10T09:00')).toEqual([
+      'The end must be after the start.',
+    ]);
     expect(issues('2030-01-10T09:00', '2030-01-17T09:01')).toContain(
       'A reservation may last at most 7 days.',
     );

@@ -6,6 +6,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
 import sg.edu.nus.serms.reservation.domain.policy.BookingHorizonPolicy;
 import sg.edu.nus.serms.reservation.domain.policy.DurationPolicy;
 import sg.edu.nus.serms.reservation.domain.policy.OpenReservationQuotaPolicy;
@@ -166,6 +168,18 @@ class ReservationPolicyTest {
     var rules = ReservationConfiguration.rulesFor(limits(false));
     Instant start = NOW.plusSeconds(3600);
     assertThat(rules.evaluate(ctx(start, start.plusSeconds(3600), 0, true))).isEmpty();
+  }
+
+  @Test
+  void defaultLimitsSetNoMinimumLength() {
+    var defaults = new Binder(new MapConfigurationPropertySource())
+        .bindOrCreate("serms.reservation", ReservationLimits.class);
+    assertThat(defaults.minDuration()).isZero();
+    var rules = ReservationConfiguration.rulesFor(defaults);
+    assertThat(rules.evaluate(ctx(Duration.ofHours(1), Duration.ofMinutes(1)))).isEmpty();
+    assertThat(rules.evaluate(ctx(Duration.ofHours(1), Duration.ofDays(7).plusSeconds(1))))
+        .extracting(RuleViolation::code)
+        .containsExactly("too-long");
   }
 
   @Test

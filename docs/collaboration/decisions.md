@@ -200,3 +200,13 @@ test bench. Migration uses the next free number at integration, never edits merg
 real PostgreSQL/cross-session tests accompany the change. This records the reply supplied by the user;
 it does not claim a GitHub owner comment, personally executed human checks, whole-PR approval,
 main merge, release or additional permission to contact teammates.
+
+## Minimum Reservation Duration Removed (2026-10-20)
+
+Status: **Confirmed by the user (repository owner Liu Tongyao, executor of UC01 under [D-004](#d-004-local-first-integration-and-wenqi-task-execution)) in conversation on 2026-10-20 at about 16:20 (Asia/Singapore)**, on main `9c5f550`.
+
+Context: the shortest reservation was 30 minutes, a provisional value from [the UC01 contract](../contracts/equipment-and-reservation.md#6-reservation-policies-configurable-strategy-pattern) §6. Recording the demonstration of checkout, overdue detection and late return meant waiting at least 30 minutes for each loan to fall due.
+
+Decision: the default `serms.reservation.min-duration` is `0m`, and the frontend mirror `MIN_MINUTES` is `0`. Any reservation whose end is after its start passes the duration rule; with minute-precision inputs the shortest booking is one minute. The change is permanent, not a temporary demo setting.
+
+Unchanged: `DurationPolicy` and the `too-short` code stay, so a minimum can be configured again; the 7-day maximum and per-item maximum, the start-not-in-past rule, the 90-day horizon, the quota of 3, the overdue block, and the checkout window (between start and end) all stay as contracted.

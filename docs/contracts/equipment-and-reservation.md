@@ -188,7 +188,7 @@ Each rule implements `ReservationPolicy`; `ReservationRules` runs them and colle
 | Rule | Class | Default | code |
 | --- | --- | --- | --- |
 | End after start; start not in past | `StartInFuturePolicy` | — | `invalid-interval` / `start-in-past` |
-| Minimum/maximum duration (rule 10, Proposal 5.3) | `DurationPolicy` | 30 minutes – 7 days; an item's own `max_borrow_duration` (V005, #22) replaces the 7 days for that item | `too-short` / `too-long` |
+| Minimum/maximum duration (rule 10, Proposal 5.3) | `DurationPolicy` | No minimum (`min-duration=0m`, [decision](../collaboration/decisions.md#minimum-reservation-duration-removed-2026-10-20)) – 7 days; an item's own `max_borrow_duration` (V005, #22) replaces the 7 days for that item | `too-short` (only when a minimum is configured) / `too-long` |
 | Booking horizon | `BookingHorizonPolicy` | 90 days | `too-far-ahead` |
 | Concurrent unended reservations (rule 11) | `OpenReservationQuotaPolicy` | 3 (`PENDING_APPROVAL` + `CONFIRMED`, unended) | `quota-exceeded` |
 | No new booking while holding overdue equipment (rule 11) | `OverdueLoanPolicy` | On (`block-overdue-borrowers`); an `ACTIVE` loan of the requester with `due_at` before now | `overdue-loan` |
@@ -223,7 +223,7 @@ Submit and cancel each append one row to `serms.audit_log` inside the booking tr
 
 | Item | Current status | Confirmation owner |
 | --- | --- | --- |
-| Section 6 defaults | Provisional 30 minutes / 7 days / 90 days / 3; Proposal rules 10/11 only require limits | Team Sprint 2 review |
+| Section 6 defaults | Minimum duration set to 0 by the owner on 2026-10-20 ([decision](../collaboration/decisions.md#minimum-reservation-duration-removed-2026-10-20), was 30 minutes); 7 days / 90 days / 3 still provisional; Proposal rules 10/11 only require limits | Team Sprint 2 review |
 | Category/borrower-specific rules | One global configuration; strategies separated, category values need a new configuration source | Team, when needed |
 | Expired pending automatically `CANCELLED` | UC02 Section 8 future work | Member 1 + Member 2 |
 | `version` integer → bigint | UC02 Section 6; Java reads `long`, so column change compatible | Member 3 (database) |

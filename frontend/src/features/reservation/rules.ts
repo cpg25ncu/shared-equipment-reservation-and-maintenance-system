@@ -4,7 +4,7 @@ import { localToIso } from '@/lib/time';
  * Client-side mirror of the booking rules for instant feedback. The server applies the same rules
  * (and the overlap check) again; its answer is final.
  */
-export const MIN_MINUTES = 30;
+export const MIN_MINUTES = 0;
 export const MAX_DAYS = 7;
 /** Minutes in an ISO-8601 duration as the server writes it (`PT72H`, `PT2H30M`); null otherwise. */
 export function durationMinutes(iso: string | null | undefined): number | null {
