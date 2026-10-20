@@ -33,7 +33,7 @@ Owner: Member 1. API details: [Equipment search/reservation contract](contracts/
 | A5 | Maintenance/open fault | Page blocks booking, API 409 | `#equipmentUnderMaintenanceOrWithAnOpenFaultCannotBeReserved`; `reservation.test.tsx` › blocks equipment with an open fault |
 | A6 | Retired/missing | Excluded search, API 404 | `#retiredOrUnknownEquipmentIsNotFound`, `Search#retiredOrUnknownEquipmentHasNoAvailabilityPage` |
 | A7 | Still on loan at start | 409; starts after due time permitted | `#equipmentStillOnLoanAtTheRequestedStartIsUnavailable` |
-| A8 | <30 minutes, >7 days, past start, >90-day horizon, already 3 open bookings | 422, **all violations together** | `ReservationPolicyTest`; `#bookingRulesAreReportedTogether`, `#quotaCountsOnlyOpenReservations`; `reservation.test.tsx` › lists every broken booking rule |
+| A8 | Below a configured minimum (none by default, [decision](collaboration/decisions.md#minimum-reservation-duration-removed-2026-10-20)), >7 days, past start, >90-day horizon, already 3 open bookings | 422, **all violations together** | `ReservationPolicyTest` (incl. `#defaultLimitsSetNoMinimumLength`); `#bookingRulesAreReportedTogether`, `#quotaCountsOnlyOpenReservations`; `reservation.test.tsx` › lists every broken booking rule |
 | A9 | Disabled account | 403 | `#disabledAccountsCannotReserve` |
 | A10 | No BORROWER / act for another | Service `@PreAuthorize`, 403 | `ReservationServiceSecurityTest` |
 | A11 | Approval required | `PENDING_APPROVAL`, UC02 | `#equipmentThatNeedsApprovalStartsPending`; all `ApprovalContract` tests |

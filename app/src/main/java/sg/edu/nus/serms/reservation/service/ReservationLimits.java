@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 /** Configurable limits, {@code serms.reservation.*}. Defaults follow the team's rule table. */
 @ConfigurationProperties("serms.reservation")
 public record ReservationLimits(
-    @DefaultValue("30m") Duration minDuration,
+    @DefaultValue("0m") Duration minDuration,
     @DefaultValue("7d") Duration maxDuration,
     @DefaultValue("90d") Duration bookingHorizon,
     @DefaultValue("3") int maxOpenReservations,
