@@ -1,0 +1,47 @@
+---
+config:
+  fontSize: 22
+  sequence:
+    fontSize: 22
+    actorFontSize: 22
+    messageFontSize: 22
+    noteFontSize: 22
+---
+%% UC05 lifecycle; short participant labels refer to the concrete types below.
+%% Verified against main df9033f. Arguments and repository details are in comments.
+sequenceDiagram
+  participant LoanReminderScanner as Scanner<br/>scheduledScan()<br/>60 s
+  participant NotificationRequestService as Requests
+  participant NotificationWorker as Worker<br/>deliverPending()<br/>30 s
+  participant NotificationDeliveryService as Delivery
+  participant LoanReminderGuard as Loan guard
+  participant NotificationController as Inbox API
+  actor Borrower
+  LoanReminderScanner->>NotificationRequestService: Due / overdue<br/>requestOnce()<br/>unique dedup key
+  NotificationWorker->>NotificationDeliveryService: deliver(id)
+  NotificationDeliveryService->>LoanReminderGuard: check(...)
+  LoanReminderGuard-->>NotificationDeliveryService: result
+  Note over NotificationWorker,LoanReminderGuard: VALID deliver() / stale cancel()<br/>UNAVAILABLE fail(): 3 tries, 60 s<br/>recordAttempt() + commit
+  Borrower->>NotificationController: list() / unread() / read()
+  NotificationController-->>Borrower: Inbox / count / 204
+  %% scan(): query ACTIVE loans with dueAt <= now + lead time (default 24 h).
+  %% For each loan, lock Equipment then Loan and recheck ACTIVE/dueAt/window.
+  %% classify() is ReminderPolicy.classify(active, dueAt, now).
+  %% forLoan() is LoanNotificationRequestFactory.forLoan(UUID, type, "once", content).
+  %% requestOnce() delegates to NotificationRequestStore.requestOnce(request).
+  %% SHA-256 dedupKey includes recipient/type/source/period/loan/expectedDueAt.
+  %% INSERT ON CONFLICT DO NOTHING keeps the first request; producer rollback removes it.
+  %% NotificationWorker calls NotificationRepository.pending(now, PageRequest.of(0,100)).
+  %% Delivery first calls findById(id) and snapshot.eligible(now).
+  %% For non-BUSINESS_EVENT notifications only, LoanReminderGuard.check(loanId,
+  %% recipient, expectedDueAt, type, now) locks Equipment -> Loan, checking ownership,
+  %% ACTIVE state, exact due time and reminder window, before notification lock/refresh.
+  %% After refresh, recheck eligible. UNAVAILABLE -> fail(now,maxAttempts,retrySeconds,reason).
+  %% Returned, changed due time or not applicable -> cancel(result.name()).
+  %% Attempt is recorded AFTER the entity outcome; both commit atomically.
+  %% In-app delivery is a visibility change. Exceptions roll back and a later poll recovers.
+  %% Controller delegates to NotificationInboxService.page(actorId,page,size,sort),
+  %% unread(actorId), and markReadForUser(id,actorId), using authenticated identity.
+  %% Repository findByRecipientAndStatus(...,DELIVERED,...) and
+  %% countByRecipientAndStatusAndReadAtIsNull(...) exclude undelivered requests.
+  %% Mark read locks the notification, checks recipient + DELIVERED, and calls markRead(now).

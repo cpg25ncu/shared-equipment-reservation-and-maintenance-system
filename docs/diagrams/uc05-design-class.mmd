@@ -1,0 +1,64 @@
+---
+config:
+  block:
+    padding: 5
+  themeVariables:
+    fontSize: "20px"
+---
+%% Compact BCE design-class view. Attributes/operations omitted for slide readability.
+%% All 22 required types are named. Block layout fixes presentation positions.
+%% Arrows summarize dependencies between actual packages; not every class reference.
+block-beta
+  columns 4
+  block:API:4
+    columns 2
+    API_TITLE["api · «boundary» → service"]:2
+    NotificationController["NotificationController"]
+    OverdueController["OverdueController"]
+  end
+  block:SERVICE:4
+    columns 4
+    SERVICE_TITLE["service · «control», except the guard interface"]:4
+    LoanReminderScanner["LoanReminder<br/>Scanner"]
+    CollectionReminderScanner["CollectionReminder<br/>Scanner"]
+    NotificationRequestService["NotificationRequest<br/>Service"]
+    NotificationWorker["Notification<br/>Worker"]
+    ApprovalNotificationListener["ApprovalNotification<br/>Listener"]
+    ApprovalNotificationFactory["ApprovalNotification<br/>Factory"]
+    NotificationDeliveryService["NotificationDelivery<br/>Service"]
+    LoanReminderGuard["«interface»<br/>LoanReminderGuard"]
+    ReservationNotificationListener["Reservation<br/>NotificationListener"]
+    LoanNotificationListener["LoanNotification<br/>Listener"]
+    MaintenanceNotificationListener["Maintenance<br/>NotificationListener"]
+    READ_SERVICES["NotificationInboxService<br/>OverdueLoanService"]
+  end
+  block:DOMAIN:2
+    columns 2
+    DOMAIN_TITLE["domain"]:2
+    Notification["«entity»<br/>Notification"]
+    NotificationRequest["«record»<br/>NotificationRequest"]
+    NotificationType["«enumeration»<br/>NotificationType"]
+    ReminderPolicy["«record»<br/>ReminderPolicy"]
+  end
+  block:REPOSITORY:2
+    columns 1
+    REPOSITORY_TITLE["repository"]
+    NotificationRepository["«interface» NotificationRepository"]
+    NotificationRequestStore["NotificationRequestStore"]
+    NotificationDeliveryStore["NotificationDeliveryStore"]
+  end
+  SERVICE --> DOMAIN
+  SERVICE --> REPOSITORY
+  REPOSITORY --> DOMAIN
+  classDef header fill:#FFFFFF,stroke:#FFFFFF,color:#023E7C,font-weight:bold
+  class API_TITLE,SERVICE_TITLE,DOMAIN_TITLE,REPOSITORY_TITLE header
+  %% Constructor/call dependencies:
+  %% NotificationController -> NotificationInboxService; OverdueController -> OverdueLoanService.
+  %% Scanners + four business listeners -> NotificationRequestService -> NotificationRequestStore.
+  %% ApprovalNotificationListener -> ApprovalNotificationFactory -> NotificationRequest.
+  %% NotificationWorker -> NotificationRepository + NotificationDeliveryService.
+  %% NotificationDeliveryService -> LoanReminderGuard + NotificationRepository +
+  %% NotificationDeliveryStore + Notification; NotificationInboxService -> repository + entity.
+  %% LoanReminderScanner -> ReminderPolicy; Notification/Request/Policy -> NotificationType.
+  %% OverdueLoanService uses JdbcTemplate for the UC03 projection, not a notification repository.
+  %% Domain classes never call repositories. Utility/text/configuration classes are omitted.
