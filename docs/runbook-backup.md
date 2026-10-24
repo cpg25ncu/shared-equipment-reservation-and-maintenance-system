@@ -22,6 +22,8 @@ A successful `pg_restore --list` is an archive check, not a restore rehearsal. T
 
 ## 50-user load check
 
+This is a manual k6 run on isolated local data. No GitHub Actions workflow invokes it, and it is not a merge or release check.
+
 `SERMS_K6_BASE_URL` points to an isolated local deployment. `SERMS_K6_USERS_FILE` points to an untracked JSON array of at least 50 distinct `{email,password,equipmentId,assetTag,startAt,endAt}` fixtures. Each VU logs in, searches availability, and submits a reservation. Use distinct equipment or disjoint intervals to avoid intentional booking conflicts. Run `k6 run --summary-export=/private/tmp/serms-k6-summary.json scripts/load-k6.js` from the repository root with those environment variables set. Capture checks, overall and per-operation p95 latency, and error rate in the issue log. The project target is under 2 seconds; a k6 threshold failure is a performance finding even when all business requests succeed. Never run the reserve load against production or commit the fixture file.
 
-OWASP ZAP baseline is a separate read-only check after deployment issue #10. Its target and findings must be reviewed with the release owner; no deployment is implied by this runbook.
+OWASP ZAP baseline is a separate manual, anonymous passive check after deployment under issue #10, outside the pipeline. The [2026-10-16 production baseline](evidence/zap-baseline-20261016/zap-baseline.md) recorded 0 FAIL / 7 WARN / 60 PASS; the **latest [2026-10-17 baseline](evidence/zap-baseline-20261017/README.md)** on deployed SHA `2993b78` recorded 0 FAIL / 5 WARN / 62 PASS. Both are historical evidence, not automatic post-deployment scans or authenticated/active scans. Its target and findings must be reviewed with the release owner; no deployment is implied by this runbook.

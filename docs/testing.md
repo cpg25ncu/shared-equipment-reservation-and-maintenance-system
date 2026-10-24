@@ -16,8 +16,11 @@ Test bench requirements remain defined in [Technology stack §5](tech-stack.md#5
 | Frontend E2E | `frontend/`: `pnpm exec playwright install chromium`, then `pnpm test:e2e` | Chromium/platform dependencies; Linux CI uses `--with-deps` |
 | Data foundation | Root: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-sprint1.ps1` | Docker, Java/Maven; script and `Sprint 1 database` use PostgreSQL 18 |
 | Notification adapter | Root: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-notification-integration.ps1` | Docker, Maven, pinned upstream commit; `Notification PostgreSQL contract` |
-| Security | GitHub `CI` workflow | Existing gitleaks, Trivy, Dependency Review; local document checks do not replace them |
-| Collaboration navigation/skills | Root: `node scripts/check-collaboration.mjs` | Added `Collaboration documentation` workflow; required branch-protection checks unchanged |
+| Security | GitHub `CI` workflow ([ci.yml](../.github/workflows/ci.yml)) | Three security checks: gitleaks, Trivy filesystem scan, Dependency Review; builds/tests run in the separate workflows listed above |
+| CodeQL | GitHub [codeql.yml](../.github/workflows/codeql.yml) | Active Java and JavaScript/TypeScript analysis on PRs and main pushes; both named analysis jobs are included in the shared 15-check merge/release list |
+| Release preparation | GitHub [release-config.yml](../.github/workflows/release-config.yml) | `release-config` tests release scripts/configuration; `release-images` builds/scans app/web images and runs isolated production-profile Compose smoke |
+| Manual security/load checks | [Backup, load and security runbook](runbook-backup.md#50-user-load-check) | ZAP baseline and k6 run manually, outside GitHub Actions; recorded runs are historical evidence, not automatic PR or release gates |
+| Collaboration navigation/skills | Root: `node scripts/check-collaboration.mjs` | `Collaboration documentation` workflow; `collaboration-docs` is in the shared 15-check merge/release list |
 | Real local demo | Root: startup, `node scripts/smoke-local.mjs`, data/browser checks and shutdown in [local demo](local-demo.md) | Dedicated local PostgreSQL cluster/accounts; creates actual demonstration transactions; not a full exception/overdue suite |
 | Real administrator security browser workflow | Root: `node scripts/check-admin-security-browser.mjs` after this checkout's local startup and Chromium installation | Desktop/mobile actual create, role change, disable/activate, password reset; two independent cookie sessions per target; old-session 401 and new-login/audit checks. Creates synthetic accounts and retains history; private reports/screenshots in `.cache/local-demo/`, reviewed exports only |
 | Real UC02 / five-role and dual-role browser flow | Root: `node scripts/check-uc02-browser.mjs` after this checkout's local-demo startup and Chromium installation; optional `--publishable-evidence` exports synthetic self-decision screenshots | Actual React → Spring Boot → PostgreSQL 18, desktop/mobile; no mocked APIs/clocks. Separate from `pnpm test:e2e` contract mocks. Includes temporary BORROWER+APPROVER, UI and actual browser-POST self-decision blocks, read-only no-side-effect DB assertions and role restoration. Creates isolated fixtures; respects quota and retains history. Private summary/traces: ignored `.cache/local-demo/`; never publish raw traces/session tokens. Reviewed evidence: [dual-role run](evidence/uc02-dual-role-20261015/README.md) |
@@ -43,6 +46,8 @@ The [PR #11 verification record](evidence/local-demo/verification.md) preserves 
 
 ## Verification Scope
 
+The owner's [2026-10-24 decision](collaboration/decisions.md#unified-ci-gates-and-dependabot-security-2026-10-24) makes main branch protection and [`scripts/verify-release.mjs`](../scripts/verify-release.mjs) require the **same 15 GitHub Actions checks**. Release additionally requires the **exact current main SHA**, `SERMS_PRODUCTION_READY=true`, and **production human approval** before SSH. See the [workflow inventory and shared list](tech-stack.md#33-devsecops-pipeline-proposal-83--dod-items-7-and-8). Applying repository settings is separate from local verification.
+
 - Run the checks closest to the change, then existing PR requirements. For documentation-only changes, check links, templates, and applicable rules locally; remote CI follows existing workflows without skipping.
 - Backend/frontend behavior changes include their complete test benches. H2/mock results do not establish real PostgreSQL 18, concurrency, or transaction acceptance.
 - After commits/base updates, assess affected evidence and rerun verification; old-HEAD passes do not apply to new HEAD.
@@ -67,7 +72,7 @@ PRs distinguish:
 | Merge/deployment | PR merge status, deployment workflow, post-deployment checks |
 | Team Done | All [Sprint DoD](agile/sprint-plan.md#2-definition-of-done) evidence |
 
-Existing required checks, coverage, and security thresholds remain unchanged. This document and the new check workflow do not automatically change GitHub protection. Record missing/unavailable checks accurately, never as `passed`.
+Coverage and security thresholds remain unchanged. The owner's 2026-10-24 decision expands and unifies the required check list; its repository settings are applied separately after green PR CI. Documentation alone does not change GitHub protection. Record missing/unavailable checks accurately, never as `passed`.
 
 ## Practical Template Checks
 

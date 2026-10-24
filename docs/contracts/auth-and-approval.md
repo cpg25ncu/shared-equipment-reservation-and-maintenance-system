@@ -20,7 +20,7 @@ Status: **Confirmed**. This repository file is authoritative. Changes require a 
 | Order | PR | Owner | Dependencies |
 | --- | --- | --- | --- |
 | 1 | PostgreSQL 18 + Flyway: move schema migrations into `app/`, remove MySQL / H2, and complete the database changes in Section 6 | Zhou Fanhao | — |
-| 2 | Test infrastructure: Testcontainers bases, test data builders, ArchUnit rules | Zhang Hanming | 1 |
+| 2 | Test infrastructure: Testcontainers bases, test data builders | Zhang Hanming | 1 |
 | 3 | Backend platform: authentication endpoints (Section 2), Principal mapping, global ProblemDetail (Section 5), springdoc OpenAPI; remove Thymeleaf | Wang Yuanmeng | 1 |
 | 4 | Frontend scaffolding: Vite + React + TS, routing, `AuthProvider`, API client, OpenAPI type generation | Wang Yuanmeng | 3 |
 | 5 | CI / deployment: backend and frontend CI jobs; change Compose to `web` + `app` + `db` | Shi Wenqi | 1; frontend job after 4 |

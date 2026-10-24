@@ -12,7 +12,7 @@ This document defines the team's shared technology baseline. It is based on the 
 
 The system uses **separate frontend and backend applications**: a React single-page frontend, a Spring Boot backend exposing REST APIs only, and PostgreSQL 18 for storage.
 
-The Status column describes verified implementation at main `cef0e10`: ✅ implemented; 🔶 partial delivery or pending integration/acceptance, described in the row; ⬜ selected, not implemented. Items dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze) say so in their row. Sections 2-6 include target design and required practices; naming a technology there does not mean it is installed or its gate is enforced. See [current progress](agile/sprint-status.md#integration-update-2026-10-17) for version-bound evidence and remaining acceptance.
+The Status column retains the 2026-10-17 implementation snapshot at main `cef0e10`; CI/CD rows were rechecked on 2026-10-24 against main `90d840e5e07efb80775cc435518eb41679e35e15`, with dated evidence identified in each row: ✅ implemented; 🔶 partial delivery or pending integration/acceptance, described in the row; ⬜ selected, not implemented. Items dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze) say so in their row. Sections 2-6 include target design and required practices; naming a technology there does not mean it is installed or its gate is enforced. See [current progress](agile/sprint-status.md#integration-update-2026-10-17) for version-bound evidence and remaining acceptance.
 
 ### 1.1 Frontend (`frontend/`)
 
@@ -70,10 +70,10 @@ The Status column describes verified implementation at main `cef0e10`: ✅ imple
 | CI/CD | GitHub Actions | ✅ Application/security checks on every PR; the gated `Deploy` workflow has released `main` to production since 2026-10-15 ([release runbook](server-release.md)) |
 | Secret scanning | gitleaks | ✅ |
 | Vulnerability scanning | Trivy (filesystem + Docker images) | ✅ Filesystem scan on every PR; `app` and `web` image scans in the `release-images` check |
-| Dependency checks | Dependency Review (PR stage) + Dependabot (weekly automated upgrades) | ✅ Dependency Review; 🔶 Dependabot configured, version updates paused until after the 2026-10-22 code freeze (majors ignored, minor/patch grouped) |
-| Code security scanning | CodeQL (Java + TypeScript) | ✅ `codeql.yml` on every PR and push to `main` (Issue #25); not a required branch-protection check |
-| Post-deployment security scanning | OWASP ZAP Baseline | 🔶 One passive baseline against production on 2026-10-16: 0 FAIL, 7 WARN, 60 PASS ([evidence](evidence/zap-baseline-20261016/zap-baseline.md)); not automated after deployment |
-| Load testing | k6 (50 concurrent users) | 🔶 `scripts/load-k6.js` ran 50 users against a local instance: all functional checks passed, reservation p95 2.26 s missed the 2 s target ([log](devlog/issue-25-devsecops.md)); no production run |
+| Dependency checks | Dependency Review (PR stage) + Dependabot | ✅ Dependency Review; the owner's 2026-10-24 decision enables Dependabot alerts and security updates. All five version-update entries remain paused with `open-pull-requests-limit: 0` until after the final project report/presentation; no automatic resumption. Majors remain ignored and minor/patch updates grouped |
+| Code security scanning | CodeQL (Java + TypeScript) | ✅ Active `codeql.yml` on every PR and push to `main` (Issue #25); `Analyze java` and `Analyze javascript-typescript` belong to the shared 15-check merge/release list under the owner's 2026-10-24 decision |
+| Post-deployment security scanning | OWASP ZAP Baseline | 🔶 Manual, anonymous passive scans outside the pipeline: [2026-10-16 baseline](evidence/zap-baseline-20261016/zap-baseline.md), 0 FAIL / 7 WARN / 60 PASS; **latest: [2026-10-17 baseline](evidence/zap-baseline-20261017/README.md)** on deployed SHA `2993b78`, 0 FAIL / 5 WARN / 62 PASS. No authenticated or active scan |
+| Load testing | k6 (50 concurrent users) | 🔶 Manually run `scripts/load-k6.js`, outside CI: the recorded 50-user local run passed functional checks but reservation p95 2.26 s missed the 2 s target ([log](devlog/issue-25-devsecops.md)); no production run |
 | Containers | Docker (multi-stage builds, non-root execution) + Docker Compose: three containers, `web` + `app` + `db` | ✅ Non-root `app` and `web` images, PostgreSQL 18, production-profile Compose smoke in CI; running on the server since 2026-10-15 |
 | Image registry | GitHub Container Registry (GHCR) | ⬜ `scripts/deploy.sh` builds the images on the server; no registry is used |
 | Server | Hong Kong server + nginx + Let's Encrypt, https://serms.midas.cyou | 🔶 Serving `main` since 2026-10-15 with security response headers; server inventory and deployed acceptance remain open on Issue #10 |
@@ -148,7 +148,7 @@ Each business module has four layers:
 | `domain` | Business rules in entities, state machines, policy classes, etc. | Dependencies on Spring MVC |
 | `repository` | JPA repositories or JdbcTemplate queries | Business decisions |
 
-**ArchUnit tests** enforce these rules. For example, controllers must not access repositories directly; modules must not access another module's `repository`. Cross-module communication uses public `service` methods or events.
+These layering rules remain design conventions; ArchUnit enforcement was dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze). For example, controllers must not access repositories directly; modules must not access another module's `repository`. Cross-module communication uses public `service` methods or events.
 
 ### 2.3 Frontend Code Structure
 
@@ -232,8 +232,8 @@ frontend/src
 | Errors do not expose internals | Global backend exception handling returns Problem Details without stack traces; shared frontend error component |
 | Backup and recovery | `scripts/backup.sh`: daily `pg_dump` with 7-day retention; `docs/runbook-backup.md` documents recovery, exercised at least once |
 | Consistent UI; desktop and tablet support | shadcn/ui + responsive Tailwind layouts; shared layout, form, table, and status badge components |
-| Shared coding standards | Backend Spotless and frontend ESLint + Prettier enforced in CI; violations block merging |
-| Presentation / business / data layers | Separate frontend and backend; backend layers from Section 2.2 enforced by ArchUnit |
+| Shared coding standards | Frontend ESLint runs in CI; Prettier is a manual formatting command. Backend Spotless was dropped by D-009 |
+| Presentation / business / data layers | Separate frontend and backend; backend layers from Section 2.2 are design conventions, with ArchUnit enforcement dropped by D-009 |
 | Unit tests for business rules | JUnit Jupiter 6 + Mockito for strategies, state machines, and domain services |
 | Integration tests for security, persistence, and workflows | Spring Boot Test + Testcontainers (PostgreSQL 18), focusing on concurrent reservations, checkout/return races, and authorization |
 | service / domain coverage ≥ 70% | JaCoCo `check` counts only `**.service.**` and `**.domain.**`; coverage below 70% fails the build |
@@ -241,24 +241,26 @@ frontend/src
 
 ### 3.3 DevSecOps Pipeline (Proposal 8.3 + DoD Items 7 and 8)
 
+The workflow inventory was verified on 2026-10-24 against main `90d840e5e07efb80775cc435518eb41679e35e15`. The [owner's subsequent 2026-10-24 decision](collaboration/decisions.md#unified-ci-gates-and-dependabot-security-2026-10-24) unifies merge/release checks and enables Dependabot security features. This section reflects that decision; manual acceptance remains separate.
+
 ```mermaid
 flowchart LR
-  subgraph PR[Each Pull Request]
-    B[backend: Spotless + compilation] --> T[Unit + integration tests<br/>Testcontainers] --> C[JaCoCo ≥70%<br/>ArchUnit / SpotBugs]
-    F[frontend: ESLint + type checking] --> FT[Vitest component tests] --> FB[vite build]
-    O[OpenAPI types up to date]
-    G[gitleaks]
-    V[Trivy fs]
-    R[Dependency Review]
+  subgraph CI[Each PR and push to main]
+    B[Backend compilation] --> T[Unit + PostgreSQL integration tests] --> C[JaCoCo business coverage ≥70%]
+    F[ESLint + type checking] --> FT[Vitest + Vite build + Playwright]
+    O[OpenAPI type drift + role inventory]
+    S[gitleaks + Trivy fs<br/>Dependency Review on PRs]
     Q[CodeQL Java + TS]
+    I[Build app and web images] --> TI[Trivy image scans + CI Compose smoke]
   end
-  subgraph MAIN[After merging into main]
-    I[Build app / web images] --> TI[Trivy image scanning] --> H[Push to GHCR]
-    H --> D[SSH deployment to test environment<br/>docker compose pull && up -d]
-    D --> E[Smoke tests + Playwright critical flows]
-    E --> Z[OWASP ZAP Baseline]
+  subgraph RELEASE[Deploy on matching main pushes or manual dispatch]
+    G[Current main SHA + readiness flag<br/>15 shared checks] --> A[production reviewer approval]
+    A --> D[SSH backup + server image build<br/>Compose up + health check]
   end
-  PR --> MAIN
+  CI --> G
+  D -. Separate manual acceptance .-> E[HTTPS login and role workflows]
+  D -. Separate manual security scan .-> Z[OWASP ZAP Baseline]
+  K[Manual k6 on isolated local data]
 ```
 
 | Stage required by the Proposal | Tool / task |
@@ -266,16 +268,27 @@ flowchart LR
 | Source code checkout | `actions/checkout` |
 | Application compilation | Backend `./mvnw verify`; frontend `pnpm typecheck && pnpm build` |
 | Unit and integration testing | Backend JUnit Jupiter 6, Mockito, Spring Boot Test, Testcontainers; frontend Vitest + React Testing Library + MSW |
-| Test coverage generation | JaCoCo (backend) + Vitest coverage (frontend), uploaded as CI artifacts |
-| Static code analysis | SpotBugs + FindSecBugs, CodeQL (Java + TypeScript), Spotless, ESLint, ArchUnit |
-| Dependency vulnerability checking | Dependency Review (PR stage, Maven + npm) + Dependabot (weekly upgrade PRs) + Trivy fs |
+| Test coverage generation | JaCoCo backend reports uploaded by the PostgreSQL workflows; frontend runs Vitest tests without a configured coverage command |
+| Static code analysis | CodeQL (Java + TypeScript) and ESLint; SpotBugs/FindSecBugs, Spotless and ArchUnit were dropped by D-009 |
+| Dependency vulnerability checking | Dependency Review on PRs + Trivy fs; Dependabot alerts/security updates enabled by the 2026-10-24 decision, while version-update PRs remain paused until after the final project report/presentation |
 | Application packaging | Executable Spring Boot JAR; frontend static files |
 | Docker image creation | Two multi-stage images: `app` (`eclipse-temurin:17-jre`) and `web` (`nginx-unprivileged`), both running as non-root |
 | Container vulnerability checking | Trivy image; HIGH / CRITICAL vulnerabilities fail the check |
-| Deployment to a test environment | GitHub Actions runs `docker compose pull && up -d` over SSH; Flyway migrates the database on backend startup |
-| Basic post-deployment verification | Smoke tests (`/api/v1/health` returns UP, homepage returns 200) + Playwright login and reservation flow + ZAP Baseline |
+| Deployment to the hosted environment | After the release gate and `production` approval, SSH runs `scripts/deploy.sh`: backup, server-side `docker compose build`, then `docker compose up -d --wait`; no registry push/pull. Flyway migrates on backend startup |
+| Basic post-deployment verification | The deployment script checks `/api/v1/health` for UP. Public HTTPS, login and role workflows are separate acceptance checks; ZAP is manual and outside the pipeline. k6 is also manual on isolated local data |
 
-**Required checks** (configured in main branch protection, read on 2026-10-17): `Secrets scan (gitleaks)`, `Vulnerability scan (Trivy)`, `Dependency review`, `database-test`, `java-tests`, `frontend`, `notification-contract` and `checkout-return`, with strict up-to-date branches. CodeQL, the UC02 and UC04 PostgreSQL acceptance runs, collaboration documents and release checks also run but are not required; the `Deploy` release gate additionally waits for `collaboration-docs`, `maintenance-postgres`, `release-config` and `release-images`. The diagram above is the original target: images are built on the server rather than pushed to GHCR, and post-deployment checks are run by hand.
+**Both gates require the same 15 GitHub Actions checks.** [`scripts/verify-release.mjs`](../scripts/verify-release.mjs) exports the shared `requiredChecks` list: `Secrets scan (gitleaks)`, `Vulnerability scan (Trivy)`, `Dependency review`, `database-test`, `java-tests`, `frontend`, `notification-contract`, `checkout-return`, `collaboration-docs`, `maintenance-postgres`, `release-config`, `release-images`, `approval-postgres`, `Analyze java` and `Analyze javascript-typescript`. Main branch protection uses this list with strict up-to-date branches. The team's all-green CI policy remains in [CONTRIBUTING](../.github/CONTRIBUTING.md#prs-and-team-acceptance); the separate aggregate `CodeQL` check is not a sixteenth required entry.
+
+**Release has three additional requirements:** successful GitHub Actions results on the **exact current main SHA**, `SERMS_PRODUCTION_READY=true`, and **production human approval** before SSH. The common check list does not remove these release-only requirements. The [2026-10-24 decision](collaboration/decisions.md#unified-ci-gates-and-dependabot-security-2026-10-24) authorizes applying the matching repository settings after PR CI passes.
+
+| Build/test responsibility | Workflow |
+| --- | --- |
+| Backend verify/OpenAPI, frontend lint/types/tests/build, role inventory and Playwright | [`frontend-tests.yml`](../.github/workflows/frontend-tests.yml) |
+| Application regression and UC03/UC05 PostgreSQL integration | [`notification-tests.yml`](../.github/workflows/notification-tests.yml), [`zhoufanhao.yml`](../.github/workflows/zhoufanhao.yml) |
+| Database migrations/regression and pinned notification contract | [`database.yml`](../.github/workflows/database.yml), [`notification-contract.yml`](../.github/workflows/notification-contract.yml) |
+| UC02 and UC04 PostgreSQL acceptance | [`approval-postgres-tests.yml`](../.github/workflows/approval-postgres-tests.yml), [`maintenance-tests.yml`](../.github/workflows/maintenance-tests.yml) |
+| Release script/configuration tests, image builds/scans and CI Compose smoke | [`release-config.yml`](../.github/workflows/release-config.yml) |
+| Three security checks, CodeQL and collaboration navigation | [`ci.yml`](../.github/workflows/ci.yml), [`codeql.yml`](../.github/workflows/codeql.yml), [`collaboration-docs.yml`](../.github/workflows/collaboration-docs.yml) |
 
 ### 3.4 Environments
 
@@ -283,7 +296,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | Local development | Coding and debugging | PostgreSQL 18 from `compose.dev.yaml` | Backend `./mvnw spring-boot:run`; frontend `pnpm dev` (Vite proxies `/api` to the backend for the same-origin behavior used in production) |
 | CI | Automated testing | Temporary PostgreSQL 18 from Testcontainers | GitHub Actions |
-| Test / demo | Sprint Review, acceptance, demo | PostgreSQL 18 in Compose with a persistent data volume | Automatically deployed after merging into main |
+| Test / demo | Sprint Review, acceptance, demo | PostgreSQL 18 in Compose with a persistent data volume | `Deploy` on main pushes outside its ignored paths or manual dispatch; release checks and `production` approval precede SSH |
 
 Local development, CI, and the server must use the same PostgreSQL major version (18), with the image consistently set to `postgres:18-alpine`.
 
@@ -306,11 +319,11 @@ Local development, CI, and the server must use the same PostgreSQL major version
 | Thymeleaf, HTML, CSS, Bootstrap, JavaScript (server-rendered pages) | **React 19 + TypeScript + Vite SPA**, shadcn/ui + Tailwind; backend exposes REST APIs only | Components support interactive reservation calendars, interval search, approval queues, and report charts, with component and end-to-end tests. OpenAPI-generated types catch API mismatches at compilation. Separate frontend/backend development reduces conflicts among five parallel contributors and reinforces the presentation / business / data separation required by Proposal 7.5 |
 | MySQL | **PostgreSQL 18** | Range types and exclusion constraints enforce the no-overlap rule (rules 1 and 12) directly in the database, including under concurrency. MySQL lacks this feature and requires application locking. `timestamptz`, `CHECK` constraints, and partial indexes suit state and time data |
 | H2 test database | **Testcontainers + real PostgreSQL 18** | H2 cannot reproduce exclusion constraints, row locks, or concurrency behavior; passing H2 tests does not establish production correctness |
-| SpotBugs **or** PMD | SpotBugs + FindSecBugs, plus CodeQL | FindSecBugs targets security issues; CodeQL covers Java and TypeScript; Spotless / Prettier handle style |
-| OWASP Dependency-Check **or** Dependabot | Dependabot + Dependency Review + Trivy | Covers Maven and npm dependencies using GitHub-native tools with no additional configuration, catching issues at the PR stage |
-| Deployment platform undecided | Hong Kong server (domain and HTTPS configured) + GHCR images | Available without relying on student credits; images are built and scanned in CI before deployment |
+| SpotBugs **or** PMD | CodeQL + ESLint | D-009 dropped SpotBugs/FindSecBugs and Spotless; CodeQL covers Java and TypeScript, ESLint runs in frontend CI, and Prettier is manual |
+| OWASP Dependency-Check **or** Dependabot | Dependency Review + Trivy; Dependabot configured but paused | Maven/npm PR dependency review and filesystem/image scanning run in CI; weekly version updates remain disabled by zero PR limits |
+| Deployment platform undecided | Hong Kong server (domain and HTTPS configured), server-built images | CI builds/scans candidate images and runs Compose smoke; the approved release builds images again on the server without GHCR |
 | Jira or GitHub Projects | GitHub Projects | PRs, issues, and DoD evidence can be linked in one place |
-| — | **Added** ArchUnit, Testcontainers, Playwright, MSW, k6, OWASP ZAP, Actuator, springdoc-openapi | Turns Section 7.5 layering requirements, Section 7.2 performance targets, and Section 8.3 post-deployment verification into automated checks with evidence |
+| — | Testcontainers, Playwright, MSW, k6, OWASP ZAP, Actuator, springdoc-openapi | Automated integration/browser/API checks support verification; k6 and ZAP remain manual evidence. ArchUnit was selected originally and dropped by D-009 |
 
 ---
 
@@ -344,7 +357,7 @@ Local development, CI, and the server must use the same PostgreSQL major version
 | Liu Tongyao | Fault reports and maintenance handling | Fault reports immediately block reservations; technician assignment; six-step maintenance transitions and rejection of invalid transitions; restored availability after repair; retirement if unrepairable; complete history retention. Frontend: case action buttons show only currently permitted operations |
 | Wang Yuanmeng | Overdue detection and notifications | Due-soon and overdue reminders; successful delivery; retries after failure and terminal failure at the limit; deduplication; cancellation of unsent reminders after return; recipients see only their own notifications. Frontend: inbox, unread count, mark as read |
 
-**Zhang Hanming** (test strategy owner) maintains shared test infrastructure: backend Testcontainers bases, test data builders, and ArchUnit rules; frontend shared MSW handlers, authenticated render utilities, and Playwright login fixtures. Other members reuse these rather than create separate equivalents.
+**Zhang Hanming** (test strategy owner) maintains shared test infrastructure: backend Testcontainers bases and test data builders; frontend shared MSW handlers, authenticated render utilities, and Playwright login fixtures. Other members reuse these rather than create separate equivalents. ArchUnit enforcement was dropped by D-009.
 
 ### 5.3 How CI Uses the Test Benches
 
@@ -371,5 +384,5 @@ Local development, CI, and the server must use the same PostgreSQL major version
 - **On main `cef0e10` (2026-10-17)**: React pages and JSON APIs cover UC01-UC05, user and role administration with session revocation, equipment and category management, reports and the audit viewer. Default/local app configuration uses PostgreSQL 18; MySQL production dependencies are removed and H2 is test-only. Flyway V001-V007, real approval persistence, UUID Identity mapping and the notification bridge are integrated. Loan and equipment SQL lives in `repository` packages (#91). The state on main `b3def12` is kept in [Sprint status](agile/sprint-status.md#integration-update-2026-10-14).
 - **Local runtime (merged from #11)**: isolated native PostgreSQL 18, explicit demo accounts, startup/shutdown, real API/data/browser checks and restart preservation. Issues #5-#9 are closed after local acceptance, recorded in the [acceptance close-out](devlog/2026-10-17-acceptance-closeout.md) and the [#6 validation log](devlog/issue-6-postgres-validation.md); member acceptance remains separate.
 - **Retained transitional modules**: `database/` supplies data regression/history checks, and `integration/notifications/` supplies app-included PostgreSQL adapters plus pinned historical contract verification. Removing or renaming these modules requires its own integration task; this closeout does not remove them or rewrite merged migrations.
-- **Coverage and quality gates**: `verify` enforces the §5 70% service/domain line coverage; the eight required checks in §3.3 block merging. ArchUnit, Spotless and SpotBugs were dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze), so the layering rules in §2.2 are not enforced by automated tests.
+- **Coverage and quality gates**: `verify` enforces the §5 70% service/domain line coverage; both merge and release gates require the same 15 checks in §3.3. Release additionally requires the exact current main SHA, readiness flag and production approval. ArchUnit, Spotless and SpotBugs were dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze), so the layering rules in §2.2 are not enforced by automated tests.
 - **Release**: web/app/db packaging, the release-SHA gate and the deployment script (from #13) have released `main` to production since 2026-10-15; an empty production database gets its first administrator through the startup bootstrap (#41). Issue #10 still needs the server inventory, the production backup schedule and signed-in deployed acceptance, together with the production checks for #17 and #20.

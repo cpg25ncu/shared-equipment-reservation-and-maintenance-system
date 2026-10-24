@@ -5,6 +5,7 @@ export const requiredChecks = [
   'Secrets scan (gitleaks)', 'Vulnerability scan (Trivy)', 'Dependency review',
   'database-test', 'java-tests', 'frontend', 'notification-contract', 'checkout-return',
   'collaboration-docs', 'maintenance-postgres', 'release-config', 'release-images',
+  'approval-postgres', 'Analyze java', 'Analyze javascript-typescript',
 ];
 
 export function validateContext({ref, event, sha, ready}) {

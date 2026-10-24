@@ -1,17 +1,24 @@
-# CI gate: every PR must pass all checks before merging (main branch protection requires the three jobs below).
+# Security checks in this workflow: gitleaks, Trivy filesystem scanning, and Dependency Review.
 #
-# Based on Lumie-platform/ci.yml, which only has typecheck + test.
-# These three security checks are independent of the technology stack and can run now:
 #   secrets-scan       gitleaks: scans the full Git history for committed API keys / private keys
 #   vuln-scan          Trivy: scans dependency manifests and configuration for known vulnerabilities / misconfigurations
-#   dependency-review  GitHub Dependency Review: rejects new PR dependencies with high-severity vulnerabilities or disallowed licenses
+#   dependency-review  GitHub Dependency Review: rejects newly introduced HIGH/CRITICAL dependency vulnerabilities on PRs
 #
-# Add build-test when the AGFP stack is selected (Node → pnpm typecheck/test; Python → ruff + pytest, etc.),
-# and make it a required check. Enable CodeQL then as well; it cannot run on an empty repository.
+# Application builds/tests: frontend-tests.yml (backend/OpenAPI and frontend),
+# notification-tests.yml (application regression and PostgreSQL), database.yml,
+# zhoufanhao.yml (UC03), approval-postgres-tests.yml (UC02), maintenance-tests.yml (UC04),
+# and notification-contract.yml (notification adapter). release-config.yml builds/scans
+# app/web images and runs production-profile Compose smoke checks. CodeQL runs in codeql.yml.
+#
+# Owner decision on 2026-10-24: merge and release require the same 15 GitHub Actions checks.
+# scripts/verify-release.mjs requiredChecks maintains the list used by branch protection.
+# Release additionally requires the exact current main SHA, SERMS_PRODUCTION_READY=true,
+# and production reviewer approval before SSH. See docs/tech-stack.md section 3.3.
+# ZAP and k6 are manual, outside these workflows.
 name: CI
 
 on:
-  # No paths-ignore: branch protection requires all three checks on PRs, and the release gate
+  # No paths-ignore: branch protection requires these three security checks on PRs, and the release gate
   # (scripts/verify-release.mjs) requires them on the main SHA, including documentation-only pushes.
   pull_request:
   push:
@@ -64,16 +71,3 @@ jobs:
         with:
           fail-on-severity: high
           comment-summary-in-pr: always
-
-  # ── Build / test ─────────────────────────────────────────────
-  # Add jobs here after selecting the stack. Example (Node/pnpm, matching Lumie):
-  #   build-test:
-  #     runs-on: ubuntu-latest
-  #     steps:
-  #       - uses: actions/checkout@v4
-  #       - uses: pnpm/action-setup@v4
-  #       - uses: actions/setup-node@v4
-  #         with: { node-version: 22, cache: pnpm }
-  #       - run: pnpm install --frozen-lockfile
-  #       - run: pnpm -r typecheck
-  #       - run: pnpm -r test
