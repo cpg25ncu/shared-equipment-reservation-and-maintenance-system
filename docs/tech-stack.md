@@ -70,8 +70,8 @@ The Status column retains the 2026-10-17 implementation snapshot at main `cef0e1
 | CI/CD | GitHub Actions | ✅ Application/security checks on every PR; the gated `Deploy` workflow has released `main` to production since 2026-10-15 ([release runbook](server-release.md)) |
 | Secret scanning | gitleaks | ✅ |
 | Vulnerability scanning | Trivy (filesystem + Docker images) | ✅ Filesystem scan on every PR; `app` and `web` image scans in the `release-images` check |
-| Dependency checks | Dependency Review (PR stage) + Dependabot (weekly schedule configured) | ✅ Dependency Review; 🔶 As verified on 2026-10-24, all five Dependabot version-update entries remain paused with `open-pull-requests-limit: 0`; the freeze date does not resume them. Majors are ignored and minor/patch updates grouped. Repository settings report Dependabot security updates disabled |
-| Code security scanning | CodeQL (Java + TypeScript) | ✅ Active `codeql.yml` on every PR and push to `main` (Issue #25); neither branch protection nor the release script requires its checks as of 2026-10-24 |
+| Dependency checks | Dependency Review (PR stage) + Dependabot | ✅ Dependency Review; the owner's 2026-10-24 decision enables Dependabot alerts and security updates. All five version-update entries remain paused with `open-pull-requests-limit: 0` until after the final project report/presentation; no automatic resumption. Majors remain ignored and minor/patch updates grouped |
+| Code security scanning | CodeQL (Java + TypeScript) | ✅ Active `codeql.yml` on every PR and push to `main` (Issue #25); `Analyze java` and `Analyze javascript-typescript` belong to the shared 15-check merge/release list under the owner's 2026-10-24 decision |
 | Post-deployment security scanning | OWASP ZAP Baseline | 🔶 Manual, anonymous passive scans outside the pipeline: [2026-10-16 baseline](evidence/zap-baseline-20261016/zap-baseline.md), 0 FAIL / 7 WARN / 60 PASS; **latest: [2026-10-17 baseline](evidence/zap-baseline-20261017/README.md)** on deployed SHA `2993b78`, 0 FAIL / 5 WARN / 62 PASS. No authenticated or active scan |
 | Load testing | k6 (50 concurrent users) | 🔶 Manually run `scripts/load-k6.js`, outside CI: the recorded 50-user local run passed functional checks but reservation p95 2.26 s missed the 2 s target ([log](devlog/issue-25-devsecops.md)); no production run |
 | Containers | Docker (multi-stage builds, non-root execution) + Docker Compose: three containers, `web` + `app` + `db` | ✅ Non-root `app` and `web` images, PostgreSQL 18, production-profile Compose smoke in CI; running on the server since 2026-10-15 |
@@ -241,7 +241,7 @@ frontend/src
 
 ### 3.3 DevSecOps Pipeline (Proposal 8.3 + DoD Items 7 and 8)
 
-Current workflow and gate inventory verified on 2026-10-24 against main `90d840e5e07efb80775cc435518eb41679e35e15` and read-only GitHub settings. This section describes implemented automation; manual acceptance remains separate.
+The workflow inventory was verified on 2026-10-24 against main `90d840e5e07efb80775cc435518eb41679e35e15`. The [owner's subsequent 2026-10-24 decision](collaboration/decisions.md#unified-ci-gates-and-dependabot-security-2026-10-24) unifies merge/release checks and enables Dependabot security features. This section reflects that decision; manual acceptance remains separate.
 
 ```mermaid
 flowchart LR
@@ -254,7 +254,7 @@ flowchart LR
     I[Build app and web images] --> TI[Trivy image scans + CI Compose smoke]
   end
   subgraph RELEASE[Deploy on matching main pushes or manual dispatch]
-    G[Current main SHA + readiness flag<br/>12 release checks] --> A[production reviewer approval]
+    G[Current main SHA + readiness flag<br/>15 shared checks] --> A[production reviewer approval]
     A --> D[SSH backup + server image build<br/>Compose up + health check]
   end
   CI --> G
@@ -270,16 +270,16 @@ flowchart LR
 | Unit and integration testing | Backend JUnit Jupiter 6, Mockito, Spring Boot Test, Testcontainers; frontend Vitest + React Testing Library + MSW |
 | Test coverage generation | JaCoCo backend reports uploaded by the PostgreSQL workflows; frontend runs Vitest tests without a configured coverage command |
 | Static code analysis | CodeQL (Java + TypeScript) and ESLint; SpotBugs/FindSecBugs, Spotless and ArchUnit were dropped by D-009 |
-| Dependency vulnerability checking | Dependency Review on PRs + Trivy fs; Dependabot version-update PRs remain paused and security updates are disabled as verified on 2026-10-24 |
+| Dependency vulnerability checking | Dependency Review on PRs + Trivy fs; Dependabot alerts/security updates enabled by the 2026-10-24 decision, while version-update PRs remain paused until after the final project report/presentation |
 | Application packaging | Executable Spring Boot JAR; frontend static files |
 | Docker image creation | Two multi-stage images: `app` (`eclipse-temurin:17-jre`) and `web` (`nginx-unprivileged`), both running as non-root |
 | Container vulnerability checking | Trivy image; HIGH / CRITICAL vulnerabilities fail the check |
 | Deployment to the hosted environment | After the release gate and `production` approval, SSH runs `scripts/deploy.sh`: backup, server-side `docker compose build`, then `docker compose up -d --wait`; no registry push/pull. Flyway migrates on backend startup |
 | Basic post-deployment verification | The deployment script checks `/api/v1/health` for UP. Public HTTPS, login and role workflows are separate acceptance checks; ZAP is manual and outside the pipeline. k6 is also manual on isolated local data |
 
-**Merge gate: 8 required checks.** `gh api repos/cpg25ncu/shared-equipment-reservation-and-maintenance-system/branches/main/protection` returned `Secrets scan (gitleaks)`, `Vulnerability scan (Trivy)`, `Dependency review`, `database-test`, `java-tests`, `frontend`, `notification-contract` and `checkout-return`, with strict up-to-date branches, on 2026-10-24. These settings, rather than this document, define GitHub merge eligibility; the team's all-green CI policy remains in [CONTRIBUTING](../.github/CONTRIBUTING.md#prs-and-team-acceptance).
+**Both gates require the same 15 GitHub Actions checks.** [`scripts/verify-release.mjs`](../scripts/verify-release.mjs) exports the shared `requiredChecks` list: `Secrets scan (gitleaks)`, `Vulnerability scan (Trivy)`, `Dependency review`, `database-test`, `java-tests`, `frontend`, `notification-contract`, `checkout-return`, `collaboration-docs`, `maintenance-postgres`, `release-config`, `release-images`, `approval-postgres`, `Analyze java` and `Analyze javascript-typescript`. Main branch protection uses this list with strict up-to-date branches. The team's all-green CI policy remains in [CONTRIBUTING](../.github/CONTRIBUTING.md#prs-and-team-acceptance); the separate aggregate `CodeQL` check is not a sixteenth required entry.
 
-**Release gate: 12 required checks.** [`scripts/verify-release.mjs`](../scripts/verify-release.mjs) exports `requiredChecks`: the same eight names plus `collaboration-docs`, `maintenance-postgres`, `release-config` and `release-images`. `Deploy` requires successful GitHub Actions results for all twelve on the exact current main SHA before `production` approval and SSH. `approval-postgres` and CodeQL's `Analyze java` / `Analyze javascript-typescript` run in CI but are absent from both required lists. Whether to add further merge requirements is an owner decision; this inventory changes no settings.
+**Release has three additional requirements:** successful GitHub Actions results on the **exact current main SHA**, `SERMS_PRODUCTION_READY=true`, and **production human approval** before SSH. The common check list does not remove these release-only requirements. The [2026-10-24 decision](collaboration/decisions.md#unified-ci-gates-and-dependabot-security-2026-10-24) authorizes applying the matching repository settings after PR CI passes.
 
 | Build/test responsibility | Workflow |
 | --- | --- |
@@ -384,5 +384,5 @@ Local development, CI, and the server must use the same PostgreSQL major version
 - **On main `cef0e10` (2026-10-17)**: React pages and JSON APIs cover UC01-UC05, user and role administration with session revocation, equipment and category management, reports and the audit viewer. Default/local app configuration uses PostgreSQL 18; MySQL production dependencies are removed and H2 is test-only. Flyway V001-V007, real approval persistence, UUID Identity mapping and the notification bridge are integrated. Loan and equipment SQL lives in `repository` packages (#91). The state on main `b3def12` is kept in [Sprint status](agile/sprint-status.md#integration-update-2026-10-14).
 - **Local runtime (merged from #11)**: isolated native PostgreSQL 18, explicit demo accounts, startup/shutdown, real API/data/browser checks and restart preservation. Issues #5-#9 are closed after local acceptance, recorded in the [acceptance close-out](devlog/2026-10-17-acceptance-closeout.md) and the [#6 validation log](devlog/issue-6-postgres-validation.md); member acceptance remains separate.
 - **Retained transitional modules**: `database/` supplies data regression/history checks, and `integration/notifications/` supplies app-included PostgreSQL adapters plus pinned historical contract verification. Removing or renaming these modules requires its own integration task; this closeout does not remove them or rewrite merged migrations.
-- **Coverage and quality gates**: `verify` enforces the §5 70% service/domain line coverage; the eight required checks in §3.3 block merging. ArchUnit, Spotless and SpotBugs were dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze), so the layering rules in §2.2 are not enforced by automated tests.
+- **Coverage and quality gates**: `verify` enforces the §5 70% service/domain line coverage; both merge and release gates require the same 15 checks in §3.3. Release additionally requires the exact current main SHA, readiness flag and production approval. ArchUnit, Spotless and SpotBugs were dropped by [D-009](collaboration/decisions.md#d-009-scope-freeze), so the layering rules in §2.2 are not enforced by automated tests.
 - **Release**: web/app/db packaging, the release-SHA gate and the deployment script (from #13) have released `main` to production since 2026-10-15; an empty production database gets its first administrator through the startup bootstrap (#41). Issue #10 still needs the server inventory, the production backup schedule and signed-in deployed acceptance, together with the production checks for #17 and #20.

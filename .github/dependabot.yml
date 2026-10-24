@@ -1,6 +1,7 @@
-# Version updates remain paused (open-pull-requests-limit: 0), including after
-# the Thu 2026-10-22 code freeze; there is no automatic date-based resumption.
-# Resumption requires a separate owner decision and configuration change.
+# Owner decision on 2026-10-24: enable Dependabot alerts and security updates
+# in repository settings. Version updates remain paused (open-pull-requests-limit: 0)
+# until after the final project report/presentation; there is no automatic resumption.
+# Security updates are separate from these version-update PR limits.
 # To resume, delete those limit lines; minor and patch
 # updates then arrive as one grouped PR per ecosystem. Major versions are
 # ignored: upgrade them on purpose in their own task.

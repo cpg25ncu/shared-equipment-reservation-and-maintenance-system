@@ -210,3 +210,19 @@ Context: the shortest reservation was 30 minutes, a provisional value from [the 
 Decision: the default `serms.reservation.min-duration` is `0m`, and the frontend mirror `MIN_MINUTES` is `0`. Any reservation whose end is after its start passes the duration rule; with minute-precision inputs the shortest booking is one minute. The change is permanent, not a temporary demo setting.
 
 Unchanged: `DurationPolicy` and the `too-short` code stay, so a minimum can be configured again; the 7-day maximum and per-item maximum, the start-not-in-past rule, the 90-day horizon, the quota of 3, the overdue block, and the checkout window (between start and end) all stay as contracted.
+
+## Unified CI Gates and Dependabot Security (2026-10-24)
+
+Status: **Confirmed directly by repository owner Liu Tongyao (@cpg25ncu) in conversation on 2026-10-24 (Asia/Singapore)**. This authorizes completing PRs #103/#104 without waiting for other members. Starting main was `90d840e`; PR #104's minimum zod patch was merged as `8f9c063fc48e46da251d079c4207ec417cffd58d` before updating #103.
+
+Sources: [CONTRIBUTING](../../.github/CONTRIBUTING.md#prs-and-team-acceptance) already requires all CI checks to pass before merging; the previously different merge/release lists were documented in PR #103. [D-009](#d-009-scope-freeze) already dropped ArchUnit. Dependabot version-update limits remain zero in `.github/dependabot.yml`.
+
+Decision:
+
+1. Use the same **15 GitHub Actions checks** for main branch protection and release verification. The previous twelve release checks plus `approval-postgres`, `Analyze java` and `Analyze javascript-typescript` form the shared list maintained in [`scripts/verify-release.mjs`](../../scripts/verify-release.mjs). Preserve strict up-to-date branch protection and every other protection setting. Release still additionally requires the exact current main SHA, `SERMS_PRODUCTION_READY=true` and production human approval. The separate aggregate `CodeQL` result is not an additional required entry. Rationale: inconsistent lists add no value to the existing all-green CI policy.
+2. Remove only the words `ArchUnit rules` from the test-infrastructure row in [authentication and approval contract section 1](../contracts/auth-and-approval.md#1-development-sequence), originally line 23. This synchronizes the confirmed D-009 scope; no business interface changes. Liu Tongyao explicitly confirms this one-line correction, so no separate Zhang Hanming confirmation is required for this line. Other contract changes retain the affected-owner confirmation rule.
+3. Enable Dependabot alerts and automated security updates now. Keep all five version-update PR limits at zero until after the final project report/presentation, then resume separately; no automatic resumption or date is inferred. Update configuration comments only.
+
+Execution authorized: merge #104 with a merge commit; synchronize #103 with main; change the release script and matching guidance; run the four requested local checks once on final HEAD; push #103 and await its CI once; apply settings only after green CI and read each changed setting back once; mark #103 ready and merge it with a merge commit. Cancel #104's Deploy only if it is still waiting/queued, because #103's deployment includes the security patch. Send the new Deploy link to Liu Tongyao, wait once for at most 30 minutes, and make one HTTPS health request after successful deployment. Codex must not approve production, change Deploy triggers, edit application code or upgrade other dependencies.
+
+Local verification, CI, settings changes, merges, deployment, health, member acceptance and team Done remain separate facts. This owner authorization is not a claim that future execution or acceptance has already succeeded; append actual results to the PR records.

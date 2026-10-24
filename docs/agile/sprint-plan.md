@@ -19,7 +19,7 @@ GitHub Projects columns: To Do → In Progress → Review → Testing → Done. 
 A task moves to Done only when all items are satisfied:
 
 1. Developed on a Feature Branch and merged through a PR, with at least one member check before team Done; this is not a new mandatory GitHub merge approval.
-2. Green CI: compilation, all frontend/backend tests, service + domain coverage ≥ 70%, gitleaks, Trivy, Dependency Review, CodeQL and ESLint. CodeQL and ESLint already run; Spotless was dropped by [D-009](../collaboration/decisions.md#d-009-scope-freeze). Actual merge/release check lists are documented in the [CI inventory](../tech-stack.md#33-devsecops-pipeline-proposal-83--dod-items-7-and-8).
+2. Green CI: compilation, all frontend/backend tests, service + domain coverage ≥ 70%, gitleaks, Trivy, Dependency Review, CodeQL and ESLint. CodeQL and ESLint already run; Spotless was dropped by [D-009](../collaboration/decisions.md#d-009-scope-freeze). Both merge and release gates require the same 15 GitHub Actions checks in the [CI inventory](../tech-stack.md#33-devsecops-pipeline-proposal-83--dod-items-7-and-8); release also requires the exact current main SHA, `SERMS_PRODUCTION_READY=true` and production human approval.
 3. Test bench submitted with code, covering normal and major exception flows (technology stack §5).
 4. Backend API changes include regenerated frontend types (`pnpm check:api` passes).
 5. Cross-module interfaces have contracts (`docs/contracts/`); affected owners confirm changes.

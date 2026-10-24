@@ -10,11 +10,11 @@
 # and notification-contract.yml (notification adapter). release-config.yml builds/scans
 # app/web images and runs production-profile Compose smoke checks. CodeQL runs in codeql.yml.
 #
-# Two gates, verified on 2026-10-24:
-# - Merge: main branch protection requires 8 checks, including these 3 security checks.
-# - Release: scripts/verify-release.mjs requiredChecks requires 12 checks on current main.
-# See docs/tech-stack.md section 3.3 for the lists; repository settings and the script
-# are the respective sources of truth. ZAP and k6 are manual, outside these workflows.
+# Owner decision on 2026-10-24: merge and release require the same 15 GitHub Actions checks.
+# scripts/verify-release.mjs requiredChecks maintains the list used by branch protection.
+# Release additionally requires the exact current main SHA, SERMS_PRODUCTION_READY=true,
+# and production reviewer approval before SSH. See docs/tech-stack.md section 3.3.
+# ZAP and k6 are manual, outside these workflows.
 name: CI
 
 on:
