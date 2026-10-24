@@ -8,7 +8,7 @@ Owner: Liu Tongyao (@cpg25ncu) · Requirement: conversation task to align CI/CD 
 
 Updated comments and current documentation to describe the three security jobs in `ci.yml`, the separate build/test workflows, and the distinct merge and release gates. Corrected the old pipeline diagram and claims about CodeQL, Dependabot, registry use, static-analysis tools, and manual ZAP/k6 checks. No application or pipeline behavior changed.
 
-The delivery PR targets `main`; its exact HEAD, Actions links and final CI conclusions are recorded in the PR's Verification Evidence section after push. This entry records the local input and observations made before the delivery commit.
+The delivery [PR #103](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/pull/103) targets `main`; its exact HEAD, Actions links and final CI conclusions are recorded in the PR's Verification Evidence section after push. Initial documentation commit `20f74a0` was pushed before PR creation; this follow-up adds the real PR link. This entry records the local input and observations made before the delivery commit.
 
 ### Design notes
 
