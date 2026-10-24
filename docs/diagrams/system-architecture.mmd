@@ -1,0 +1,62 @@
+---
+config:
+  theme: base
+  fontFamily: Arial, Helvetica, sans-serif
+  themeCSS: '.nodeLabel, .edgeLabel, .cluster-label, .label { font-family: Arial, Helvetica, sans-serif !important; } .node, .node *, .cluster, .cluster * { filter: none !important; box-shadow: none !important; } .cluster-label, .cluster-label span, .cluster-label p { color: #023E7C !important; }'
+  themeVariables:
+    fontFamily: Arial, Helvetica, sans-serif
+    fontSize: 26px
+    primaryColor: '#FFFFFF'
+    primaryTextColor: '#023E7C'
+    primaryBorderColor: '#023E7C'
+    lineColor: '#023E7C'
+    secondaryColor: '#FFFFFF'
+    tertiaryColor: '#FFFFFF'
+    clusterBkg: '#FFFFFF'
+    clusterBorder: '#023E7C'
+    edgeLabelBackground: '#FFFFFF'
+  flowchart:
+    htmlLabels: true
+    curve: stepAfter
+    nodeSpacing: 35
+    rankSpacing: 45
+    padding: 20
+    wrappingWidth: 600
+    useMaxWidth: false
+---
+%% T1. As built at df9033f0cafd58258bf86594bdc9f7795e9748e2.
+%% Sources: docs/tech-stack.md sections 2.1-2.5; compose.yaml; Dockerfile; web/nginx.conf.
+%% D-009 excludes email. Render with Mermaid CLI 12.0.0, white background, width >= 2400.
+flowchart LR
+  subgraph CLIENT["Public entry"]
+    direction TB
+    B["<b>Browser</b><br/>5 roles"]
+    H["<b>Host nginx</b><br/>TLS · Let's Encrypt"]
+    B -->|HTTPS| H
+  end
+
+  subgraph COMPOSE["Docker Compose · private network"]
+    direction LR
+    W["<b>web container · :8080</b><br/>nginx<br/>React static files<br/>/api reverse proxy"]
+
+    subgraph APP["app container · modular monolith"]
+      direction TB
+      API["<b>Spring Boot 4 · Java 17 · :8081</b><br/>/api/v1 · /api/v1/health"]
+      L["<b>Layer stack</b><br/>api → service → domain → repository"]
+      MOD["<b>Business modules</b><br/>equipment · reservation · approval<br/>loan · maintenance"]
+      EVT["<b>notification · audit</b>"]
+      REST["<b>Other modules</b><br/>identity · report · shared"]
+      API ~~~ L
+      L ~~~ MOD
+      MOD -. domain events .-> EVT
+      EVT ~~~ REST
+    end
+
+    DB[("<b>db container</b><br/>PostgreSQL 18 · :5432<br/>Flyway V001–V007<br/>No public port")]
+    W -->|"/api"| APP
+    APP -->|JDBC| DB
+  end
+
+  CLIENT -->|"127.0.0.1:8789"| W
+  classDef default fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#023E7C;
+  style APP fill:#FFFFFF,stroke:#F17D00,stroke-width:3px,color:#023E7C
