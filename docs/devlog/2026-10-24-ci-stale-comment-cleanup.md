@@ -65,3 +65,9 @@ No technology, contract, ownership, threshold, merge policy or pipeline behavior
 ### Authorship
 
 Written by Codex at Liu Tongyao's (@cpg25ncu) request, including the inventory, comment/documentation edits and this entry. No Issue, human review, member test, approval, meeting or effort hours are invented.
+
+## 2026-10-24 documentation follow-up
+
+Codex, at Liu Tongyao's request, added the latest anonymous passive ZAP baseline (2026-10-17, deployed `2993b78`, 0 FAIL / 5 WARN / 62 PASS) alongside the 2026-10-16 result in the technology guide, backup runbook and Sprint status. The technology table now distinguishes its original `cef0e10` snapshot from CI/CD verification against `90d840e` on 2026-10-24; Sprint status now describes Deploy's path filtering accurately. Only these three guides and this appended log section change in this follow-up; no YAML changes or repeated YAML comparison.
+
+The fetched main baseline is unchanged. This round runs only `node scripts/check-collaboration.mjs`, `git diff --check` and the four-file Markdown scope check once on its final HEAD; results and the single post-push CI wait are appended to PR #103. The contract's remaining ArchUnit wording requires Zhang Hanming's confirmation and is left untouched, as is the historical `docs/local-repository-closeout.md`. The separate zod security PR must merge into main and #103 must then incorporate that main before its Trivy finding can clear. No merge, repository-setting change or human acceptance is claimed.
