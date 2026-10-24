@@ -64,7 +64,9 @@ export function LoginPage() {
             workspace.
           </p>
         </div>
-        <p className="login-foot">SWE5006 · Team 07</p>
+        <p className="login-foot">
+          SWE5006 · Team 07 · Shared Equipment Reservation and Maintenance System
+        </p>
       </section>
       <main className="login-panel">
         <div className="login-card">
