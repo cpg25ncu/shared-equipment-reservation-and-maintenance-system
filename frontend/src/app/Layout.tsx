@@ -16,6 +16,9 @@ export function Layout() {
   const workspace = items.filter((item) => item.group === 'workspace');
   const manage = items.filter((item) => item.group === 'manage');
   const unreadCount = unread.data?.count ?? 0;
+  const release = import.meta.env.DEV
+    ? 'local'
+    : (import.meta.env.VITE_RELEASE_SHA || 'local').slice(0, 7);
   async function leave() {
     setLeaving(true);
     try {
@@ -88,7 +91,8 @@ export function Layout() {
           <Outlet />
         </main>
         <footer>
-          Shared Equipment Reservation and Maintenance System <span>Team 07</span>
+          Shared Equipment Reservation and Maintenance System
+          <span>Team 07 · Release {release}</span>
         </footer>
       </div>
     </div>
