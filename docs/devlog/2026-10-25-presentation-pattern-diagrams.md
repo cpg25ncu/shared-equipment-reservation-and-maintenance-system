@@ -110,7 +110,9 @@ Local scratch evidence directory: `D:/ChatGPT/Designing_Moder_Software_Systems/.
 
 ## Follow-ups and handover
 
-The required assets and sources are complete. Open one draft PR titled **docs: presentation design-pattern class diagrams**. Liu Tongyao owns final slide placement and member acceptance. No application server, database, container or background process was started. Keep this isolated clone and local exported assets for review; do not clean another session's checkout.
+The required assets and sources are complete. Draft [PR #111: docs: presentation design-pattern class diagrams](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/pull/111) is open. Source/render commit: `6d62727a93cef1e3127342532c9f88eadfbbd56c`; this subsequent handover update changes only the devlog. The GitHub connector returned 403 on PR creation; the already-configured GitHub CLI successfully created the draft instead. No duplicate PR was created.
+
+Liu Tongyao owns final slide placement and member acceptance. No application server, database, container or background process was started. Keep this isolated clone and local exported assets for review; do not clean another session's checkout. No merge, production action or application-code change was performed.
 
 ## Authorship
 
