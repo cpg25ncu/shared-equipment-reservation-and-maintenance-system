@@ -28,3 +28,17 @@ This lands after the 2026-10-22 code freeze. It is an owner-requested, non-funct
 ### Authorship
 
 Written by Claude (Claude Code) at Liu Tongyao's request, including the change, this entry, the merge and the recorded rehearsal. No human review, member test, meeting or effort hours are claimed.
+
+## 2026-10-25 Second rehearsal release (approval recording)
+
+### What was built
+
+The login card subtitle now reads "Sign in with your SERMS account to reserve, borrow and track shared equipment." In the first rehearsal (PR #106, merged as `b2ca024`) the `production` approval was given before recording started, so this second small change repeats the whole path and the approval click is recorded.
+
+### Verification
+
+Local, before push: `git diff --check` and `node scripts/check-collaboration.mjs`. Hosted CI, merge, release-gate and deployment results are recorded in the pull request. The first rehearsal's release gate took 3m 42s and its deployment 2m 52s.
+
+### Authorship
+
+Written by Claude (Claude Code) at Liu Tongyao's request, including the merge and the `production` approval given in the owner's browser on the owner's explicit instruction. No human review, member test, meeting or effort hours are claimed.
