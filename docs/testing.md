@@ -16,7 +16,10 @@ Test bench requirements remain defined in [Technology stack §5](tech-stack.md#5
 | Frontend E2E | `frontend/`: `pnpm exec playwright install chromium`, then `pnpm test:e2e` | Chromium/platform dependencies; Linux CI uses `--with-deps` |
 | Data foundation | Root: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-sprint1.ps1` | Docker, Java/Maven; script and `Sprint 1 database` use PostgreSQL 18 |
 | Notification adapter | Root: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-notification-integration.ps1` | Docker, Maven, pinned upstream commit; `Notification PostgreSQL contract` |
-| Security | GitHub `CI` workflow | Existing gitleaks, Trivy, Dependency Review; local document checks do not replace them |
+| Security | GitHub `CI` workflow ([ci.yml](../.github/workflows/ci.yml)) | Three security checks: gitleaks, Trivy filesystem scan, Dependency Review; builds/tests run in the separate workflows listed above |
+| CodeQL | GitHub [codeql.yml](../.github/workflows/codeql.yml) | Active Java and JavaScript/TypeScript analysis on PRs and main pushes; absent from both required gate lists as verified on 2026-10-24 |
+| Release preparation | GitHub [release-config.yml](../.github/workflows/release-config.yml) | `release-config` tests release scripts/configuration; `release-images` builds/scans app/web images and runs isolated production-profile Compose smoke |
+| Manual security/load checks | [Backup, load and security runbook](runbook-backup.md#50-user-load-check) | ZAP baseline and k6 run manually, outside GitHub Actions; recorded runs are historical evidence, not automatic PR or release gates |
 | Collaboration navigation/skills | Root: `node scripts/check-collaboration.mjs` | Added `Collaboration documentation` workflow; required branch-protection checks unchanged |
 | Real local demo | Root: startup, `node scripts/smoke-local.mjs`, data/browser checks and shutdown in [local demo](local-demo.md) | Dedicated local PostgreSQL cluster/accounts; creates actual demonstration transactions; not a full exception/overdue suite |
 | Real administrator security browser workflow | Root: `node scripts/check-admin-security-browser.mjs` after this checkout's local startup and Chromium installation | Desktop/mobile actual create, role change, disable/activate, password reset; two independent cookie sessions per target; old-session 401 and new-login/audit checks. Creates synthetic accounts and retains history; private reports/screenshots in `.cache/local-demo/`, reviewed exports only |
@@ -42,6 +45,8 @@ The historical table baseline was main `b3def12`; UC04 acceptance was updated ag
 The [PR #11 verification record](evidence/local-demo/verification.md) preserves local results. GitHub subsequently passed all nine checks on `d42e0a6`; those results do not cover new closeout commits or replace member acceptance. The merged integration line passed all twelve checks on `db376ab`, whose content equals `main` `b3def12`. Current status and remaining scenarios are in [Sprint progress](agile/sprint-status.md#integration-update-2026-10-14).
 
 ## Verification Scope
+
+Two gate lists were verified on 2026-10-24: GitHub main branch protection requires **8** checks; [`scripts/verify-release.mjs`](../scripts/verify-release.mjs) requires **12** on the exact current main SHA before deployment approval/SSH. The [workflow inventory and exact lists](tech-stack.md#33-devsecops-pipeline-proposal-83--dod-items-7-and-8) distinguish these gates from other running checks and the team's all-green CI policy. Local verification does not modify either gate.
 
 - Run the checks closest to the change, then existing PR requirements. For documentation-only changes, check links, templates, and applicable rules locally; remote CI follows existing workflows without skipping.
 - Backend/frontend behavior changes include their complete test benches. H2/mock results do not establish real PostgreSQL 18, concurrency, or transaction acceptance.

@@ -2,7 +2,8 @@ name: Deploy
 on:
   push:
     branches: [main]
-    # Documentation-only pushes never deploy; a mixed push with any code change still does.
+    # Pushes changing only ignored paths do not deploy. Workflow YAML is not ignored:
+    # even comment-only edits there start Deploy; production approval still gates SSH.
     paths-ignore: ['**.md', 'docs/**', '.agents/**', '.github/ISSUE_TEMPLATE/**']
   workflow_dispatch: {}
 concurrency:

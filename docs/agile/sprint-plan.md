@@ -19,12 +19,12 @@ GitHub Projects columns: To Do → In Progress → Review → Testing → Done. 
 A task moves to Done only when all items are satisfied:
 
 1. Developed on a Feature Branch and merged through a PR, with at least one member check before team Done; this is not a new mandatory GitHub merge approval.
-2. Green CI: compilation, all frontend/backend tests, service + domain coverage ≥ 70%, gitleaks, Trivy, Dependency Review (and CodeQL, Spotless, ESLint once implemented).
+2. Green CI: compilation, all frontend/backend tests, service + domain coverage ≥ 70%, gitleaks, Trivy, Dependency Review, CodeQL and ESLint. CodeQL and ESLint already run; Spotless was dropped by [D-009](../collaboration/decisions.md#d-009-scope-freeze). Actual merge/release check lists are documented in the [CI inventory](../tech-stack.md#33-devsecops-pipeline-proposal-83--dod-items-7-and-8).
 3. Test bench submitted with code, covering normal and major exception flows (technology stack §5).
 4. Backend API changes include regenerated frontend types (`pnpm check:api` passes).
 5. Cross-module interfaces have contracts (`docs/contracts/`); affected owners confirm changes.
 6. Save diagrams, screenshots, and test results during development, not at the end.
-7. Successful automatic deployment after merging and passed post-deployment checks.
+7. Successful deployment through `Deploy` after merging, including the release gate and `production` approval, and passed post-deployment acceptance. The script automates Compose startup and health verification; signed-in role workflows and ZAP are separate manual checks. Documentation paths ignored by the workflow do not trigger deployment; workflow YAML still does ([release entry points](../server-release.md#deployment-entry-points)).
 
 ## 3. Sprint Goals and Coordination
 

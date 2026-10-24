@@ -1,5 +1,7 @@
-# Version updates are paused until after the code freeze on Thu 2026-10-22
-# (open-pull-requests-limit: 0). To resume, delete those lines; minor and patch
+# Version updates remain paused (open-pull-requests-limit: 0), including after
+# the Thu 2026-10-22 code freeze; there is no automatic date-based resumption.
+# Resumption requires a separate owner decision and configuration change.
+# To resume, delete those limit lines; minor and patch
 # updates then arrive as one grouped PR per ecosystem. Major versions are
 # ignored: upgrade them on purpose in their own task.
 version: 2
