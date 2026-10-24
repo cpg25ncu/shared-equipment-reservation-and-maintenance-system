@@ -1,0 +1,73 @@
+---
+config:
+  theme: base
+  fontFamily: Arial, Helvetica, sans-serif
+  themeCSS: '.nodeLabel, .edgeLabel, .cluster-label, .label { font-family: Arial, Helvetica, sans-serif !important; } .node, .node *, .cluster, .cluster * { filter: none !important; box-shadow: none !important; } .cluster-label, .cluster-label span, .cluster-label p { color: #023E7C !important; }'
+  themeVariables:
+    fontFamily: Arial, Helvetica, sans-serif
+    fontSize: 24px
+    primaryColor: '#FFFFFF'
+    primaryTextColor: '#023E7C'
+    primaryBorderColor: '#023E7C'
+    lineColor: '#023E7C'
+    secondaryColor: '#FFFFFF'
+    tertiaryColor: '#FFFFFF'
+    clusterBkg: '#FFFFFF'
+    clusterBorder: '#023E7C'
+    edgeLabelBackground: '#FFFFFF'
+  flowchart:
+    htmlLabels: true
+    curve: stepAfter
+    nodeSpacing: 12
+    rankSpacing: 28
+    padding: 14
+    wrappingWidth: 600
+    useMaxWidth: false
+---
+%% T1. As built at df9033f0cafd58258bf86594bdc9f7795e9748e2.
+%% Source: .github/workflows/*.yml; scripts/verify-release.mjs; scripts/deploy.sh.
+%% The eight requested check markers are retained as a subset; the current gate has 15.
+%% Deploy skips documentation-only pushes. No workflow or production action is run by rendering.
+flowchart LR
+  subgraph PR["1 · Every pull request (parallel, ~4 min)<br/>★ 8 requested checks · actual gate: all 15"]
+    direction LR
+    subgraph LEFT[" "]
+      direction TB
+      SEC["<b>Security</b><br/>★ Secrets scan (gitleaks)<br/>full history<br/>★ Vulnerability scan (Trivy)<br/>fs: vuln / misconfig / secret<br/>★ Dependency review"]
+      FE["<b>Frontend &amp; contract</b><br/>★ frontend<br/>lint · typecheck · Vitest · build<br/>OpenAPI drift · Playwright"]
+      REL["<b>Release preparation</b><br/>deploy script tests · Compose config<br/>Docker build app + web<br/>Trivy image scans<br/>production-profile Compose smoke"]
+      SEC ~~~ FE ~~~ REL
+    end
+    subgraph RIGHT[" "]
+      direction TB
+      BUILD["<b>Build &amp; test</b><br/>Maven verify · JaCoCo ≥70%<br/>service + domain coverage<br/>PostgreSQL 18 integration:<br/>approval · maintenance · UC03<br/>notification contract<br/>Sprint 1 database migrations<br/>★ java-tests · ★ database-test<br/>★ checkout-return<br/>★ notification-contract"]
+      SAST["<b>SAST</b><br/>CodeQL Java + TypeScript"]
+      DOC["<b>Collaboration docs</b><br/>links + skill entry points"]
+      BUILD ~~~ SAST ~~~ DOC
+    end
+  end
+
+  subgraph MAIN["2 · Merge to protected main"]
+    direction TB
+    DEP["<b>Deploy workflow</b><br/>docs-only pushes skipped"]
+    GATE["<b>Release gate</b><br/>scripts/verify-release.mjs<br/>all 15 checks green<br/>exact current main SHA<br/>production ready"]
+    APPROVE["<b>Production environment</b><br/>manual approval"]
+    SSH["<b>SSH</b><br/>pinned host fingerprint"]
+    RUN["<b>scripts/deploy.sh</b><br/>1. flock lock<br/>2. pg_dump pre-release backup<br/>+ verify archive<br/>3. checkout exact SHA<br/>4. docker compose build<br/>5. up --wait<br/>6. /api/v1/health UP"]
+    NOTE["<b>Images built on the server</b><br/>No registry"]
+    DEP --> GATE --> APPROVE --> SSH --> RUN
+    RUN ~~~ NOTE
+  end
+
+  subgraph AFTER["3 · After release<br/>(manual)"]
+    direction TB
+    ZAP["OWASP ZAP<br/>baseline"]
+    ACCEPT["Deployed<br/>acceptance"]
+    ZAP ~~~ ACCEPT
+  end
+
+  PR --> MAIN --> AFTER
+  classDef default fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#023E7C;
+  style LEFT fill:#FFFFFF,stroke:none
+  style RIGHT fill:#FFFFFF,stroke:none
+  style APPROVE fill:#FFFFFF,stroke:#F17D00,stroke-width:3px,color:#023E7C
