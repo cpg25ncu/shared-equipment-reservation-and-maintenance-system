@@ -42,17 +42,17 @@ All nine PNGs are exported to `D:\ChatGPT\Designing_Moder_Software_Systems\Prese
 
 | PNG filename | Actual pixels | Target size (in) | Smallest fitted text at 96 dpi | Result |
 | --- | --- | --- | --- | --- |
-| `N6a_uc04_design_class.png` | 2400 x 982 | 4.3 x 4.6 | 1.0 px | Rendered unchanged; very dense |
-| `N6g_uc04_analysis_class.png` | 2400 x 4344 | 4.3 x 4.6 | 2.0 px | Rendered unchanged; very dense |
-| `N6b_uc04_analysis_sequence.png` | 2400 x 2688 | 4.3 x 4.6 | 3.1 px | Rendered unchanged; dense |
-| `N6c_uc04_design_sequence.png` | 2400 x 5405 | 4.3 x 4.6 | 1.0 px | Rendered unchanged; very dense |
+| `N6a_uc04_design_class.png` | 10215 x 4179 | 4.3 x 4.6 | 1.0 px | Rendered unchanged; very dense |
+| `N6g_uc04_analysis_class.png` | 2909 x 5266 | 4.3 x 4.6 | 2.0 px | Rendered unchanged; very dense |
+| `N6b_uc04_analysis_sequence.png` | 3101 x 3474 | 4.3 x 4.6 | 3.1 px | Rendered unchanged; dense |
+| `N6c_uc04_design_sequence.png` | 4923 x 11087 | 4.3 x 4.6 | 1.0 px | Rendered unchanged; very dense |
 | `N6d_uc04_states.png` | 2400 x 4632 | 4.3 x 2.2 | 1.7 px | Rendered unchanged; very dense |
 | `N6e_uc03_states.png` | 2400 x 1544 | 4.3 x 2.2 | 5.3 px | Rendered unchanged; dense |
 | `N6f_reservation_states.png` | 2400 x 2108 | 4.3 x 2.2 | 4.1 px | Rendered unchanged; dense |
 | `N7a_uc05_design_class.png` | 2400 x 1579 | 8.9 x 4.8 | 14.2 px | Passed; approximately 14 px minimum |
 | `N7b_uc05_design_sequence.png` | 2400 x 1348 | 8.9 x 4.8 | 13.9 px | Passed; approximately 14 px minimum |
 
-All seven existing diagrams are too dense when their entire image is fitted into the requested small slot. They need slide cropping, enlargement, or multiple slides. In particular, the UC04 design class is naturally very wide, and the UC04 state diagram is naturally tall despite the requested landscape target. These are source-density/layout limitations, not render failures; the sources were preserved exactly as requested.
+All seven existing diagrams are too dense when their entire image is fitted into the requested small slot. They need slide cropping, enlargement, or multiple slides. In particular, the UC04 design class is naturally very wide, and the UC04 state diagram is naturally tall despite the requested landscape target. These are source-density/layout limitations, not render failures; the sources were preserved exactly as requested. Legacy exports receive at least 24 pixels for their smallest source font where this requires more than 2400 pixels of width, preserving useful detail for cropping; this does not fix whole-slide density.
 
 Environment: Windows, Node `v24.20.0`, npm/npx `11.19.0`, Mermaid CLI `12.0.0` using Mermaid `12.2.0`, and installed headless Google Chrome. The already cached Mermaid CLI package was used through its `renderMermaid` API for every diagram; no additional dependency was installed. Local render tooling, intermediate SVGs, audit JSON and QA previews are outside the clone in `D:\ChatGPT\Designing_Moder_Software_Systems\.cache\serms-t6-render\`.
 
@@ -60,12 +60,13 @@ Verification inputs: baseline/initial HEAD `df9033f0cafd58258bf86594bdc9f7795e97
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| `node ../serms-t6-render/render.mjs`, then final UC05-only rerenders | Passed: all nine Mermaid sources render, all nine PNGs are 2400 px wide | `results.json`, final `results-uc05.json`, retained SVGs and exported PNGs |
+| `node ../serms-t6-render/render.mjs`, then final UC05-only rerenders and final full export | Passed: all nine Mermaid sources render, all nine PNGs are at least 2400 px wide | `results.json`, final `results-uc05.json`, retained SVGs and exported PNGs |
 | `node ../serms-t6-render/audit.mjs` | Passed: seven original sources are byte-identical to baseline; 22 requested types and 21 method names verified against Java; nine PNG signatures/dimensions checked; only three allowed paths changed; UTF-8 without BOM and LF | `audit-results.json` contains source and PNG SHA-256 hashes |
 | Visual QA of the existing contact sheet and both UC05 images fitted to 8.9 x 4.8 in at 96 dpi | Passed for rendering/completeness and new-view readability; existing density exceptions are listed above | `existing-diagrams-contact-sheet.png`, `uc05-slide-size-preview.png` |
 | `git diff --exit-code origin/main --` followed by the seven existing Mermaid paths | Passed: no changes |
 | `node scripts/check-collaboration.mjs` | Passed: 19 documents, 7 skills |
 | `git diff --check` | Passed |
+| `git diff --cached --check`; `git diff --check origin/main...HEAD` | Passed on the staged additions and diagram delivery commit |
 | Backend/frontend/PostgreSQL behavior suites | Not run: documentation-only task; application code and contracts unchanged |
 | Hosted CI, human/member acceptance, merge, deployment, team Done | Not claimed; draft delivery only |
 
@@ -73,7 +74,9 @@ Problems encountered: the managed worktree tool rejected the non-repository chat
 
 ## Delivery and follow-ups
 
-The requested documentation and nine local PNG exports are complete. Open one draft PR titled `docs: UC05 design diagrams and presentation renders`, targeting `main`. Do not merge. The presentation owner should crop/enlarge the existing diagrams as recorded above. Human acceptance and ordinary hosted CI remain separate from these local documentation checks.
+The requested documentation and nine local PNG exports are complete. Opened draft [PR #112: docs: UC05 design diagrams and presentation renders](https://github.com/cpg25ncu/shared-equipment-reservation-and-maintenance-system/pull/112), targeting `main`. The GitHub connector returned `403 Resource not accessible by integration`; the already authenticated GitHub CLI successfully created the single requested PR. The diagram delivery commit is `3971bc7a8fd18ca89f86a34563aa30b0854c182a`; the subsequent log-only commit records final export sizes and this delivery link, without changing either verified Mermaid source. The branch is retained in the task-specific clone, and no services remain running from the rendering work.
+
+The PR remains draft and unmerged. The presentation owner should crop/enlarge the existing diagrams as recorded above. Human acceptance and ordinary hosted CI remain separate from these local documentation checks. No required local artifact is missing; broader runtime tests, human acceptance, merge and deployment were not part of this task.
 
 ## Authorship and remaining acceptance
 
