@@ -1,0 +1,139 @@
+@startuml N3_erd
+' SERMS T2: PostgreSQL 18, schema serms, V001–V007.
+' Catalog baseline: df9033f0cafd58258bf86594bdc9f7795e9748e2.
+' Render: PlantUML 1.2026.9 / Java 25. No schema or application change.
+' User foreign keys use U / U* references to avoid nine crossing connectors.
+scale 4400 width
+skinparam dpi 120
+hide circle
+hide empty methods
+hide stereotypes
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam roundcorner 0
+skinparam linetype ortho
+skinparam nodesep 12
+skinparam ranksep 4
+skinparam ArrowColor #023E7C
+skinparam ArrowThickness 1.3
+skinparam class {
+  BackgroundColor white
+  HeaderBackgroundColor #023E7C
+  HeaderBackgroundColor<<booking>> #F17D00
+  BorderColor #023E7C
+  FontColor white
+  FontColor<<booking>> black
+  FontSize 15
+  AttributeFontColor black
+  AttributeFontSize 14
+}
+skinparam legend {
+  BackgroundColor white
+  BorderColor white
+  FontColor black
+  FontSize 14
+}
+entity "<color:white>role</color>" as role {
+  PK role_id · UK code
+}
+entity "<color:white>user_role</color>" as user_role {
+  PK,FK user_id → U
+  PK,FK role_id
+}
+entity "<color:white>app_user</color>" as app_user {
+  PK user_id [U]
+  UK notification_principal [U*]
+}
+entity "<color:white>equipment_category</color>" as equipment_category {
+  PK name
+}
+entity "<color:white>equipment [v]</color>" as equipment {
+  PK equipment_id
+  FK category · UK asset_tag
+}
+entity "reservation [v]" as reservation <<booking>> {
+  PK reservation_id
+  FK requester_id → U
+  start_at / end_at
+}
+entity "<color:white>approval_decision [i]</color>" as approval_decision {
+  PK approval_id
+  FK,UK reservation_id
+  FK approver_id → U
+}
+entity "<color:white>maintenance_case [v]</color>" as maintenance_case {
+  PK maintenance_case_id
+  FK equipment_id, loan_id?
+  FK reported_by, assigned_to? → U
+}
+entity "<color:white>loan [v]</color>" as loan {
+  PK loan_id
+  UK reminder_id [L*]
+  FK checkout_by → U
+  FK return_by? → U
+}
+entity "<color:white>audit_log [i]</color>" as audit_log {
+  PK audit_id
+  FK actor_id ? → U
+}
+entity "<color:white>notification_request</color>" as notification_request {
+  PK id · UK dedup_key
+  FK recipient → U*
+  FK loan_id ? → L*
+}
+entity "<color:white>notification_attempt</color>" as notification_attempt {
+  PK id
+  FK notification_id
+}
+
+' Layout-only hidden edges never denote a relationship.
+role -[hidden]right- user_role
+user_role -[hidden]right- app_user
+role -[hidden]down- equipment_category
+equipment_category -[hidden]down- approval_decision
+approval_decision -[hidden]down- audit_log
+user_role -[hidden]down- equipment
+equipment -[hidden]down- maintenance_case
+maintenance_case -[hidden]down- notification_request
+app_user -[hidden]down- reservation
+reservation -[hidden]down- loan
+loan -[hidden]down- notification_attempt
+approval_decision -[hidden]right- maintenance_case
+maintenance_case -[hidden]right- loan
+audit_log -[hidden]right- notification_request
+
+' All 18 active FKs: 10 connectors below, including user_role.user_id;
+' 8 additional user FKs use explicit U/U* references in the entity rows.
+role ||-right-o{ user_role
+user_role }o-right-|| app_user
+equipment_category ||-right-o{ equipment
+equipment ||-right-o{ reservation
+reservation ||--o| approval_decision
+reservation ||-down-o| loan
+equipment ||-down-o{ maintenance_case
+maintenance_case }o-right-o| loan
+loan |o--o{ notification_request
+notification_request ||-right-o{ notification_attempt
+
+legend bottom
+[v] version ↑ (trigger) · [i] immutable (trigger) · ? nullable
+<color:#023E7C>reservation: EXCLUDE gist (equipment_id, tstzrange)</color>
+Omitted: notification_legacy_v2 (5 FKs), schema_version.
+endlegend
+' Legacy FK inventory retained for source-level completeness:
+' notification_legacy_v2.recipient_id -> app_user.user_id (NOT NULL)
+' notification_legacy_v2.reservation_id -> reservation.reservation_id (nullable)
+' notification_legacy_v2.loan_id -> loan.loan_id (nullable)
+' notification_legacy_v2.maintenance_case_id -> maintenance_case.maintenance_case_id (nullable)
+' notification_request.legacy_notification_id -> notification_legacy_v2.notification_id (nullable, UNIQUE)
+' Exclusion applies to PENDING_APPROVAL, CONFIRMED and FULFILLED reservations.
+' version increments: equipment, reservation, loan, maintenance_case (bump_version).
+' app_user.session_version has no database bump trigger.
+' V007 adds that counter; it is omitted from the compact key-only view.
+' audit_log.entity_id is a polymorphic identifier, NOT a foreign key.
+' Core FK edges without repeated column rows:
+' reservation.equipment_id -> equipment.equipment_id (NOT NULL)
+' loan.reservation_id -> reservation.reservation_id (NOT NULL, UNIQUE)
+@enduml

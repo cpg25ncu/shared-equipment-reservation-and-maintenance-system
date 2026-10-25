@@ -1,0 +1,33 @@
+@startdot
+digraph UML {
+// T3 UML class diagram. Render trusted source with PlantUML 1.2026.9 to SVG; rasterize to PNG.
+// Wrapped identifiers concatenate to exact type names. Baseline df9033f.
+
+graph [rankdir=LR,dpi=72,bgcolor=white,fontname="Arial",fontcolor="#023E7C",fontsize=22,label=<<TABLE BORDER="0" CELLBORDER="0" CELLPADDING="3"><TR><TD><FONT POINT-SIZE="24"><B>Observer — Spring application events</B></FONT></TD></TR><TR><TD>request stored in the same transaction;</TD></TR><TR><TD><FONT COLOR="#F17D00"><B>NotificationWorker delivers after commit (dedup key, bounded retry)</B></FONT></TD></TR></TABLE>>,labelloc=t,pad=0.08,nodesep=0.11,ranksep=0.32,splines=polyline,newrank=true];
+node [fontname="Arial",fontsize=22,fontcolor="#023E7C",color="#023E7C"];
+edge [fontname="Arial",fontsize=22,fontcolor="#023E7C",color="#023E7C",arrowsize=0.8,penwidth=1.3];
+subgraph cluster_producers {label="Clients / publisher bridge"; color="#023E7C"; fontcolor="#023E7C"; fontsize=22; penwidth=1; margin=10;
+reservation [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>ReservationService</TD></TR></TABLE>>];
+approval [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>ApprovalService</TD></TR></TABLE>>];
+loan [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>LoanService</TD></TR></TABLE>>];
+maintenance [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>MaintenanceService</TD></TR></TABLE>>];
+bridge [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>SpringMaintenance<BR/>EventPublisher</TD></TR></TABLE>>];
+{rank=same; reservation; approval; loan; maintenance; bridge;}
+reservation -> approval -> loan -> maintenance -> bridge [style=invis,weight=100];
+}
+subject [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD><I>«Subject · Spring interface»</I></TD></TR><TR><TD>ApplicationEventPublisher</TD></TR><HR/><TR><TD ALIGN="LEFT">+ publishEvent(event)</TD></TR></TABLE>>];
+subgraph cluster_observers {label="«Observer» @EventListener\nnotification/service"; color="#023E7C"; fontcolor="#023E7C"; fontsize=22; penwidth=1; margin=10;
+rn [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>ReservationNotificationListener</TD></TR><HR/><TR><TD ALIGN="LEFT">+ on(ReservationSubmitted)</TD></TR><TR><TD ALIGN="LEFT">+ on(ReservationCancelled)</TD></TR></TABLE>>];
+an [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>ApprovalNotificationListener</TD></TR><HR/><TR><TD ALIGN="LEFT">+ on(ReservationDecided)</TD></TR></TABLE>>];
+ln [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>LoanNotificationListener</TD></TR><HR/><TR><TD ALIGN="LEFT">+ on(LoanEvent)</TD></TR></TABLE>>];
+mn [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>MaintenanceNotificationListener</TD></TR><HR/><TR><TD ALIGN="LEFT">+ on(MaintenanceAssigned)</TD></TR><TR><TD ALIGN="LEFT">+ on(MaintenanceCompleted)</TD></TR></TABLE>>];
+{rank=same; rn; an; ln; mn;}
+rn -> an -> ln -> mn [style=invis,weight=100];
+}
+reservation -> subject [style=dashed]; approval -> subject [style=dashed]; loan -> subject [style=dashed];
+maintenance:s -> bridge:n [style=dashed,constraint=false]; bridge -> subject [style=dashed];
+subject -> {rn an ln mn} [style=dashed];
+
+
+}
+@enddot

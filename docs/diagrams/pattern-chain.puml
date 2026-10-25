@@ -1,0 +1,26 @@
+@startdot
+digraph UML {
+// T3 UML class diagram. Render trusted source with PlantUML 1.2026.9 to SVG; rasterize to PNG.
+// Wrapped identifiers concatenate to exact type names. Baseline df9033f.
+// The chain iterates a List<ApprovalHandler>; there is no handler next field.
+graph [rankdir=LR,dpi=72,bgcolor=white,fontname="Arial",fontcolor="#023E7C",fontsize=22,label=<<TABLE BORDER="0" CELLBORDER="0" CELLPADDING="3"><TR><TD><FONT POINT-SIZE="24"><B>UC02 — Chain of Responsibility</B></FONT></TD></TR><TR><TD>NoSelfApprovalHandler → DecisionCommentHandler</TD></TR><TR><TD><FONT COLOR="#F17D00"><B>Stops at the first rejection.</B></FONT></TD></TR></TABLE>>,labelloc=t,pad=0.08,nodesep=0.11,ranksep=0.32,splines=polyline,newrank=true];
+node [fontname="Arial",fontsize=22,fontcolor="#023E7C",color="#023E7C"];
+edge [fontname="Arial",fontsize=22,fontcolor="#023E7C",color="#023E7C",arrowsize=0.8,penwidth=1.3];
+client [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD><I>«Client»</I></TD></TR><TR><TD>ApprovalService</TD></TR></TABLE>>];
+chain [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD><I>«Chain»</I></TD></TR><TR><TD>ApprovalPolicyChain</TD></TR><HR/><TR><TD ALIGN="LEFT">+ evaluate(ApprovalContext):<BR/>ApprovalEvaluation</TD></TR></TABLE>>];
+handler [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD><I>«Handler · interface»</I></TD></TR><TR><TD>ApprovalHandler</TD></TR><HR/><TR><TD ALIGN="LEFT">+ evaluate(ApprovalContext):<BR/>ApprovalEvaluation</TD></TR></TABLE>>];
+subgraph cluster_handlers {label="«ConcreteHandler»"; color="#023E7C"; fontcolor="#023E7C"; fontsize=22; penwidth=1; margin=10;
+self [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>NoSelfApprovalHandler</TD></TR></TABLE>>];
+comment [shape=plain,label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" COLOR="#023E7C" BGCOLOR="white"><TR><TD>DecisionCommentHandler</TD></TR></TABLE>>];
+{rank=same; self; comment;}
+self -> comment [style=invis,weight=100];
+}
+{rank=same; client; chain;}
+client -> chain [style=invis,weight=100];
+client:s -> chain:n [style=dashed,constraint=false];
+chain -> handler [arrowtail=odiamond,dir=both,label="ordered *"];
+handler -> {self comment} [dir=back,arrowtail=empty,style=dashed];
+
+
+}
+@enddot
