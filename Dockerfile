@@ -10,6 +10,8 @@ RUN corepack enable
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY frontend/ ./
+ARG RELEASE_SHA=local
+ENV VITE_RELEASE_SHA=$RELEASE_SHA
 RUN pnpm build
 
 FROM eclipse-temurin:17-jre-alpine AS app
