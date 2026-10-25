@@ -64,7 +64,9 @@ export function LoginPage() {
             workspace.
           </p>
         </div>
-        <p className="login-foot">SWE5006 · Team 07</p>
+        <p className="login-foot">
+          SWE5006 · Team 07 · Shared Equipment Reservation and Maintenance System
+        </p>
       </section>
       <main className="login-panel">
         <div className="login-card">
@@ -73,7 +75,9 @@ export function LoginPage() {
           </span>
           <p className="eyebrow">YOUR WORKSPACE</p>
           <h2>Welcome back.</h2>
-          <p className="muted">Sign in with your SERMS account to continue.</p>
+          <p className="muted">
+            Sign in with your SERMS account to reserve, borrow and track shared equipment.
+          </p>
           {auth.error && (
             <ErrorState message={auth.error.message} onRetry={() => void auth.reload()} />
           )}
