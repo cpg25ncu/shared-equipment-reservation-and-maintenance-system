@@ -1,0 +1,75 @@
+---
+config:
+  theme: base
+  fontFamily: Arial, Helvetica, sans-serif
+  themeCSS: '.nodeLabel, .edgeLabel, .cluster-label, .label { font-family: Arial, Helvetica, sans-serif !important; } .node, .node *, .cluster, .cluster * { filter: none !important; box-shadow: none !important; } .cluster-label, .cluster-label span, .cluster-label p { color: #023E7C !important; }'
+  themeVariables:
+    fontFamily: Arial, Helvetica, sans-serif
+    fontSize: 26px
+    primaryColor: '#FFFFFF'
+    primaryTextColor: '#023E7C'
+    primaryBorderColor: '#023E7C'
+    lineColor: '#023E7C'
+    secondaryColor: '#FFFFFF'
+    tertiaryColor: '#FFFFFF'
+    clusterBkg: '#FFFFFF'
+    clusterBorder: '#023E7C'
+    edgeLabelBackground: '#FFFFFF'
+  flowchart:
+    htmlLabels: true
+    curve: linear
+    nodeSpacing: 22
+    rankSpacing: 30
+    padding: 12
+    wrappingWidth: 600
+    useMaxWidth: false
+---
+%% T1 system-level UML use cases, baseline df9033f.
+%% Human roles include login; Scheduler is the internal time trigger for UC05.
+%% Render all T1 sources with Mermaid CLI 12.0.0, --no-font-embed, white background.
+flowchart LR
+  B["fa:fa-person<br/>Borrower"]:::actor
+  A["fa:fa-person<br/>Approver"]:::actor
+  C["fa:fa-person<br/>Custodian"]:::actor
+  M["fa:fa-person<br/>Maintainer"]:::actor
+  S["fa:fa-clock<br/>Scheduler<br/>«time»"]:::actor
+  D["fa:fa-person<br/>Administrator"]:::actor
+
+  subgraph SYSTEM["SERMS<br/>All five human roles include Log In · Scheduler is an internal time trigger"]
+    U1(["UC01<br/>Search and Reserve<br/>Equipment"])
+    U2(["UC02<br/>Review and Approve<br/>Reservation"])
+    U3(["UC03<br/>Check Out and Return<br/>Equipment"])
+    U4(["UC04<br/>Report Fault and Process<br/>Maintenance"])
+    U5(["UC05<br/>Identify Overdue Equipment<br/>and Notify Users"])
+    LOGIN(["Log In"])
+    DAMAGE(["Record Damaged Return<br/>(UC03)"])
+    OPEN(["Open Maintenance Case<br/>(UC04)"])
+    USERS(["Manage Users and Roles"])
+    EQ(["Manage Equipment<br/>and Categories"])
+    REPORT(["View Reports"])
+    AUDIT(["View Audit Log"])
+    NOTIFY(["View Notifications<br/>(all five human roles)"])
+  end
+
+  B --- U1
+  A --- U2
+  C --- U3
+  M --- U4
+  S -->|triggers overdue detection| U5
+  U1 -. "«include»" .-> LOGIN
+  U2 -. "«include»" .-> LOGIN
+  U3 -. "«include»" .-> LOGIN
+  U4 -. "«include»" .-> LOGIN
+  U5 -. "«include»<br/>interactive access" .-> LOGIN
+  U3 --- DAMAGE
+  DAMAGE -. "«extend»<br/>damaged return" .-> OPEN
+  U4 -. "«include»" .-> OPEN
+  USERS --- D
+  EQ --- D
+  REPORT --- D
+  AUDIT --- D
+  NOTIFY --- D
+  LOGIN ~~~ USERS
+  classDef default fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#023E7C;
+  classDef actor fill:#FFFFFF,stroke:none,color:#023E7C;
+  style OPEN fill:#FFFFFF,stroke:#F17D00,stroke-width:3px,color:#023E7C
