@@ -4,14 +4,28 @@ import { fileURLToPath } from 'node:url';
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+// Drops HTML comments in one left-to-right pass, as Markdown renderers do.
+// Text joined around a removed comment is not rescanned.
+function withoutComments(text) {
+  let result = '';
+  let index = 0;
+  for (;;) {
+    const start = text.indexOf('<!--', index);
+    const end = start === -1 ? -1 : text.indexOf('-->', start + 4);
+    if (end === -1) return result + text.slice(index);
+    result += text.slice(index, start);
+    index = end + 3;
+  }
+}
+
 function prose(text) {
-  return text.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[^\n]*$/gm, '')
-    .replace(/<!--[\s\S]*?-->/g, '');
+  return withoutComments(text.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[^\n]*$/gm, ''));
 }
 
 function headingSlug(text) {
+  // Decode &amp; last so "&amp;lt;" becomes "&lt;", not "<".
   return text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
     .replace(/[`*_]/g, '').trim().toLowerCase()
     .replace(/[^\p{L}\p{N}\p{M}_\- ]/gu, '').replace(/ /g, '-');
 }
