@@ -81,7 +81,7 @@ public final class SermsPostgres {
     }
   }
 
-  private static void migrate(DataSource ds) {
+  public static void migrate(DataSource ds) {
     try (Connection c = ds.getConnection(); Statement s = c.createStatement()) {
       for (Path script : scripts()) s.execute(Files.readString(script));
     } catch (IOException e) {

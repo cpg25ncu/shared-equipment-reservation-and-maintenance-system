@@ -32,3 +32,16 @@ Branch: `claude/bold-franklin-barevs` · Baseline: `16a1030`
 - The read replica, off-host backup copy and edge rate limiting are marked *planned*. A k6 scaling chart (Figure 16) and a measured results table were added. Limitations AIS-03 and AIS-07–AIS-09 were updated.
 - Measured values: 690 + 101 backend tests, 188 + 16 front-end tests, 77.87% coverage, k6 50/150 users on 1–3 replicas, 0 failed requests in rolling updates and failover, ZAP production 0/5/62 and local 0/2/60.
 - `docs/report/README.md` now separates implemented items from design-only ones. The rebuilt docx (41 pages, 21 figures, 24 tables) passes the OOXML check; its TOC page numbers come from the rendered PDF.
+
+## 2026-11-04 Team correction and final report pass
+
+- The team is **Team 6** with four students: Shi Wenqi, Wang Yuanmeng, Zhang Hanming and Zhou Fanhao. The cover, stakeholders, ownership, WBS, effort and issue owners are corrected. UC04 is recorded as shared and testing/quality under Zhang Hanming, pending the team's confirmation.
+- The elements previously marked planned are now implemented (D-015). The report presents them as implemented, with evidence. Only microservices on Kubernetes and campus SSO are architected (Section 6), as the instructor asked.
+- New tables:
+  - architecture scope and implementation status;
+  - 4+1 view mapping;
+  - ubiquitous language;
+  - aggregate invariants;
+  - key constraints and indexes;
+  - quality attribute scenarios with verified measures.
+- Also added: AD-18 to AD-20. Diagrams 02-06, 17 and 20 were updated. The rebuilt docx has 43 pages, 21 figures and 30 tables, and passes the OOXML check.

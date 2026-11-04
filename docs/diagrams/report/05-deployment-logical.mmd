@@ -17,8 +17,11 @@ flowchart TB
     direction LR
     S1[("HTTP sessions<br/><small>spring_session tables</small>")]:::db
     S2[("Scheduler locks<br/><small>shedlock table</small>")]:::db
-    S3[("Business data + audit<br/><small>serms schema</small>")]:::db
+    S3[("Business data + audit<br/><small>serms schema · primary</small>")]:::db
+    S4[("Read replica<br/><small>reports · dumps</small>")]:::db
   end
   CL -- "HTTPS" --> LB
   LB --> R1 & R2 & R3
   R1 & R2 & R3 --> S1 & S2 & S3
+  S3 -- "streaming" --> S4
+  R1 & R2 & R3 -. "reports" .-> S4

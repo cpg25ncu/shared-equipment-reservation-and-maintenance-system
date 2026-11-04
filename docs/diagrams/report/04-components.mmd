@@ -11,6 +11,7 @@ flowchart TB
     ERR["Global ProblemDetail handlers"]:::gen
     SES["Spring Session JDBC<br/><small>sessions in PostgreSQL</small>"]:::gen
     LCK["ShedLock<br/><small>one scheduler run per cluster</small>"]:::gen
+    RRT["ReadReplica router<br/><small>reports → standby, fallback to primary</small>"]:::gen
   end
   subgraph CORE["Core domain modules"]
     direction LR
@@ -31,7 +32,9 @@ flowchart TB
     AUD["<b>audit</b><br/><small>append-only viewer</small>"]:::gen
     REP["<b>report</b><br/><small>read-only aggregates</small>"]:::gen
   end
-  PG[("PostgreSQL 18 · schema serms")]:::gen
+  PG[("PostgreSQL 18 primary · schema serms")]:::gen
+  PGR[("Read replica (hot standby)")]:::gen
+  REP -- "via ReadReplica" --> PGR
   NG --> SH
   SH --> CORE
   SH --> SUP

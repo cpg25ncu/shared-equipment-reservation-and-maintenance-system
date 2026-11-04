@@ -262,3 +262,35 @@ Confirmations needed before team Done:
 The release itself still follows the gated `Deploy` workflow and production approval. The server's `.env` may set `SERMS_APP_REPLICAS`, and must set `GRAFANA_ADMIN_PASSWORD` before the monitoring overlay is started.
 
 Evidence: [scaling evidence 2026-11-04](../evidence/scaling-20261104/README.md) and [devlog](../devlog/2026-11-04-scalable-monolith.md). Local verification, CI, member confirmation, merge, deployment and Done remain separate facts.
+
+## D-015 Read Replica, PITR, Off-host Backups and Edge Rate Limits
+
+Status: **Requested by the user in the Claude Code session of 2026-11-04 (Asia/Singapore)**, as a follow-up to [D-014](#d-014-scalable-monolith-with-load-balancing): the elements the project report showed as planned are to be implemented. Member confirmations are still to be recorded.
+
+Decision:
+
+1. **Read replica.** `db-replica` is a PostgreSQL 18 hot standby. `postgres/replica-entrypoint.sh` clones the primary with `pg_basebackup` through physical slot `serms_replica`; the primary sets `max_slot_wal_keep_size=2GB` so a stopped replica cannot fill its disk. `shared/persistence/ReadReplica` routes report queries to the standby and falls back to the primary while the standby is unreachable, promoted, or more than 300 s behind. `scripts/backup.sh` dumps from the standby when it is healthy.
+2. **Point-in-time recovery.**
+   - The primary archives WAL continuously (`postgres/archive-wal.sh` → volume `serms-wal-archive`, `archive_timeout=300`), so RPO is at most 5 minutes.
+   - `scripts/base-backup.sh` takes a daily base backup, keeps 7 and prunes older WAL.
+   - `scripts/pitr-restore.sh` restores into an isolated container only.
+3. **Off-host copies.** `scripts/offsite-backup.sh` mirrors AES-256-encrypted dumps, base backups and WAL to `SERMS_OFFSITE_TARGET`, and verifies the newest dump after each run. `scripts/rehearse-recovery.sh` proves a point-in-time restore from the off-host copy alone.
+4. **Authentication file.** `postgres/pg_hba.conf` is selected with `-c hba_file`, so it also applies to the existing production volume. Socket connections inside a container are trusted; network connections, including replication, use SCRAM.
+5. **Edge rate limits.** `web/nginx.conf` applies these limits, keyed by the client address that host nginx sends in `X-Forwarded-For` (trusted only from loopback and Docker bridge ranges):
+   - sign-in: 10 requests per minute, burst 20;
+   - API: 20 requests per second, burst 100.
+
+   Exceeding a limit returns `429` with `/problems/rate-limited`. Requests without a public client address are not limited, so a host proxy that omits the header cannot throttle all users together.
+
+Release impact:
+
+- **Database restart.** The first release with this change recreates `db` once, because its command and volumes change, and clones `db-replica`. `scripts/deploy.sh` brings both up before the rolling app update.
+- **Server configuration.** Host nginx must send `X-Forwarded-For`. The server `.env` gains `SERMS_OFFSITE_TARGET` and `SERMS_OFFSITE_KEY_FILE`. The operator installs the cron entries in [runbook-backup.md](../runbook-backup.md).
+
+Confirmations needed:
+
+- Zhou Fanhao: database configuration and backups;
+- Wang Yuanmeng: deployment, cron and the off-host target;
+- Zhang Hanming: the `429` response on `POST /api/v1/auth/login`, which is new behaviour next to [auth-and-approval §2](../contracts/auth-and-approval.md).
+
+Evidence: [data tier 2026-11-04](../evidence/data-tier-20261104/README.md).

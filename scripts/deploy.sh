@@ -40,8 +40,9 @@ export RELEASE_SHA
 docker compose config --quiet
 # Compilation failures leave currently running containers intact.
 docker compose build
-# The database (and any service whose configuration is unchanged) stays as it is.
-docker compose up -d --wait --wait-timeout 180 --no-recreate db
+# The primary is recreated only when its own configuration changed (for example the first release
+# with replication and WAL archiving); db-replica clones it on first start and then streams.
+docker compose up -d --wait --wait-timeout 300 db db-replica
 
 # Rolling update of the stateless app replicas (scripts/rolling-update.sh, from the release
 # revision checked out above). A failed new replica leaves the previous release serving.

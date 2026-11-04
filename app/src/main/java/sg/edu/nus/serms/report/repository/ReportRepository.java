@@ -9,7 +9,10 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import java.util.function.Supplier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import sg.edu.nus.serms.shared.persistence.ReadReplica;
 import org.springframework.stereotype.Repository;
 import sg.edu.nus.serms.report.domain.OperationsReport.CategoryOverdue;
 import sg.edu.nus.serms.report.domain.OperationsReport.CategoryReservations;
@@ -33,15 +36,25 @@ public class ReportRepository {
       long loans,
       Duration loanedTime) {}
 
-  private final NamedParameterJdbcTemplate jdbc;
+  private final Supplier<NamedParameterJdbcTemplate> jdbc;
 
+  /** Fixed template (tests and tools). */
   public ReportRepository(NamedParameterJdbcTemplate jdbc) {
-    this.jdbc = jdbc;
+    this.jdbc = () -> jdbc;
+  }
+
+  /**
+   * Runtime wiring: each report query asks {@link ReadReplica} for the current target, the
+   * streaming replica while it is healthy and the primary otherwise.
+   */
+  @Autowired
+  public ReportRepository(ReadReplica readReplica) {
+    this.jdbc = readReplica::jdbc;
   }
 
   /** Reservations whose slot starts in [from, to), by category and status. */
   public List<CategoryReservations> reservationsByCategory(Instant from, Instant to) {
-    return jdbc.query(
+    return jdbc.get().query(
         """
         SELECT e.category,
                count(*) AS total,
@@ -72,7 +85,7 @@ public class ReportRepository {
    * {@code until}. Retired items appear only when they were on loan in the window.
    */
   public List<LoanedTime> loanedTime(Instant from, Instant until) {
-    return jdbc.query(
+    return jdbc.get().query(
         """
         SELECT e.equipment_id, e.asset_tag, e.name, e.category, e.status,
                count(l.loan_id) AS loans,
@@ -103,7 +116,7 @@ public class ReportRepository {
 
   /** Loans still out after their due time, longest overdue first. */
   public List<OverdueLoan> overdueAt(Instant now) {
-    return jdbc.query(
+    return jdbc.get().query(
         """
         SELECT l.loan_id, e.equipment_id, e.asset_tag, e.name, e.category,
                u.user_id, u.display_name, l.due_at
@@ -135,7 +148,7 @@ public class ReportRepository {
    * returned at all. {@code until} must not be later than now, so an active loan here is overdue.
    */
   public List<CategoryOverdue> overdueByCategory(Instant from, Instant until) {
-    return jdbc.query(
+    return jdbc.get().query(
         """
         SELECT e.category,
                count(*) AS loans_due,
@@ -159,7 +172,7 @@ public class ReportRepository {
 
   /** Maintenance cases reported in [from, to), per item, most first. */
   public List<EquipmentMaintenance> maintenanceByEquipment(Instant from, Instant to, int limit) {
-    return jdbc.query(
+    return jdbc.get().query(
         """
         SELECT e.equipment_id, e.asset_tag, e.name, e.category, count(*) AS cases
         FROM serms.maintenance_case m JOIN serms.equipment e ON e.equipment_id = m.equipment_id

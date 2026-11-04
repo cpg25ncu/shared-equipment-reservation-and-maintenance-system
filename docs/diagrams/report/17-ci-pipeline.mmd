@@ -26,7 +26,7 @@ flowchart LR
   end
   subgraph PKG["Stage 3 · Package and smoke"]
     direction TB
-    P1["<b>release-images</b><br/><small>multi-stage build app + web · Trivy image scan ·<br/>Compose smoke with 2 replicas behind nginx ·<br/>verify-cluster: LB spread, shared session, ShedLock ·<br/>verify-rolling-update: 0 failed requests</small>"]:::job
+    P1["<b>release-images</b><br/><small>multi-stage build app + web · Trivy image scan ·<br/>Compose smoke with 2 replicas behind nginx ·<br/>verify-cluster: LB spread, shared session, ShedLock ·<br/>verify-data-tier: replica, fallback, rate limits ·<br/>rehearse-recovery: PITR from off-host copy ·<br/>verify-rolling-update: 0 failed requests</small>"]:::job
     P2["<b>release-config</b><br/><small>release-gate unit tests · deploy/rolling-update<br/>boundary tests · Compose + monitoring config</small>"]:::job
   end
   G{{"Branch protection<br/>15/15 checks green ·<br/>up-to-date with main"}}:::gate
