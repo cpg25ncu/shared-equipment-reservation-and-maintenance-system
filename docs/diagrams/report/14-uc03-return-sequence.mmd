@@ -1,0 +1,33 @@
+%% UC03 Receive a returned item (damaged branch opens a maintenance case)
+sequenceDiagram
+  autonumber
+  actor CU as Custodian
+  participant C as Loan<br/>Controller
+  participant S as LoanService
+  participant R as Loan<br/>Repository
+  participant M as Maintenance<br/>Service
+  participant DB as PostgreSQL
+  participant EV as Event<br/>Publisher
+  CU->>C: POST /loans/{id}/return<br/>{expectedVersion, condition, note}
+  C->>S: receive(loanId, version, condition, note)
+  Note over S: @PreAuthorize CUSTODIAN<br/>@Transactional, fixed lock order
+  S->>R: lockEquipment()
+  R->>DB: SELECT … FOR UPDATE
+  S->>R: lockReservationReference(), lockLoan()
+  S->>S: status ACTIVE, version matches?
+  alt stale or already returned
+    S-->>C: LoanConflictException 409
+  end
+  S->>R: returnLoan(…, expectedVersion)
+  R->>DB: UPDATE loan … WHERE version = ?
+  opt condition = DAMAGED
+    S->>M: reportFault(…, PHYSICAL_DAMAGE, HIGH)
+    M->>DB: INSERT maintenance_case
+    M-->>S: caseId
+  end
+  S->>S: EquipmentLoanState.afterReturn()
+  S->>R: setEquipment(), audit(LOAN_RETURN)
+  S->>EV: LoanEvent RETURNED
+  Note over S,DB: COMMIT
+  S-->>C: LoanView
+  C-->>CU: 200 OK

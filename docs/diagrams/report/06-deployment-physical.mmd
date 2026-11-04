@@ -1,0 +1,46 @@
+%% Physical deployment view (production target)
+flowchart TB
+  classDef node fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef hot fill:#FFF4E6,stroke:#F17D00,stroke-width:2px,color:#0B2545
+  classDef db fill:#EAF1FB,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef ext fill:#F2F2F2,stroke:#7A7A7A,color:#333333,stroke-dasharray:4 3
+  INET["Internet · users"]:::ext
+  DNS["DNS serms.midas.cyou"]:::ext
+  subgraph HOST["«node» Linux VM · Hong Kong · Ubuntu LTS · Docker Engine + Compose v2"]
+    FW["«firewall» ufw: only 22 (admin IPs), 80, 443 open"]:::node
+    HNG["«process» host nginx :443 / :80<br/><small>TLS (Let's Encrypt, auto-renew) · HSTS · limit_req</small>"]:::node
+    subgraph NETF["«docker network» frontend"]
+      WEB["«container» web · nginx:alpine (non-root)<br/><small>127.0.0.1:8789 → 8080 · SPA + upstream app_pool</small>"]:::hot
+    end
+    subgraph NETB["«docker network» backend (internal: true)"]
+      direction LR
+      A1["«container» app-1<br/><small>eclipse-temurin 17 JRE · :8081<br/>heap 512 MB · Hikari 10</small>"]:::node
+      A2["«container» app-2<br/><small>eclipse-temurin 17 JRE · :8081<br/>heap 512 MB · Hikari 10</small>"]:::node
+      AN["«container» app-n<br/><small>docker compose --scale app=n</small>"]:::node
+      DB[("«container» db · postgres:18-alpine<br/><small>:5432 not published · volume serms-pgdata</small>")]:::db
+    end
+    subgraph OPS["«docker network» ops"]
+      direction LR
+      PR["«container» prometheus"]:::node
+      GF["«container» grafana"]:::node
+      BKJ["«cron» scripts/backup.sh<br/><small>daily pg_dump · 7 days</small>"]:::node
+    end
+    VOL[("«volume» serms-pgdata")]:::db
+    BKV[("«volume» /var/backups/serms")]:::db
+  end
+  OFF[("Off-host object storage<br/><small>encrypted backup copy</small>")]:::ext
+  GHA["GitHub Actions · Deploy workflow<br/><small>SSH with production approval</small>"]:::ext
+
+  INET --> DNS --> FW --> HNG -- "proxy_pass 127.0.0.1:8789" --> WEB
+  WEB -- "upstream least_conn" --> A1
+  WEB --> A2
+  WEB --> AN
+  A1 -- "JDBC 5432" --> DB
+  A2 --> DB
+  AN --> DB
+  DB --- VOL
+  BKJ -- "pg_dump" --> DB
+  BKJ --> BKV -- "rclone / rsync" --> OFF
+  PR -. "scrape /actuator/prometheus" .-> NETB
+  GF --> PR
+  GHA -- "ssh deploy.sh: backup → build → rolling up → health" --> HOST

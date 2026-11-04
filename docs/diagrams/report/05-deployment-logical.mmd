@@ -1,0 +1,24 @@
+%% Logical deployment view: scalable monolith with load balancing
+flowchart TB
+  classDef node fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef hot fill:#FFF4E6,stroke:#F17D00,stroke-width:2px,color:#0B2545
+  classDef db fill:#EAF1FB,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  CL["«device» Client workstation / tablet<br/><small>browser executes the React SPA</small>"]:::node
+  subgraph PRES["«execution environment» Presentation"]
+    LB["«component» Load balancer + static host<br/><small>nginx · upstream app_pool { least_conn; app-1..n max_fails=3 }</small>"]:::hot
+  end
+  subgraph BIZ["«execution environment» Business logic · identical stateless replicas"]
+    direction LR
+    R1["«artifact» serms.jar · replica 1<br/><small>API · service · domain · repository</small>"]:::node
+    R2["«artifact» serms.jar · replica 2<br/><small>API · service · domain · repository</small>"]:::node
+    R3["«artifact» serms.jar · replica n<br/><small>API · service · domain · repository</small>"]:::node
+  end
+  subgraph SHARED["«execution environment» Shared state (the only stateful tier)"]
+    direction LR
+    S1[("HTTP sessions<br/><small>spring_session tables</small>")]:::db
+    S2[("Scheduler locks<br/><small>shedlock table</small>")]:::db
+    S3[("Business data + audit<br/><small>serms schema</small>")]:::db
+  end
+  CL -- "HTTPS" --> LB
+  LB --> R1 & R2 & R3
+  R1 & R2 & R3 --> S1 & S2 & S3

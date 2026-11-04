@@ -1,0 +1,40 @@
+%% Continuous integration: every pull request and push to main (15 required checks)
+flowchart LR
+  classDef trig fill:#023E7C,stroke:#023E7C,color:#FFFFFF
+  classDef job fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef sec fill:#FFF4E6,stroke:#F17D00,stroke-width:2px,color:#0B2545
+  classDef gate fill:#EAF1FB,stroke:#023E7C,stroke-width:2.5px,color:#0B2545
+  classDef art fill:#F2F2F2,stroke:#7A7A7A,color:#333333,stroke-dasharray:4 3
+  DEV["Developer pushes<br/>feature branch"]:::trig --> PR["Pull request to main<br/><small>template · linked issue · member check</small>"]:::trig
+  subgraph BUILD["Stage 1 · Build and test (parallel)"]
+    direction TB
+    J1["<b>java-tests</b><br/><small>mvn verify · 685 JUnit tests<br/>JaCoCo service+domain ≥ 70% (78%)</small>"]:::job
+    J2["<b>approval-postgres</b><br/><small>Testcontainers PostgreSQL 18 · UC02 IT</small>"]:::job
+    J3["<b>checkout-return</b><br/><small>UC03/UC05/equipment PostgreSQL IT</small>"]:::job
+    J4["<b>maintenance-postgres</b><br/><small>UC04 PostgreSQL IT</small>"]:::job
+    J5["<b>database-test</b><br/><small>Flyway V001-V009 clean + upgrade</small>"]:::job
+    J6["<b>notification-contract</b><br/><small>pinned contract suite</small>"]:::job
+    J7["<b>frontend</b><br/><small>ESLint · tsc · 174 Vitest · OpenAPI drift ·<br/>Vite build · Playwright E2E</small>"]:::job
+    J8["<b>collaboration-docs</b><br/><small>links, skills, rule sources</small>"]:::job
+  end
+  subgraph SECU["Stage 2 · Security (DevSecOps)"]
+    direction TB
+    S1["<b>Secrets scan</b> gitleaks"]:::sec
+    S2["<b>Vulnerability scan</b> Trivy fs"]:::sec
+    S3["<b>Dependency review</b> (PR)"]:::sec
+    S4["<b>CodeQL</b> Analyze java ·<br/>Analyze javascript-typescript"]:::sec
+  end
+  subgraph PKG["Stage 3 · Package and smoke"]
+    direction TB
+    P1["<b>release-images</b><br/><small>multi-stage Docker build app + web ·<br/>Trivy image scan (HIGH/CRITICAL = fail)</small>"]:::job
+    P2["<b>release-config</b><br/><small>Compose prod profile, 2 app replicas<br/>behind nginx · /actuator/health smoke ·<br/>cross-replica session test</small>"]:::job
+  end
+  G{{"Branch protection<br/>15/15 checks green ·<br/>up-to-date with main"}}:::gate
+  A1[["JUnit / JaCoCo / Playwright<br/>reports · SARIF · images"]]:::art
+  PR --> BUILD & SECU
+  BUILD --> PKG
+  SECU --> PKG
+  PKG --> G
+  BUILD -.-> A1
+  SECU -.-> A1
+  G -- "merge commit" --> MAIN["main updated"]:::trig

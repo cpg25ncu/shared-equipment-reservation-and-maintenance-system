@@ -1,0 +1,43 @@
+%% UC01 Submit reservation - design sequence diagram (behind the load balancer)
+sequenceDiagram
+  autonumber
+  actor B as Borrower
+  participant LB as nginx LB
+  participant SEC as Security<br/>filters
+  participant C as Reservation<br/>Controller
+  participant S as Reservation<br/>Service
+  participant RR as Reservation<br/>Rules
+  participant R as Reservation<br/>Repository
+  participant DB as PostgreSQL
+  participant EV as Event<br/>Publisher
+  B->>LB: POST /api/v1/reservations<br/>SESSION cookie, X-XSRF-TOKEN
+  LB->>SEC: least_conn → app-k
+  SEC->>DB: load session (spring_session)
+  SEC->>SEC: CSRF + session_version
+  SEC->>C: create(request, principal)
+  C->>S: submit(requesterId, request)
+  Note over S: @PreAuthorize BORROWER<br/>@Transactional begin
+  S->>R: lockEquipment(id)
+  R->>DB: SELECT … FOR UPDATE
+  alt retired / under maintenance / open fault
+    S-->>C: EquipmentUnavailable 409
+  end
+  S->>R: lockRequesterAccountStatus()
+  S->>R: countOpen(), hasOverdueLoan()
+  S->>RR: evaluate(ruleContext)
+  RR-->>S: violations
+  alt violations not empty
+    S-->>C: RulesBroken 422
+  end
+  S->>R: overlapsHeldSlot(), insert(…)
+  R->>DB: INSERT reservation
+  alt concurrent overlap
+    DB-->>R: 23P01 exclusion violation
+    S-->>C: SlotTaken 409
+  end
+  S->>R: audit(RESERVATION_SUBMIT)
+  S->>EV: ReservationSubmitted
+  EV->>DB: queue notification (same tx)
+  Note over S,DB: COMMIT
+  S-->>C: Reservation
+  C-->>B: 201 Created

@@ -1,0 +1,45 @@
+%% C4 Level 3 - Components of the Spring Boot application (one replica)
+flowchart TB
+  classDef api fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef core fill:#FFF4E6,stroke:#F17D00,stroke-width:2px,color:#0B2545
+  classDef gen fill:#EAF1FB,stroke:#023E7C,stroke-width:1.5px,color:#0B2545
+  classDef bus fill:#023E7C,stroke:#023E7C,color:#FFFFFF
+  NG["nginx load balancer · /api/*"]:::gen
+  subgraph SH["shared · cross-cutting"]
+    direction LR
+    SEC["Security filter chain<br/><small>session cookie · CSRF · @PreAuthorize</small>"]:::gen
+    ERR["Global ProblemDetail handlers"]:::gen
+    SES["Spring Session JDBC<br/><small>sessions in PostgreSQL</small>"]:::gen
+    LCK["ShedLock<br/><small>one scheduler run per cluster</small>"]:::gen
+  end
+  subgraph CORE["Core domain modules"]
+    direction LR
+    RES["<b>reservation</b><br/><small>ReservationController<br/>ReservationService<br/>ReservationRules · Strategy<br/>ReservationRepository</small>"]:::core
+    APR["<b>approval</b><br/><small>ApprovalController<br/>ApprovalService<br/>ApprovalPolicyChain · Chain of Resp.<br/>JdbcApprovalDecisionRepository</small>"]:::core
+    LOAN["<b>loan</b><br/><small>LoanController<br/>LoanService<br/>EquipmentLoanState · State<br/>LoanRepository</small>"]:::core
+  end
+  subgraph SUP["Supporting modules"]
+    direction LR
+    EQ["<b>equipment</b><br/><small>catalogue · categories ·<br/>availability search</small>"]:::api
+    MNT["<b>maintenance</b><br/><small>MaintenanceService ·<br/>case state machine</small>"]:::api
+  end
+  BUS{{"Spring ApplicationEventPublisher · in-process domain events"}}:::bus
+  subgraph GEN["Generic modules"]
+    direction LR
+    ID["<b>identity</b><br/><small>users · roles · login</small>"]:::gen
+    NOT["<b>notification</b><br/><small>listeners · NotificationWorker ·<br/>reminder scanners · NotificationChannel</small>"]:::gen
+    AUD["<b>audit</b><br/><small>append-only viewer</small>"]:::gen
+    REP["<b>report</b><br/><small>read-only aggregates</small>"]:::gen
+  end
+  PG[("PostgreSQL 18 · schema serms")]:::gen
+  NG --> SH
+  SH --> CORE
+  SH --> SUP
+  APR -- "ReservationApprovalPort (ACL)" --> RES
+  LOAN -- "reportFault()" --> MNT
+  CORE -- "publish" --> BUS
+  SUP -- "publish" --> BUS
+  BUS -- "subscribe" --> NOT
+  GEN --> PG
+  CORE -.-> PG
+  SUP -.-> PG

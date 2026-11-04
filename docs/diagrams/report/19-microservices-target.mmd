@@ -1,0 +1,44 @@
+%% Evolution target: microservices on Kubernetes (discussed in the report, not implemented)
+flowchart TB
+  classDef edge fill:#023E7C,stroke:#023E7C,color:#FFFFFF
+  classDef svc fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef core fill:#FFF4E6,stroke:#F17D00,stroke-width:2px,color:#0B2545
+  classDef db fill:#EAF1FB,stroke:#023E7C,stroke-width:1.5px,color:#0B2545
+  classDef bus fill:#0B2545,stroke:#0B2545,color:#FFFFFF
+  U["Browser SPA · served from CDN / object storage"]:::edge
+  IG["Ingress controller + API Gateway<br/><small>TLS · JWT validation · rate limit · /api/v1/{context} routing</small>"]:::edge
+  KC["Keycloak / campus OIDC<br/><small>identity &amp; access</small>"]:::svc
+  U --> IG
+  IG -. "OIDC login / token" .-> KC
+  subgraph K8S["Kubernetes cluster · namespace serms · Deployments with HPA (CPU / RPS) · PodDisruptionBudgets"]
+    direction LR
+    subgraph C1["Catalogue"]
+      direction TB
+      S1["catalogue-service"]:::svc --- D1[(catalogue_db)]:::db
+    end
+    subgraph C2["Booking (core)"]
+      direction TB
+      S2["booking-service<br/><small>reservation + approval</small>"]:::core --- D2[(booking_db)]:::db
+    end
+    subgraph C3["Loan (core)"]
+      direction TB
+      S3["loan-service"]:::core --- D3[(loan_db)]:::db
+    end
+    subgraph C4["Maintenance"]
+      direction TB
+      S4["maintenance-service"]:::svc --- D4[(maintenance_db)]:::db
+    end
+    subgraph C5["Notification"]
+      direction TB
+      S5["notification-service"]:::svc --- D5[(notification_db)]:::db
+    end
+    subgraph C6["Audit & Reporting"]
+      direction TB
+      S6["audit-reporting-service<br/><small>CQRS read models</small>"]:::svc --- D6[(reporting_db)]:::db
+    end
+  end
+  BUS{{"Event broker · Kafka / RabbitMQ<br/>transactional outbox → topics · idempotent consumers · saga: ReservationConfirmed → LoanCreated → EquipmentReturned"}}:::bus
+  OBS["Observability · OpenTelemetry traces · Prometheus · Grafana · Loki"]:::svc
+  IG -- "REST" --> K8S
+  K8S -- "publish / subscribe domain events" --> BUS
+  K8S -. "telemetry" .-> OBS

@@ -1,0 +1,23 @@
+%% Continuous delivery: gated release of main to production with rolling update
+flowchart TB
+  classDef trig fill:#023E7C,stroke:#023E7C,color:#FFFFFF
+  classDef job fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef gate fill:#FFF4E6,stroke:#F17D00,stroke-width:2.5px,color:#0B2545
+  classDef bad fill:#FDECEC,stroke:#C62828,stroke-width:2px,color:#5A0E0E
+  M["Push to main (non-doc paths)<br/>or workflow_dispatch"]:::trig
+  G1{"<b>release-gate</b><br/>ref = main · SHA = current main ·<br/>SERMS_PRODUCTION_READY = true ·<br/>15 checks success (verify-release.mjs)"}:::gate
+  G2{"<b>production environment</b><br/>human reviewer approval"}:::gate
+  D1["SSH with pinned host key<br/><small>secrets: DEPLOY_HOST / USER / KEY</small>"]:::job
+  D2["scripts/deploy.sh<br/>① pre-release pg_dump backup"]:::job
+  D3["② git checkout exact SHA ·<br/>build serms-app / serms-web:SHA"]:::job
+  D4["③ Flyway migrate (expand-only, backward compatible)"]:::job
+  D5["④ Rolling update: replace app-1, wait healthy,<br/>then app-2 … app-n · nginx drains old replica"]:::job
+  D6["⑤ Health: /actuator/health = UP via nginx ·<br/>release SHA footer matches"]:::job
+  D7["⑥ Post-deploy: ZAP baseline · k6 smoke (manual)"]:::job
+  OK["Production serves new SHA"]:::trig
+  RB["Rollback: retag previous image SHA,<br/>compose up · restore dump if needed"]:::bad
+  M --> G1 -- pass --> G2 -- approve --> D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> OK
+  G1 -- "fail / pending timeout" --> X["No SSH: release blocked"]:::bad
+  D5 -- "health fails" --> RB
+  D6 -- "health fails" --> RB
+  OK -.-> D7
