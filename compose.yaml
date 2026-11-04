@@ -9,6 +9,7 @@ services:
       POSTGRES_PASSWORD: ${SERMS_DB_PASSWORD:?Set the server-only database password}
     volumes:
       - database:/var/lib/postgresql
+    networks: [backend]
     healthcheck:
       test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 5s
@@ -22,6 +23,12 @@ services:
         RELEASE_SHA: ${RELEASE_SHA:-local}
     image: serms-app:${RELEASE_SHA:-local}
     restart: unless-stopped
+    # Horizontal scaling (report AD-02/AD-07): identical stateless replicas behind web's nginx
+    # upstream. scripts/deploy.sh replaces them one set at a time (rolling update).
+    deploy:
+      replicas: ${SERMS_APP_REPLICAS:-2}
+    stop_grace_period: 30s
+    networks: [backend]
     environment:
       SERVER_ADDRESS: 0.0.0.0
       SERVER_PORT: 8081
@@ -32,6 +39,9 @@ services:
       SERMS_APPROVAL_ENABLED: 'true'
       SERMS_SECURITY_SECURE_COOKIES: 'true'
       SERVER_SERVLET_SESSION_COOKIE_SECURE: 'true'
+      # Each replica keeps a small pool; replicas x pool stays well below PostgreSQL max_connections.
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: ${SERMS_DB_POOL_SIZE:-10}
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
       # First-admin bootstrap: blank unless set for one start (docs/server-release.md).
       SERMS_BOOTSTRAP_ADMIN_EMAIL: ${SERMS_BOOTSTRAP_ADMIN_EMAIL:-}
       SERMS_BOOTSTRAP_ADMIN_DISPLAY_NAME: ${SERMS_BOOTSTRAP_ADMIN_DISPLAY_NAME:-}
@@ -49,6 +59,7 @@ services:
     restart: unless-stopped
     ports:
       - '127.0.0.1:${HOST_PORT:-8789}:8080'
+    networks: [frontend, backend]
     depends_on:
       app:
         condition: service_healthy
@@ -56,3 +67,8 @@ volumes:
   database:
     external: true
     name: ${SERMS_DB_VOLUME:?Set the confirmed existing PostgreSQL 18 volume}
+networks:
+  # Only web publishes a port (loopback, for host nginx). app and db have no route to the Internet.
+  frontend: {}
+  backend:
+    internal: true

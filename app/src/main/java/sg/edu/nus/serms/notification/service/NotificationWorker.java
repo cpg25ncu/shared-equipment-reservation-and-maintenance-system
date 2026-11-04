@@ -4,6 +4,7 @@ import java.time.Clock;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import sg.edu.nus.serms.notification.repository.NotificationRepository;
@@ -22,7 +23,13 @@ public class NotificationWorker {
     this.clock = clock;
   }
 
+  /** Scheduled entry point: with several app replicas only the lock holder delivers this round. */
+  @SchedulerLock(name = "serms-notification-delivery", lockAtMostFor = "PT5M", lockAtLeastFor = "PT2S")
   @Scheduled(fixedDelayString = "${serms.notifications.poll-ms:30000}")
+  public void scheduledDelivery() {
+    deliverPending();
+  }
+
   public void deliverPending() {
     for (String id : repository.pending(clock.instant(), PageRequest.of(0, 100))) {
       try {

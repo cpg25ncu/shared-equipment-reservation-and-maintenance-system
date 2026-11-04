@@ -14,11 +14,14 @@ jobs:
         with:
           node-version: '24'
       - run: node --test scripts/verify-release.test.mjs
-      - run: bash -n scripts/deploy.sh
+      - run: bash -n scripts/deploy.sh scripts/rolling-update.sh scripts/verify-cluster.sh scripts/verify-rolling-update.sh
       - run: bash scripts/test-deploy.sh
-      - name: Validate production Compose configuration
-        run: docker compose config --quiet
+      - name: Validate production and monitoring Compose configuration
+        run: |
+          docker compose config --quiet
+          docker compose -f compose.yaml -f compose.monitoring.yaml config --quiet
         env:
+          GRAFANA_ADMIN_PASSWORD: ci-only-config-validation
           SERMS_DB_NAME: serms_test
           SERMS_DB_USER: serms_test
           SERMS_DB_PASSWORD: ci-only-config-validation
@@ -44,15 +47,28 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: '1'
-      - name: Run real production-profile Compose smoke in isolated CI storage
+      - name: Run real production-profile Compose smoke with two app replicas behind nginx
         env:
           SERMS_DB_NAME: serms_ci
           SERMS_DB_USER: serms_ci
           SERMS_DB_PASSWORD: ci-only-${{ github.run_id }}
           SERMS_DB_VOLUME: serms-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          SERMS_APP_REPLICAS: '2'
           RELEASE_SHA: ci
+          # CI-only first administrator on the throw-away database, used to sign in below.
+          SERMS_BOOTSTRAP_ADMIN_EMAIL: ci-admin@example.invalid
+          SERMS_BOOTSTRAP_ADMIN_DISPLAY_NAME: CI Administrator
+          SERMS_BOOTSTRAP_ADMIN_PASSWORD: ci-only-${{ github.run_id }}-admin
+          SERMS_VERIFY_EMAIL: ci-admin@example.invalid
+          SERMS_VERIFY_PASSWORD: ci-only-${{ github.run_id }}-admin
         run: |
           docker volume create "$SERMS_DB_VOLUME"
           trap 'docker compose down; docker volume rm "$SERMS_DB_VOLUME"' EXIT
-          docker compose up -d --wait --wait-timeout 180
+          docker compose up -d --wait --wait-timeout 240
           node scripts/verify-compose.mjs
+          # Load balancing, shared sessions, ShedLock and logout across replicas.
+          bash scripts/verify-cluster.sh
+          # Zero-downtime rolling update to a second image tag under signed-in traffic.
+          docker tag serms-app:ci serms-app:ci-next
+          docker tag serms-web:ci serms-web:ci-next
+          RELEASE_SHA=ci-next bash scripts/verify-rolling-update.sh

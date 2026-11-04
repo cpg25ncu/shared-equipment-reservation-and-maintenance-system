@@ -24,3 +24,11 @@ Branch: `claude/bold-franklin-barevs` · Baseline: `16a1030`
 - The docx passes the OOXML schema check of the docx tooling, compared with the original template.
 - Rendered to PDF with LibreOffice and inspected every page. TOC page numbers come from the rendered PDF, and the second pass returns the same numbers.
 - Application tests: **not run**. No application files changed.
+
+## 2026-11-04 Report brought in line with the implementation
+
+- The user then asked for the target items to be implemented in code. See [scalable monolith](2026-11-04-scalable-monolith.md) and [D-014](../collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing).
+- Report figures and text now match the code: cookie `JSESSIONID`, real nginx settings (AD-07), rolling-update steps (Figure 19), CI jobs and test counts (Figure 18).
+- The read replica, off-host backup copy and edge rate limiting are marked *planned*. A k6 scaling chart (Figure 16) and a measured results table were added. Limitations AIS-03 and AIS-07–AIS-09 were updated.
+- Measured values: 690 + 101 backend tests, 188 + 16 front-end tests, 77.87% coverage, k6 50/150 users on 1–3 replicas, 0 failed requests in rolling updates and failover, ZAP production 0/5/62 and local 0/2/60.
+- `docs/report/README.md` now separates implemented items from design-only ones. The rebuilt docx (41 pages, 21 figures, 24 tables) passes the OOXML check; its TOC page numbers come from the rendered PDF.

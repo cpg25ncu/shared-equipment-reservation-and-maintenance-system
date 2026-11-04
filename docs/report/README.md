@@ -12,21 +12,31 @@
 
 The diagram sources are in [`docs/diagrams/report/`](../diagrams/report/) (Mermaid).
 
-## Target design vs implemented on `main`
+## Implemented vs designed
 
-Some parts of the report describe the target design and are **not yet in the code**. The team must either implement them or reword them before submission:
+The scalable-monolith items the instructor asked for are **implemented on this branch and verified** ([decision D-014](../collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing), [evidence](../evidence/scaling-20261104/README.md)):
 
-| Report statement | State on `main` |
-| --- | --- |
-| N app replicas behind an nginx `upstream` with `least_conn` | One `app` container; `web/nginx.conf` proxies to `app:8081` |
-| Spring Session JDBC (Flyway V008) and ShedLock (V009) | Not added; sessions are in-memory and `@Scheduled` jobs run in every instance |
-| Rolling update, image-tag rollback, release SHA check in `deploy.sh` | Compose `up` with a health check |
-| `release-config` smoke test with two replicas and a cross-replica session | Single-instance Compose smoke |
-| Prometheus/Grafana, ops network, off-host backup copy, read replica, ufw, `limit_req` | Not configured in this repository |
-| Data retention periods (12 months notifications, 3 years audit, 30 min session) | Proposed values |
-| Effort per member and the WBS person-day figures | Estimates; replace them with the team's real figures |
+| Report statement | Implementation | Verification |
+| --- | --- | --- |
+| N app replicas behind an nginx load balancer | `compose.yaml` `deploy.replicas: ${SERMS_APP_REPLICAS:-2}`; `web/nginx.conf` `upstream app_pool` (least_conn, Docker DNS `resolve`) | `scripts/verify-cluster.sh`: one session served 20/20 by two replicas; killing a replica caused 0 failed requests |
+| HTTP sessions in PostgreSQL | Spring Session JDBC, Flyway V008, cookie still `JSESSIONID` | `ClusterScalingPostgresTest` (two real replicas), `verify-cluster.sh` |
+| Scheduler locks | ShedLock 7.9, Flyway V009, `@SchedulerLock` on the three scheduled jobs | `ClusterScalingPostgresTest`, `serms.shedlock` rows on the running stack |
+| Rolling update | `scripts/rolling-update.sh`, called by `scripts/deploy.sh` | `scripts/test-deploy.sh` (8 boundary cases); `scripts/verify-rolling-update.sh`: 0 failed requests in 4 runs |
+| Prometheus / Grafana monitoring | Micrometer endpoint (internal only), `compose.monitoring.yaml`, `monitoring/` (alerts, dashboard) | Both replicas discovered as targets; 5 alert rules loaded; dashboard provisioned |
 
-Facts taken from repository evidence: test counts (685 + 30 + 38 backend, 174 front-end component tests), 78.04% coverage, ZAP 0 FAIL / 5 WARN / 62 PASS, k6 reserve p95 2.26 s, milestone dates, the 15 required checks, the schema up to V007 and the class and method names in the detailed design.
+Numbers in the report are measured: test counts, 77.87% coverage, k6 (50 and 150 users, 1-3 replicas), rolling-update and failover runs, and ZAP (production 2026-10-17; local 2026-11-04). Measurement conditions are in the evidence README.
+
+Still **design only**, and marked as planned or roadmap in the report:
+
+- the PostgreSQL read replica;
+- host-nginx rate limiting;
+- off-host backup copies;
+- campus SSO (OIDC);
+- microservices on Kubernetes (Section 6).
+
+The WBS person-days and the per-member effort table are **estimates**; replace them with the team's real figures.
+
+Production still runs the single-replica release until this branch is confirmed by the affected members, merged and deployed through the gated `Deploy` workflow.
 
 ## Rebuild
 

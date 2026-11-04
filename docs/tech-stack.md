@@ -45,8 +45,8 @@ The Status column retains the 2026-10-17 implementation snapshot at main `cef0e1
 | Error format | RFC 9457 Problem Details (Spring's built-in `ProblemDetail`) | Bundled with Boot | ✅ |
 | Security | Spring Security: session cookie authentication, BCrypt password hashing, `@PreAuthorize` method authorization, and CSRF protection (cookie + request header) | Bundled with Boot | ✅ JSON identity, roles and CSRF |
 | Data access | Spring Data JPA / Hibernate; handwritten SQL through JdbcTemplate for locking or complex queries | Bundled with Boot | ✅ |
-| Scheduled tasks | Spring `@Scheduled` | Bundled with Boot | ✅ Notification delivery worker, loan reminder/overdue scanner and collection reminder scanner (Issue #19) |
-| Operational endpoints | Spring Boot Actuator (only `health` and `info` exposed) | Bundled with Boot | ✅ |
+| Scheduled tasks | Spring `@Scheduled` + ShedLock (`serms.shedlock`) | Bundled with Boot · ShedLock 7.9 | ✅ Notification delivery worker, loan reminder/overdue scanner and collection reminder scanner (Issue #19); one replica runs each job at a time |
+| Operational endpoints | Spring Boot Actuator (`health`, `info`, and `prometheus`; web/nginx returns 404 for `/api/v1/prometheus`) | Bundled with Boot | ✅ |
 | Build | Maven (Maven Wrapper `./mvnw`) | 3.9 | ✅ |
 | Testing | JUnit Jupiter 6 · Mockito · AssertJ · Spring Boot Test | Bundled with Boot 4 | ✅ Transitional data/adapter benches retain JUnit 5 |
 | Integration test database | Testcontainers (real PostgreSQL 18) | — | ✅ UC01 in ordinary tests; UC02 (`approval-postgres-tests.yml`), UC03/UC05/equipment management (`zhoufanhao.yml`, `notification-tests.yml`) and UC04 (`maintenance-tests.yml`) PostgreSQL profiles run in CI |
@@ -73,8 +73,10 @@ The Status column retains the 2026-10-17 implementation snapshot at main `cef0e1
 | Dependency checks | Dependency Review (PR stage) + Dependabot | ✅ Dependency Review; the owner's 2026-10-24 decision enables Dependabot alerts and security updates. All five version-update entries remain paused with `open-pull-requests-limit: 0` until after the final project report/presentation; no automatic resumption. Majors remain ignored and minor/patch updates grouped |
 | Code security scanning | CodeQL (Java + TypeScript) | ✅ Active `codeql.yml` on every PR and push to `main` (Issue #25); `Analyze java` and `Analyze javascript-typescript` belong to the shared 15-check merge/release list under the owner's 2026-10-24 decision |
 | Post-deployment security scanning | OWASP ZAP Baseline | 🔶 Manual, anonymous passive scans outside the pipeline: [2026-10-16 baseline](evidence/zap-baseline-20261016/zap-baseline.md), 0 FAIL / 7 WARN / 60 PASS; **latest: [2026-10-17 baseline](evidence/zap-baseline-20261017/README.md)** on deployed SHA `2993b78`, 0 FAIL / 5 WARN / 62 PASS. No authenticated or active scan |
-| Load testing | k6 (50 concurrent users) | 🔶 Manually run `scripts/load-k6.js`, outside CI: the recorded 50-user local run passed functional checks but reservation p95 2.26 s missed the 2 s target ([log](devlog/issue-25-devsecops.md)); no production run |
-| Containers | Docker (multi-stage builds, non-root execution) + Docker Compose: three containers, `web` + `app` + `db` | ✅ Non-root `app` and `web` images, PostgreSQL 18, production-profile Compose smoke in CI; running on the server since 2026-10-15 |
+| Load testing | k6 (50 concurrent users; `SERMS_K6_VUS` for scaling runs) | 🔶 Manually run `scripts/load-k6.js`, outside CI. The first 50-user laptop run missed the reserve target (p95 2.26 s, [log](devlog/issue-25-devsecops.md)); the 2026-11-04 runs on two replicas meet it (all p95 ≤ 1.3 s, reserve 0.31 s) and show scaling with one vCPU per replica ([evidence](evidence/scaling-20261104/README.md)); no production run |
+| Containers | Docker (multi-stage builds, non-root execution) + Docker Compose: `web` + `app` × N (default 2, `SERMS_APP_REPLICAS`) + `db`, segmented `frontend` / internal `backend` networks | ✅ Non-root `app` and `web` images, PostgreSQL 18, production-profile Compose smoke in CI with two replicas, cross-replica session and zero-downtime rolling-update checks; running on the server since 2026-10-15 (single replica until this change is released) |
+| Load balancing and horizontal scaling | nginx `upstream` (`least_conn`, Docker DNS `resolve`) in the `web` container; Spring Session JDBC (`serms.spring_session`, V008); ShedLock (`serms.shedlock`, V009); `scripts/rolling-update.sh` | ✅ Implemented 2026-11-04 ([evidence](evidence/scaling-20261104/README.md)); production release pending |
+| Monitoring | Micrometer Prometheus endpoint (internal only), Prometheus v3.5 + Grafana 12.1 (`compose.monitoring.yaml`), alert rules in `monitoring/prometheus/alerts.yml` | ✅ Implemented and verified locally 2026-11-04; server start pending |
 | Image registry | GitHub Container Registry (GHCR) | ⬜ `scripts/deploy.sh` builds the images on the server; no registry is used |
 | Server | Hong Kong server + nginx + Let's Encrypt, https://serms.midas.cyou | 🔶 Serving `main` since 2026-10-15 with security response headers; server inventory and deployed acceptance remain open on Issue #10 |
 
@@ -119,7 +121,7 @@ flowchart LR
 
 - **Same-origin deployment**: the frontend and `/api` share `https://serms.midas.cyou`. The web container's nginx forwards `/api/*` to the backend. This avoids CORS configuration and allows secure HttpOnly session cookies without storing JWTs in the browser.
 - The database container exposes no public port; only the app container can access it.
-- The Proposal explicitly excludes microservices and Kubernetes, so the backend runs as a single process.
+- The Proposal explicitly excludes microservices and Kubernetes. The backend is one deployable (a modular monolith) that runs as several identical, stateless replicas behind web's nginx upstream (`least_conn`, Docker DNS). HTTP sessions are stored in PostgreSQL (Spring Session JDBC, cookie still `JSESSIONID`), and scheduled jobs take a ShedLock row, so any replica can serve any request ([decision D-014](collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing)).
 
 ### 2.2 Backend Code Structure (Modular Monolith)
 

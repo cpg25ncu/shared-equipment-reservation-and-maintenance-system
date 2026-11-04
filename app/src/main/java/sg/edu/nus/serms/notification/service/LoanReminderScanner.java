@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -45,6 +46,7 @@ public class LoanReminderScanner {
     this.text = text;
   }
 
+  @SchedulerLock(name = "serms-loan-reminder-scan", lockAtMostFor = "PT5M", lockAtLeastFor = "PT10S")
   @Scheduled(fixedDelayString = "${serms.notifications.scan-ms:60000}", initialDelayString = "${serms.notifications.scan-initial-delay-ms:60000}")
   public void scheduledScan() {
     scan();

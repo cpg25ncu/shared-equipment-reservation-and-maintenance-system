@@ -226,3 +226,39 @@ Decision:
 Execution authorized: merge #104 with a merge commit; synchronize #103 with main; change the release script and matching guidance; run the four requested local checks once on final HEAD; push #103 and await its CI once; apply settings only after green CI and read each changed setting back once; mark #103 ready and merge it with a merge commit. Cancel #104's Deploy only if it is still waiting/queued, because #103's deployment includes the security patch. Send the new Deploy link to Liu Tongyao, wait once for at most 30 minutes, and make one HTTPS health request after successful deployment. Codex must not approve production, change Deploy triggers, edit application code or upgrade other dependencies.
 
 Local verification, CI, settings changes, merges, deployment, health, member acceptance and team Done remain separate facts. This owner authorization is not a claim that future execution or acceptance has already succeeded; append actual results to the PR records.
+
+## D-014 Scalable Monolith with Load Balancing
+
+Numbering note: D-013 is reserved by Shi Wenqi's unmerged `feature/shi-wenqi-uc01-closeout` branch (see the [2026-10-15 devlog](../devlog/2026-10-15-member-1-return-and-integration.md)); this entry therefore uses D-014.
+
+Status: **Requested by the user in the Claude Code session of 2026-11-04 (Asia/Singapore)**. The request responds to the instructor's report feedback: "aim to implement at least scalable monolith with load balancing. Then discuss in the report how to architect it to scalable microservices." Member confirmations listed below are still to be recorded.
+
+Context: [technology stack §2.1](../tech-stack.md#21-system-context-and-deployment) said the backend "runs as a single process". Sessions were held in Tomcat memory and every `@Scheduled` job ran in each JVM, so a second instance would have broken sign-in and duplicated reminder runs.
+
+Decision:
+
+1. Keep one deployable modular monolith (no microservices, no Kubernetes, unchanged module boundaries). Run it as `SERMS_APP_REPLICAS` identical replicas (default 2) behind an nginx `upstream` in the existing `web` container.
+2. Store HTTP sessions in PostgreSQL with Spring Session JDBC (Flyway V008). The cookie keeps the contract name and attributes (`JSESSIONID`, HttpOnly, Secure, SameSite=Lax), so [auth-and-approval §2](../contracts/auth-and-approval.md) does not change.
+3. Guard the three scheduled jobs with ShedLock (Flyway V009), so one replica runs each job at a time.
+4. `scripts/deploy.sh` delegates to `scripts/rolling-update.sh`:
+   - start the new replicas next to the old ones;
+   - keep the old release if any new replica is unhealthy;
+   - drain old replicas one at a time.
+5. Expose Micrometer's Prometheus endpoint only on the internal backend network (nginx returns 404). `compose.monitoring.yaml` adds Prometheus and Grafana bound to loopback.
+
+Microservices remain a documented evolution path in the project report (Section 6), not an implementation goal.
+
+Affected shared files under [ownership](ownership.md#shared-files-at-risk-of-concurrent-edits):
+
+- `app/pom.xml`, `app/.../shared/config/`, `notification/service/*Scanner|Worker`, Flyway V008/V009;
+- `compose.yaml`, `web/nginx.conf`, `scripts/deploy.sh`, `.github/workflows/release-config.yml`.
+
+Confirmations needed before team Done:
+
+- Wang Yuanmeng: CI/CD, deployment, UC05 scheduler;
+- Zhou Fanhao: migrations;
+- Zhang Hanming: authentication contract, reviewing that the cookie shape is unchanged.
+
+The release itself still follows the gated `Deploy` workflow and production approval. The server's `.env` may set `SERMS_APP_REPLICAS`, and must set `GRAFANA_ADMIN_PASSWORD` before the monitoring overlay is started.
+
+Evidence: [scaling evidence 2026-11-04](../evidence/scaling-20261104/README.md) and [devlog](../devlog/2026-11-04-scalable-monolith.md). Local verification, CI, member confirmation, merge, deployment and Done remain separate facts.
