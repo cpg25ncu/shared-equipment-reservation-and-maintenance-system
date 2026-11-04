@@ -300,18 +300,18 @@ Evidence: [data tier 2026-11-04](../evidence/data-tier-20261104/README.md).
 Status: **Confirmed by the user (repository owner Liu Tongyao, @cpg25ncu) in conversation on 2026-11-04 (Asia/Singapore)**, on main `3740a83`. The owner stated:
 
 - the repository serves the coursework of two courses;
-- Shi Wenqi's changes of 2026-11-04 (PR #118) are for the second course, and Liu Tongyao is not in that course's group;
+- Shi Wenqi's changes of 2026-11-04 (PR #118) are for the second course, SWE5001, and Liu Tongyao is not in that course's group;
 - those changes may stay, provided they are recorded and planned;
 - the project report is not kept in the repository.
 
 Context:
 
 - **SWE5006.** Team 07 has five members. The [use-case ownership](ownership.md#agreed-use-case-ownership), [D-007](#d-007-completion-task-ownership) and the earlier records in this file describe this course.
-- **Second course.** Team 6 has four members: Shi Wenqi, Wang Yuanmeng, Zhang Hanming and Zhou Fanhao. The instructor's feedback on its project report led to PR #118 (merge `3740a83`). The PR delivered [D-014](#d-014-scalable-monolith-with-load-balancing), [D-015](#d-015-read-replica-pitr-off-host-backups-and-edge-rate-limits), their tests and evidence, the diagram sources in `docs/diagrams/report/`, and the report itself.
+- **SWE5001.** Team 6 has four members: Shi Wenqi, Wang Yuanmeng, Zhang Hanming and Zhou Fanhao. The instructor's feedback on its project report led to PR #118 (merge `3740a83`). The PR delivered [D-014](#d-014-scalable-monolith-with-load-balancing), [D-015](#d-015-read-replica-pitr-off-host-backups-and-edge-rate-limits), their tests and evidence, the diagram sources in `docs/diagrams/report/`, and the report itself.
 
 Decision:
 
-1. **Keep the second-course work.** The code, configuration, scripts, tests, evidence, diagram sources and D-014/D-015 from #118 stay on `main`. Shi Wenqi owns this work. D-014 and D-015 still need the member confirmations they list.
+1. **Keep the SWE5001 work.** The code, configuration, scripts, tests, evidence, diagram sources and D-014/D-015 from #118 stay on `main`. Shi Wenqi owns this work. D-014 and D-015 still need the member confirmations they list.
 2. **Keep course reports outside the repository.** `docs/report/` (the `.docx`, its build scripts and its README) is removed from `main`. The files remain in Git history at `3740a83` and on branch `feat/shi-wenqi-scalable-architecture`; history is not rewritten. Content that exists only in a course report applies to that course only: team names, member lists, effort tables, role splits. It does not change the SWE5006 ownership records.
 
 Unchanged: both courses use the same code and the same production release. One backend, one frontend, the contracts, the 15 required checks, the gated `Deploy` workflow and the [affected-owner confirmation rule](../../.github/CONTRIBUTING.md#prs-and-team-acceptance) apply to changes made for either course.

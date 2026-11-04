@@ -30,7 +30,7 @@ Long-term responsibilities and a PR's delivery owner can differ, but do not trea
 
 For the completion tasks created on 2026-10-14 (Issues #15-#27), [D-007](decisions.md#d-007-completion-task-ownership) names the delivery owner of each task; the use-case table above is unchanged.
 
-The tables above describe SWE5006 (Team 07). The repository also serves a second course, whose Team 6 does not include Liu Tongyao. [D-016](decisions.md#d-016-repository-shared-by-two-courses) records that course's work on `main` and its owner. That course's reports do not change these tables.
+The tables above describe SWE5006 (Team 07). The repository also serves SWE5001, whose Team 6 does not include Liu Tongyao. [D-016](decisions.md#d-016-repository-shared-by-two-courses) records that course's work on `main` and its owner. That course's reports do not change these tables.
 
 ## Shared Files at Risk of Concurrent Edits
 

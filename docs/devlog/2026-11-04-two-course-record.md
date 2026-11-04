@@ -7,11 +7,11 @@ Decision: [D-016](../collaboration/decisions.md#d-016-repository-shared-by-two-c
 ## 2026-11-04 What happened
 
 - Shi Wenqi (@YukiOvOb) opened PR #118 at 17:23 SGT and merged it himself at 18:04 SGT: 114 files, +9757 / −42. All 16 checks passed, and nobody reviewed it. The PR asked three members to confirm (Wang Yuanmeng, Zhou Fanhao, Zhang Hanming); none had confirmed at merge time.
-- The work answers instructor feedback on a second course's project report:
+- The work answers instructor feedback on the SWE5001 project report:
   - a scalable monolith ([D-014](../collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing));
   - a replicated data tier with edge rate limits ([D-015](../collaboration/decisions.md#d-015-read-replica-pitr-off-host-backups-and-edge-rate-limits));
   - the report `docs/report/SERMS_Project_Report.docx` with 21 diagrams.
-- The report names "Team 6, four students" and records UC04 as shared. An agent review read this as removing Liu Tongyao from the SWE5006 team and proposed reverting #118. The owner then explained that the repository serves two courses and that Liu Tongyao is not in the second course's group. The revert was dropped; nothing was reverted.
+- The report names "Team 6, four students" and records UC04 as shared. An agent review read this as removing Liu Tongyao from the SWE5006 team and proposed reverting #118. The owner then explained that the repository serves two courses, SWE5006 and SWE5001, and that Liu Tongyao is not in the SWE5001 group. The revert was dropped; nothing was reverted.
 
 ## 2026-11-04 What this change does
 
@@ -60,4 +60,4 @@ After that release, V008 and V009 are in the production database. Flyway has no 
 
 | Symptom | Root cause | Fix | How it was verified |
 | --- | --- | --- | --- |
-| The report seemed to drop a SWE5006 member and reassign UC04 | The report belongs to a second course with a different team, and nothing in the repository said so | D-016 records both courses; the report leaves the repository | Owner's statement in conversation on 2026-11-04 |
+| The report seemed to drop a SWE5006 member and reassign UC04 | The report belongs to SWE5001, whose team is different, and nothing in the repository said so | D-016 records both courses; the report leaves the repository | Owner's statement in conversation on 2026-11-04 |
