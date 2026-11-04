@@ -1,0 +1,31 @@
+%% DDD strategic design: subdomains, bounded contexts and context map
+flowchart TB
+  classDef core fill:#FFF4E6,stroke:#F17D00,stroke-width:2.5px,color:#0B2545
+  classDef sup fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef gen fill:#EAF1FB,stroke:#023E7C,stroke-width:1.5px,color:#0B2545
+  subgraph CORE["CORE SUBDOMAIN · Equipment Booking and Circulation"]
+    direction LR
+    BC1["<b>Reservation BC</b><br/><small>Reservation aggregate · ReservationRules<br/>time-slot exclusivity · quotas</small>"]:::core
+    BC2["<b>Approval BC</b><br/><small>ApprovalDecision aggregate · policy chain<br/>no self-approval · comment rules</small>"]:::core
+    BC3["<b>Loan BC</b><br/><small>Loan aggregate · checkout / return<br/>due date · overdue</small>"]:::core
+  end
+  subgraph SUPP["SUPPORTING SUBDOMAINS"]
+    direction LR
+    BC4["<b>Equipment Catalogue BC</b><br/><small>Equipment aggregate · Category<br/>asset tag · lifecycle status</small>"]:::sup
+    BC5["<b>Maintenance BC</b><br/><small>MaintenanceCase aggregate<br/>fault · diagnosis · repair</small>"]:::sup
+  end
+  subgraph GENR["GENERIC SUBDOMAINS"]
+    direction LR
+    BC6["<b>Identity & Access BC</b><br/><small>User · Role · session</small>"]:::gen
+    BC7["<b>Notification BC</b><br/><small>NotificationRequest · attempts</small>"]:::gen
+    BC8["<b>Audit & Reporting BC</b><br/><small>AuditLog · read models</small>"]:::gen
+  end
+  BC2 -- "ACL: ReservationApprovalPort ←<br/>ReservationApprovalAdapter" --> BC1
+  BC1 -- "Customer / Supplier<br/>(reservation → loan)" --> BC3
+  BC3 -- "Customer / Supplier<br/>reportFault()" --> BC5
+  BC4 -- "Open Host Service<br/>availability, status" --> BC1
+  BC4 -- "OHS" --> BC5
+  BC6 -- "Shared Kernel<br/>UserId, Role, principal" --> CORE
+  CORE -- "Published Language<br/>domain events" --> BC7
+  CORE -- "events (Conformist)" --> BC8
+  SUPP -- "events" --> BC7

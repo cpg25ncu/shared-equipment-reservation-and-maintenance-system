@@ -1,0 +1,31 @@
+%% Domain event flow between bounded contexts (producers → consumers)
+flowchart LR
+  classDef prod fill:#FFF4E6,stroke:#F17D00,stroke-width:2px,color:#0B2545
+  classDef evt fill:#023E7C,stroke:#023E7C,color:#FFFFFF
+  classDef cons fill:#EAF1FB,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  P1["Reservation BC"]:::prod
+  P2["Approval BC"]:::prod
+  P3["Loan BC"]:::prod
+  P4["Maintenance BC"]:::prod
+  P5["Reminder scanners<br/><small>@Scheduled + ShedLock</small>"]:::prod
+  E1(["ReservationSubmitted"]):::evt
+  E2(["ReservationCancelled"]):::evt
+  E3(["ReservationDecided"]):::evt
+  E4(["EquipmentCheckedOut"]):::evt
+  E5(["EquipmentReturned"]):::evt
+  E6(["LoanDueSoon / LoanOverdue"]):::evt
+  E7(["CollectionReminder"]):::evt
+  E8(["FaultReported / CaseAssigned / CaseResolved"]):::evt
+  C1["Notification BC<br/><small>ReservationNotificationListener · ApprovalNotificationListener<br/>LoanNotificationListener · MaintenanceNotificationListener</small>"]:::cons
+  C2["Audit BC<br/><small>append-only audit_log (same transaction)</small>"]:::cons
+  C3["Maintenance BC<br/><small>opens case on damaged return</small>"]:::cons
+  C4["Equipment Catalogue BC<br/><small>status projection</small>"]:::cons
+  P1 --> E1 & E2
+  P2 --> E3
+  P3 --> E4 & E5
+  P5 --> E6 & E7
+  P4 --> E8
+  E1 & E2 & E3 & E4 & E5 & E6 & E7 & E8 --> C1
+  E1 & E2 & E3 & E4 & E5 & E8 --> C2
+  E5 -- "condition = DAMAGED" --> C3
+  E4 & E5 & E8 --> C4

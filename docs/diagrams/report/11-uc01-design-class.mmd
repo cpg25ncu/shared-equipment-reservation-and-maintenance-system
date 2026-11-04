@@ -1,0 +1,117 @@
+%% UC01 Search and reserve equipment - design class diagram (object level)
+classDiagram
+  direction TB
+  class ReservationController {
+    <<RestController /api/v1/reservations>>
+    -ReservationService service
+    +create(CreateReservationRequest, SermsUserPrincipal) ResponseEntity~ReservationView~
+    +mine(status, page, size, principal) ReservationPage
+    +get(UUID id, principal) ReservationView
+    +cancel(UUID id, principal) ReservationView
+  }
+  class CreateReservationRequest {
+    <<record DTO>>
+    @NotNull UUID equipmentId
+    @NotNull Instant startAt
+    @NotNull Instant endAt
+    String purpose
+  }
+  class ReservationService {
+    <<Service · Transactional>>
+    -ReservationRepository repository
+    -ReservationRules rules
+    -ApplicationEventPublisher events
+    -Clock clock
+    +submit(UUID requesterId, ReservationRequest) Reservation
+    +mine(UUID, ReservationStatus, int, int) ReservationPage
+    +cancel(UUID requesterId, UUID reservationId) Reservation
+    -translate(DataAccessException) RuntimeException
+  }
+  class ReservationRules {
+    <<Composite of strategies>>
+    -List~ReservationPolicy~ policies
+    +evaluate(ReservationRuleContext) List~RuleViolation~
+  }
+  class ReservationPolicy {
+    <<interface · Strategy>>
+    +evaluate(ReservationRuleContext) Optional~RuleViolation~
+  }
+  class StartInFuturePolicy
+  class DurationPolicy {
+    -Duration min
+    -Duration defaultMax
+  }
+  class BookingHorizonPolicy {
+    -Duration horizon
+  }
+  class OpenReservationQuotaPolicy {
+    -int maxOpen
+  }
+  class OverdueLoanPolicy
+  class ReservationRuleContext {
+    <<record>>
+    ReservationRequest request
+    Instant now
+    int openCount
+    boolean requiresApproval
+    boolean hasOverdueLoan
+    Duration maxBorrowDuration
+  }
+  class ReservationRepository {
+    <<Repository · NamedParameterJdbcTemplate>>
+    +lockEquipment(UUID) Optional~LockedEquipment~
+    +lockRequesterAccountStatus(UUID) Optional~String~
+    +hasOpenMaintenance(UUID) boolean
+    +countOpen(UUID, Instant) int
+    +hasOverdueLoan(UUID, Instant) boolean
+    +overlapsHeldSlot(UUID, Instant, Instant) boolean
+    +equipmentCanBeReserved(UUID, Instant) boolean
+    +insert(id, requester, equipment, start, end, status, purpose)
+    +audit(actor, action, id, summary, at)
+    +findById(UUID) Optional~Reservation~
+  }
+  class Reservation {
+    <<record · aggregate view>>
+    UUID id
+    UUID requesterId
+    UUID equipmentId
+    Instant startAt
+    Instant endAt
+    ReservationStatus status
+    long version
+    +cancellable() boolean
+  }
+  class ReservationSubmitted {
+    <<DomainEvent>>
+    UUID eventId
+    UUID reservationId
+    UUID requesterId
+    UUID equipmentId
+    ReservationStatus status
+  }
+  class ReservationException {
+    <<sealed · ProblemDetail type>>
+    SlotTaken 409
+    EquipmentUnavailable 409
+    RulesBroken 422
+    RequesterNotEligible 403
+  }
+  class ReservationNotificationListener {
+    <<EventListener · notification module>>
+    +on(ReservationSubmitted)
+  }
+  ReservationController --> ReservationService
+  ReservationController ..> CreateReservationRequest
+  ReservationService --> ReservationRules
+  ReservationService --> ReservationRepository
+  ReservationService ..> ReservationRuleContext : creates
+  ReservationService ..> ReservationSubmitted : publishes
+  ReservationService ..> ReservationException : throws
+  ReservationRules o-- "5" ReservationPolicy
+  ReservationPolicy <|.. StartInFuturePolicy
+  ReservationPolicy <|.. DurationPolicy
+  ReservationPolicy <|.. BookingHorizonPolicy
+  ReservationPolicy <|.. OpenReservationQuotaPolicy
+  ReservationPolicy <|.. OverdueLoanPolicy
+  ReservationRepository ..> Reservation : maps
+  ReservationNotificationListener ..> ReservationSubmitted : consumes

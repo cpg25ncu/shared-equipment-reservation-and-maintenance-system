@@ -1,0 +1,19 @@
+gitGraph
+  commit id: "main: V007"
+  branch feat/uc01-reservation
+  checkout feat/uc01-reservation
+  commit id: "UC01 rules"
+  commit id: "UC01 tests"
+  checkout main
+  branch feat/uc04-maintenance
+  commit id: "UC04 case"
+  checkout main
+  merge feat/uc01-reservation id: "PR #22 (15 checks green)" tag: "deploy 0be0a29"
+  checkout feat/uc04-maintenance
+  commit id: "UC04 fault fields"
+  checkout main
+  merge feat/uc04-maintenance id: "PR #21 merge"
+  branch fix/zod-ghsa
+  commit id: "security fix"
+  checkout main
+  merge fix/zod-ghsa id: "PR hotfix" tag: "deploy"
