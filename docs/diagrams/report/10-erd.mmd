@@ -129,10 +129,12 @@ erDiagram
   }
   SPRING_SESSION {
     char primary_id PK
-    char session_id UK
+    char session_id UK "cookie JSESSIONID"
+    bigint creation_time
     bigint last_access_time
     int max_inactive_interval
-    varchar principal_name
+    bigint expiry_time "indexed, cleanup job"
+    varchar principal_name "indexed"
   }
   SPRING_SESSION_ATTRIBUTES {
     char session_primary_id PK,FK
@@ -141,7 +143,7 @@ erDiagram
   }
   SHEDLOCK {
     varchar name PK
-    timestamp lock_until
-    timestamp locked_at
+    timestamptz lock_until "database clock"
+    timestamptz locked_at
     varchar locked_by
   }

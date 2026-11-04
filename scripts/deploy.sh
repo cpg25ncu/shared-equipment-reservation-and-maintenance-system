@@ -40,8 +40,17 @@ export RELEASE_SHA
 docker compose config --quiet
 # Compilation failures leave currently running containers intact.
 docker compose build
-docker compose up -d --wait --wait-timeout 180
+# The database (and any service whose configuration is unchanged) stays as it is.
+docker compose up -d --wait --wait-timeout 180 --no-recreate db
+
+# Rolling update of the stateless app replicas (scripts/rolling-update.sh, from the release
+# revision checked out above). A failed new replica leaves the previous release serving.
+REPLICAS=$(env_value SERMS_APP_REPLICAS); REPLICAS=${REPLICAS:-2}
+SERMS_APP_REPLICAS="$REPLICAS" bash scripts/rolling-update.sh
+# web carries the new SPA bundle and nginx configuration; it restarts in about a second.
+docker compose up -d --no-deps --wait --wait-timeout 120 web
 HEALTH=$(curl -fsS "http://127.0.0.1:$HOST_PORT/api/v1/health")
 [[ "$HEALTH" =~ \"status\"[[:space:]]*:[[:space:]]*\"UP\" ]]
-echo "Released $RELEASE_SHA. Verify real HTTPS login and workflows before acceptance."
+echo "Released $RELEASE_SHA on $REPLICAS app replicas. Verify real HTTPS login and workflows before acceptance."
+echo "Rollback: git checkout --detach $PREVIOUS_SHA and run this script's build/up steps with RELEASE_SHA=$PREVIOUS_SHA (images serms-*:$PREVIOUS_SHA are kept)."
 # Retain previous revision/images and backup; never downgrade or delete database data automatically.

@@ -9,15 +9,15 @@ flowchart TB
   G2{"<b>production environment</b><br/>human reviewer approval"}:::gate
   D1["SSH with pinned host key<br/><small>secrets: DEPLOY_HOST / USER / KEY</small>"]:::job
   D2["scripts/deploy.sh<br/>① pre-release pg_dump backup"]:::job
-  D3["② git checkout exact SHA ·<br/>build serms-app / serms-web:SHA"]:::job
-  D4["③ Flyway migrate (expand-only, backward compatible)"]:::job
-  D5["④ Rolling update: replace app-1, wait healthy,<br/>then app-2 … app-n · nginx drains old replica"]:::job
-  D6["⑤ Health: /actuator/health = UP via nginx ·<br/>release SHA footer matches"]:::job
+  D3["② git checkout exact SHA ·<br/>docker compose build serms-app / serms-web:SHA"]:::job
+  D4["③ rolling-update.sh: start N new replicas next to old ones ·<br/>Flyway expand-only migration on first start"]:::job
+  D5["④ all new replicas healthy → wait one resolver period →<br/>stop old replicas one at a time (graceful drain)"]:::job
+  D6["⑤ recreate web (new SPA + nginx config) ·<br/>/api/v1/health = UP through nginx"]:::job
   D7["⑥ Post-deploy: ZAP baseline · k6 smoke (manual)"]:::job
   OK["Production serves new SHA"]:::trig
-  RB["Rollback: retag previous image SHA,<br/>compose up · restore dump if needed"]:::bad
+  RB["New replica unhealthy: remove new replicas,<br/>previous release keeps serving (automatic)"]:::bad
   M --> G1 -- pass --> G2 -- approve --> D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> OK
   G1 -- "fail / pending timeout" --> X["No SSH: release blocked"]:::bad
-  D5 -- "health fails" --> RB
-  D6 -- "health fails" --> RB
+  D4 -- "health fails" --> RB
+  D6 -- "health fails" --> MR["Manual rollback: previous SHA images,<br/>restore pre-release dump if schema requires"]:::bad
   OK -.-> D7

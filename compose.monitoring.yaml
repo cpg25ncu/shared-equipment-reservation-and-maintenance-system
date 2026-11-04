@@ -1,0 +1,39 @@
+# Observability overlay (report Figure 9, ops network). Start it next to the production stack:
+#   docker compose -f compose.yaml -f compose.monitoring.yaml up -d
+# Prometheus discovers every app replica through Docker DNS and scrapes /api/v1/prometheus on the
+# internal backend network; nginx never exposes that path. Both UIs bind to loopback only and are
+# reached through an SSH tunnel.
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      - '127.0.0.1:${PROMETHEUS_PORT:-9090}:9090'
+    networks: [backend, ops]
+  grafana:
+    image: grafana/grafana:12.1.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set a server-only Grafana admin password}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - '127.0.0.1:${GRAFANA_PORT:-3000}:3000'
+    networks: [ops]
+    depends_on: [prometheus]
+networks:
+  ops: {}
+volumes:
+  prometheus-data: {}
+  grafana-data: {}

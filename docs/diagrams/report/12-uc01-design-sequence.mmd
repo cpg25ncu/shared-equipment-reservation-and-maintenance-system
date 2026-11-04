@@ -10,7 +10,7 @@ sequenceDiagram
   participant R as Reservation<br/>Repository
   participant DB as PostgreSQL
   participant EV as Event<br/>Publisher
-  B->>LB: POST /api/v1/reservations<br/>SESSION cookie, X-XSRF-TOKEN
+  B->>LB: POST /api/v1/reservations<br/>JSESSIONID cookie, X-XSRF-TOKEN
   LB->>SEC: least_conn → app-k
   SEC->>DB: load session (spring_session)
   SEC->>SEC: CSRF + session_version

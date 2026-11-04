@@ -61,6 +61,13 @@ Leaving the settings in place is harmless for later starts (an administrator exi
 5. Hosted deployment concurrency is serialized. The server script also takes a nonblocking file lock, rejects tracked server changes, confirms main again, and preserves `.env`, data, previous image tags and history.
 6. Before changing application code, dump the confirmed running DB into the existing backup directory outside the checkout, require a nonempty dump and successful `pg_restore --list`, and record previous SHA/target SHA/backup path privately. This validates archive structure, **not** a restore rehearsal.
 7. Build before replacing containers. Compose waits for actual backend/database readiness; the web health check reaches `/api/v1/health`, replacing the synthetic static health response.
+8. **Rolling update** ([D-014](collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing)). `deploy.sh` keeps `db` running and calls `scripts/rolling-update.sh` from the release revision. That script:
+   - starts `SERMS_APP_REPLICAS` new app replicas (`.env`, default 2) next to the running ones;
+   - waits until every new replica is healthy;
+   - waits one nginx resolver period, then stops and removes the old replicas one at a time.
+
+   If any new replica is not healthy, only the new replicas are removed and the previous release keeps serving. `web` is then recreated with the new SPA and nginx configuration, which takes about a second. Expand-only migrations let old and new replicas share the schema during the switch. **First release after D-014:** the previous release kept sessions in Tomcat memory, so every signed-in user must sign in once more after the switch. Later releases keep sessions, because they are stored in `serms.spring_session`.
+9. **Monitoring** (optional overlay). Set `GRAFANA_ADMIN_PASSWORD` in `.env`, then run `docker compose -f compose.yaml -f compose.monitoring.yaml up -d prometheus grafana`. Prometheus (127.0.0.1:9090) discovers every app replica through Docker DNS and scrapes `/api/v1/prometheus` on the internal network; nginx answers 404 for that path. Grafana (127.0.0.1:3000) provisions the *SERMS · scalable monolith* dashboard. Reach both through an SSH tunnel. Alert rules are in `monitoring/prometheus/alerts.yml`.
 
 Required server commands: Git, Bash, flock, Docker with Compose v2 supporting `--wait`, curl, and the PostgreSQL tools inside the running DB image. `.env` entries used by the script must be plain, unquoted `KEY=value`. No auto-generated placeholder environment, orphan removal, image prune, database downgrade or volume deletion is performed.
 
