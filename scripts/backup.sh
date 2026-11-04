@@ -21,10 +21,25 @@ BACKUP_DIR=${SERMS_BACKUP_DIR:-$(env_value SERMS_BACKUP_DIR)}
 [[ "$BACKUP_DIR" != "$APP_DIR" && "$BACKUP_DIR" != "$APP_DIR/"* ]] || {
   echo 'Backup directory must be outside the checkout' >&2; exit 1;
 }
-CONTAINER=${SERMS_DB_CONTAINER:-$(docker compose ps -q db)}
+# Source (report AD-18): the hot-standby replica when it is healthy, so the dump does not load the
+# primary; otherwise the primary. SERMS_BACKUP_SOURCE=primary|replica forces one of them.
+SOURCE=${SERMS_BACKUP_SOURCE:-auto}
+pick() { docker compose ps -q "$1" 2>/dev/null; }
+healthy() { [[ -n "$1" && "$1" != *$'\n'* && "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$1")" = healthy ]]; }
+if [[ -n "${SERMS_DB_CONTAINER:-}" ]]; then
+  CONTAINER=$SERMS_DB_CONTAINER
+else
+  case "$SOURCE" in
+    replica) CONTAINER=$(pick db-replica) ;;
+    primary) CONTAINER=$(pick db) ;;
+    auto) CONTAINER=$(pick db-replica); healthy "$CONTAINER" || CONTAINER=$(pick db) ;;
+    *) echo 'SERMS_BACKUP_SOURCE must be auto, primary or replica' >&2; exit 1 ;;
+  esac
+fi
 [[ -n "$CONTAINER" && "$CONTAINER" != *$'\n'* ]] || {
-  echo 'Exactly one running db container is required' >&2; exit 1;
+  echo 'Exactly one running database container is required' >&2; exit 1;
 }
+echo "Dumping from $(docker inspect --format '{{index .Config.Labels "com.docker.compose.service"}}' "$CONTAINER" 2>/dev/null || echo "$CONTAINER")"
 [[ "$(docker inspect --format '{{.Config.Image}}' "$CONTAINER")" = postgres:18-alpine ]] || {
   echo 'Expected the inventoried PostgreSQL 18 image' >&2; exit 1;
 }

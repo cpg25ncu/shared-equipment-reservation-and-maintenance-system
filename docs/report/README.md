@@ -1,6 +1,6 @@
 # SERMS Project Report
 
-`SERMS_Project_Report.docx` is the project report, written into the course template (*02 Project Report Template for Practice Project*). It shows the **target architecture** asked for in the instructor feedback:
+`SERMS_Project_Report.docx` (Team 6) is the project report, written into the course template (*02 Project Report Template for Practice Project*). It shows the **target architecture** asked for in the instructor feedback:
 
 - a scalable modular monolith with load balancing,
 - several architecture views (C4 context, containers and components; tiers and layers; logical and physical deployment),
@@ -14,29 +14,32 @@ The diagram sources are in [`docs/diagrams/report/`](../diagrams/report/) (Merma
 
 ## Implemented vs designed
 
-The scalable-monolith items the instructor asked for are **implemented on this branch and verified** ([decision D-014](../collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing), [evidence](../evidence/scaling-20261104/README.md)):
+Everything the instructor asked for is implemented and verified on this branch. Report Table 2 maps each architectural element to its code and evidence.
 
-| Report statement | Implementation | Verification |
+| Report element | Implementation | Verification |
 | --- | --- | --- |
-| N app replicas behind an nginx load balancer | `compose.yaml` `deploy.replicas: ${SERMS_APP_REPLICAS:-2}`; `web/nginx.conf` `upstream app_pool` (least_conn, Docker DNS `resolve`) | `scripts/verify-cluster.sh`: one session served 20/20 by two replicas; killing a replica caused 0 failed requests |
-| HTTP sessions in PostgreSQL | Spring Session JDBC, Flyway V008, cookie still `JSESSIONID` | `ClusterScalingPostgresTest` (two real replicas), `verify-cluster.sh` |
-| Scheduler locks | ShedLock 7.9, Flyway V009, `@SchedulerLock` on the three scheduled jobs | `ClusterScalingPostgresTest`, `serms.shedlock` rows on the running stack |
-| Rolling update | `scripts/rolling-update.sh`, called by `scripts/deploy.sh` | `scripts/test-deploy.sh` (8 boundary cases); `scripts/verify-rolling-update.sh`: 0 failed requests in 4 runs |
-| Prometheus / Grafana monitoring | Micrometer endpoint (internal only), `compose.monitoring.yaml`, `monitoring/` (alerts, dashboard) | Both replicas discovered as targets; 5 alert rules loaded; dashboard provisioned |
+| N app replicas behind an nginx load balancer | `compose.yaml` `deploy.replicas`; `web/nginx.conf` `upstream app_pool` | `verify-cluster.sh`: one session served 20/20 by two replicas; replica kill: 0 failed requests |
+| Shared sessions, scheduler locks | Spring Session JDBC (V008, cookie `JSESSIONID`), ShedLock (V009) | `ClusterScalingPostgresTest` |
+| Rolling update | `scripts/rolling-update.sh` via `deploy.sh` | `test-deploy.sh` 8/8; `verify-rolling-update.sh`: 0 failed requests in 5 runs |
+| Prometheus / Grafana | `compose.monitoring.yaml`, `monitoring/` | Both replicas discovered; 5 alert rules; dashboard |
+| Streaming read replica for reports and dumps | `db-replica`, `postgres/replica-entrypoint.sh`, `shared/persistence/ReadReplica` | `ReadReplicaPostgresTest`; `verify-data-tier.sh` (routing, fallback, return) |
+| WAL archiving + PITR | `postgres/archive-wal.sh`, `base-backup.sh`, `pitr-restore.sh` | `rehearse-recovery.sh`: restore at the target time, 25/0 rows |
+| Encrypted off-host backups | `offsite-backup.sh` (AES-256, SHA-256, `pg_restore` check) | The drill restores from the off-host copy alone |
+| Edge rate limiting | `web/nginx.conf` `limit_req` | `verify-data-tier.sh`: 21 × 401 then 429 for a public client |
 
-Numbers in the report are measured: test counts, 77.87% coverage, k6 (50 and 150 users, 1-3 replicas), rolling-update and failover runs, and ZAP (production 2026-10-17; local 2026-11-04). Measurement conditions are in the evidence README.
+Architected only, as the instructor asked: microservices on Kubernetes with an event broker, and campus SSO (OIDC). Both are in report Section 6 and are marked "Architected" in Table 2.
 
-Still **design only**, and marked as planned or roadmap in the report:
+Measured figures come from the evidence folders [scaling-20261104](../evidence/scaling-20261104/README.md) and [data-tier-20261104](../evidence/data-tier-20261104/README.md):
 
-- the PostgreSQL read replica;
-- host-nginx rate limiting;
-- off-host backup copies;
-- campus SSO (OIDC);
-- microservices on Kubernetes (Section 6).
+- 693 + 101 backend tests, 188 + 16 front-end tests, 77.87% coverage;
+- k6 at 50 and 150 users on 1-3 replicas;
+- rolling-update and failover runs;
+- the recovery drill;
+- ZAP: production 2026-10-17 and local 2026-11-04.
 
-The WBS person-days and the per-member effort table are **estimates**; replace them with the team's real figures.
+Team: Team 6, four students (Shi Wenqi, Wang Yuanmeng, Zhang Hanming, Zhou Fanhao). The report records UC04 as shared and testing/quality under Zhang Hanming; confirm this split. The WBS person-days and the per-member effort table are **estimates**; replace them with the team's real figures.
 
-Production still runs the single-replica release until this branch is confirmed by the affected members, merged and deployed through the gated `Deploy` workflow.
+Production still runs the previous release until D-014/D-015 are confirmed by the affected members, merged and deployed through the gated `Deploy` workflow.
 
 ## Rebuild
 

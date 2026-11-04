@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: '24'
       - run: node --test scripts/verify-release.test.mjs
-      - run: bash -n scripts/deploy.sh scripts/rolling-update.sh scripts/verify-cluster.sh scripts/verify-rolling-update.sh
+      - run: bash -n scripts/deploy.sh scripts/rolling-update.sh scripts/verify-cluster.sh scripts/verify-rolling-update.sh scripts/verify-data-tier.sh scripts/backup.sh scripts/base-backup.sh scripts/offsite-backup.sh scripts/pitr-restore.sh scripts/rehearse-recovery.sh postgres/*.sh
       - run: bash scripts/test-deploy.sh
       - name: Validate production and monitoring Compose configuration
         run: |
@@ -63,11 +63,15 @@ jobs:
           SERMS_VERIFY_PASSWORD: ci-only-${{ github.run_id }}-admin
         run: |
           docker volume create "$SERMS_DB_VOLUME"
-          trap 'docker compose down; docker volume rm "$SERMS_DB_VOLUME"' EXIT
+          trap 'docker compose down -v --remove-orphans; docker volume rm "$SERMS_DB_VOLUME"' EXIT
           docker compose up -d --wait --wait-timeout 240
           node scripts/verify-compose.mjs
           # Load balancing, shared sessions, ShedLock and logout across replicas.
           bash scripts/verify-cluster.sh
+          # Streaming read replica with report routing and fallback, WAL archiving, edge rate limits.
+          bash scripts/verify-data-tier.sh
+          # Dump + base backup, encrypted off-host copy, point-in-time restore from that copy only.
+          bash scripts/rehearse-recovery.sh "$RUNNER_TEMP/serms-recovery"
           # Zero-downtime rolling update to a second image tag under signed-in traffic.
           docker tag serms-app:ci serms-app:ci-next
           docker tag serms-web:ci serms-web:ci-next

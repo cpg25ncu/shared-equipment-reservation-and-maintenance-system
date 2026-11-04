@@ -1,0 +1,7 @@
+PASS streaming replica in recovery; WAL archiving on (000000010000000000000006)
+PASS report served from db-replica (6664 tuples read on the standby)
+PASS replica stopped: reports fall back to the primary and still return 200
+PASS replica restarted: reports use it again
+PASS public client: 21 wrong-password 401s, then 14 x 429 /problems/rate-limited
+PASS limits are per client: another public client and internal traffic are not limited
+Data tier and edge verification passed

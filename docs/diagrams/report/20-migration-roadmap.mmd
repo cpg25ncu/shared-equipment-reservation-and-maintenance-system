@@ -3,7 +3,7 @@ flowchart LR
   classDef ph fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
   classDef now fill:#FFF4E6,stroke:#F17D00,stroke-width:2.5px,color:#0B2545
   P0["<b>Phase 0 · delivered</b><br/>Modular monolith<br/><small>10 modules · one DB · Compose</small>"]:::ph
-  P1["<b>Phase 1 · delivered 2026-11</b><br/>Scalable monolith<br/><small>stateless replicas · nginx LB ·<br/>Spring Session JDBC · ShedLock ·<br/>rolling update · Prometheus</small>"]:::now
+  P1["<b>Phase 1 · delivered 2026-11</b><br/>Scalable monolith<br/><small>stateless replicas · nginx LB ·<br/>Spring Session JDBC · ShedLock ·<br/>rolling update · Prometheus ·<br/>read replica · PITR · off-host backups ·<br/>edge rate limits</small>"]:::now
   P2["<b>Phase 2 · harden seams</b><br/><small>ArchUnit module rules ·<br/>schema per module · outbox table ·<br/>OIDC</small>"]:::ph
   P3["<b>Phase 3 · extract edges</b><br/><small>notification-service and<br/>audit-reporting-service via broker</small>"]:::ph
   P4["<b>Phase 4 · extract core</b><br/><small>maintenance, loan, booking ·<br/>sagas · K8s + HPA</small>"]:::ph

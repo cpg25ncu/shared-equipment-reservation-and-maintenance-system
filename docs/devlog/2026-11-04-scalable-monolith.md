@@ -57,3 +57,37 @@ Production was not touched, and no member confirmation is claimed.
 | `verify-compose.mjs`, `verify-cluster.sh`, `verify-rolling-update.sh` on the two-replica stack | Pass; see the evidence README |
 | k6, ZAP | See the evidence README |
 | Hosted CI, member confirmation, merge, deployment | **Not run.** These follow after push |
+
+## 2026-11-04 Data tier, recovery and edge limits (D-015)
+
+The user asked for the elements the report showed as planned to be implemented: read replica, PITR, off-host backups, rate limiting.
+
+| Area | Files |
+| --- | --- |
+| PostgreSQL config | `postgres/pg_hba.conf` (selected by `-c hba_file`), `primary-entrypoint.sh`, `archive-wal.sh`, `replica-entrypoint.sh`, `replica-health.sh`; `compose.yaml` adds the primary replication and archive settings, `db-replica`, and volumes `wal-archive` and `replica-data` |
+| Report routing | `shared/persistence/ReadReplica` (replica pool outside the Spring `DataSource` beans, 15 s probe, lag threshold 300 s, gauges `serms_read_replica_in_use` and `serms_read_replica_lag_seconds`); `ReportRepository` asks it for every query |
+| Backups | `backup.sh` (dumps from the healthy replica), `base-backup.sh`, `pitr-restore.sh`, `offsite-backup.sh`, `rehearse-recovery.sh` |
+| Edge | `web/nginx.conf`: real client IP from trusted ranges, `limit_req` for sign-in and API, 429 problem response |
+| Verification | `ReadReplicaPostgresTest`; `verify-data-tier.sh`; `release-config.yml` runs the data-tier and recovery checks in `release-images` |
+
+### Problems and fixes
+
+| Symptom | Cause | Resolution |
+| --- | --- | --- |
+| An existing production volume would not accept replication connections | The image's `pg_hba.conf` lives inside the data volume and has no replication line; init scripts never run on existing data | Repository `pg_hba.conf` selected with `-c hba_file`; the upgrade from the old local volume streamed on the first start |
+| A stopped replica could fill the primary's disk through its slot | Physical slots retain WAL indefinitely | `max_slot_wal_keep_size=2GB`; `replica-entrypoint.sh` drops an inactive leftover slot before re-cloning |
+| Rate limits could throttle every user as one client | Behind host nginx, all requests come from the Docker gateway unless `X-Forwarded-For` is trusted | `set_real_ip_from` loopback and Docker ranges; requests that still come from a private address are not limited (fail open). The release note requires host nginx to send `X-Forwarded-For` |
+| Decision numbers in code comments clashed with the report's AD-16/AD-17 | Numbering chosen before the report table | Renumbered to AD-18 (replica), AD-19 (PITR and off-host copies), AD-20 (edge limits) |
+
+### Verification
+
+All results are in the [data-tier evidence](../evidence/data-tier-20261104/README.md):
+
+- `mvn -B clean verify`: 693/693 tests, 77.87% coverage;
+- PostgreSQL integration tests: 30, 41 and 30, all passing;
+- `verify-data-tier.sh`: all PASS;
+- `rehearse-recovery.sh`: 25/0 rows at the target time;
+- smoke, cluster and rolling checks: PASS, with 534/534 requests during the rolling update;
+- k6 at 50 users: p95 1.12 s.
+
+Hosted CI, member confirmation, merge and deployment have **not** run.
