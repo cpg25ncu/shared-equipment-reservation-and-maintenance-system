@@ -1,12 +1,12 @@
 # Scalable monolith with load balancing
 
-Requirement: the instructor's report feedback, "implement at least scalable monolith with load balancing". Decision: [D-014](../collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing).
+Owner: Shi Wenqi (@YukiOvOb) · Requirement: the instructor's report feedback, "implement at least scalable monolith with load balancing". Decision: [D-014](../collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing).
 
 Branch: `claude/bold-franklin-barevs` · Baseline: `main` `16a1030` · Evidence: [scaling 2026-11-04](../evidence/scaling-20261104/README.md)
 
 ## 2026-11-04 Task
 
-The user asked for the code to match the report:
+Shi Wenqi asked for the code to match the report:
 
 - multiple replicas with nginx load balancing;
 - sessions in the database (Spring Session JDBC);
@@ -60,7 +60,7 @@ Production was not touched, and no member confirmation is claimed.
 
 ## 2026-11-04 Data tier, recovery and edge limits (D-015)
 
-The user asked for the elements the report showed as planned to be implemented: read replica, PITR, off-host backups, rate limiting.
+Shi Wenqi asked for the elements the report showed as planned to be implemented: read replica, PITR, off-host backups, rate limiting.
 
 | Area | Files |
 | --- | --- |

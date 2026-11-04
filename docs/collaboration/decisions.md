@@ -231,7 +231,7 @@ Local verification, CI, settings changes, merges, deployment, health, member acc
 
 Numbering note: D-013 is reserved by Shi Wenqi's unmerged `feature/shi-wenqi-uc01-closeout` branch (see the [2026-10-15 devlog](../devlog/2026-10-15-member-1-return-and-integration.md)); this entry therefore uses D-014.
 
-Status: **Requested by the user in the Claude Code session of 2026-11-04 (Asia/Singapore)**. The request responds to the instructor's report feedback: "aim to implement at least scalable monolith with load balancing. Then discuss in the report how to architect it to scalable microservices." Member confirmations listed below are still to be recorded.
+Status: **Requested by Shi Wenqi (Member 1, @YukiOvOb) on 2026-11-04 (Asia/Singapore)**. The request responds to the instructor's report feedback: "aim to implement at least scalable monolith with load balancing. Then discuss in the report how to architect it to scalable microservices." Member confirmations listed below are still to be recorded.
 
 Context: [technology stack §2.1](../tech-stack.md#21-system-context-and-deployment) said the backend "runs as a single process". Sessions were held in Tomcat memory and every `@Scheduled` job ran in each JVM, so a second instance would have broken sign-in and duplicated reminder runs.
 
@@ -265,7 +265,7 @@ Evidence: [scaling evidence 2026-11-04](../evidence/scaling-20261104/README.md) 
 
 ## D-015 Read Replica, PITR, Off-host Backups and Edge Rate Limits
 
-Status: **Requested by the user in the Claude Code session of 2026-11-04 (Asia/Singapore)**, as a follow-up to [D-014](#d-014-scalable-monolith-with-load-balancing): the elements the project report showed as planned are to be implemented. Member confirmations are still to be recorded.
+Status: **Requested by Shi Wenqi (Member 1, @YukiOvOb) on 2026-11-04 (Asia/Singapore)**, as a follow-up to [D-014](#d-014-scalable-monolith-with-load-balancing): the elements the project report showed as planned are to be implemented. Member confirmations are still to be recorded.
 
 Decision:
 

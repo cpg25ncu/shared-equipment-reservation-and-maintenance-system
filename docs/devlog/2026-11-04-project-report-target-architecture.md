@@ -1,12 +1,12 @@
 # Project report: target architecture views
 
-Requirement: instructor feedback on the project report. Asked for: a detailed DevOps pipeline and test evidence, more architecture views (deployment), detailed DDD diagrams, class and sequence diagrams for one or two critical use cases, data schemas, a scalable monolith with load balancing, and a discussion of microservices.
+Owner: Shi Wenqi (@YukiOvOb) · Requirement: instructor feedback on the project report. Asked for: a detailed DevOps pipeline and test evidence, more architecture views (deployment), detailed DDD diagrams, class and sequence diagrams for one or two critical use cases, data schemas, a scalable monolith with load balancing, and a discussion of microservices.
 
 Branch: `claude/bold-franklin-barevs` · Baseline: `16a1030`
 
 ## 2026-11-04 Report written into the course template
 
-- The user asked for the report to show the ideal result, with diagrams drawn as the target design, and said code changes are optional.
+- Shi Wenqi asked for the report to show the ideal result, with diagrams drawn as the target design, and said code changes are optional.
 - Added `docs/report/SERMS_Project_Report.docx` (40 pages, 20 figures, 23 tables; diagram PNGs quantised to 128 colours to keep the file near 3 MB). It follows the template sections 1–5, and section 6 covers the move from the scalable monolith to microservices.
 - Added the Mermaid sources in `docs/diagrams/report/`: C4 context, containers and components; tiers and layers; logical and physical deployment; DDD context map, aggregates and event flow; ERD; UC01 and UC03 design class and sequence diagrams; reservation states; branching; CI; CD; the microservice target; and the strangler roadmap.
 - The design class and sequence diagrams use the real class and method names from `reservation`, `loan` and `maintenance`. Status values match migrations V002–V007.
@@ -27,7 +27,7 @@ Branch: `claude/bold-franklin-barevs` · Baseline: `16a1030`
 
 ## 2026-11-04 Report brought in line with the implementation
 
-- The user then asked for the target items to be implemented in code. See [scalable monolith](2026-11-04-scalable-monolith.md) and [D-014](../collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing).
+- Shi Wenqi then asked for the target items to be implemented in code. See [scalable monolith](2026-11-04-scalable-monolith.md) and [D-014](../collaboration/decisions.md#d-014-scalable-monolith-with-load-balancing).
 - Report figures and text now match the code: cookie `JSESSIONID`, real nginx settings (AD-07), rolling-update steps (Figure 19), CI jobs and test counts (Figure 18).
 - The read replica, off-host backup copy and edge rate limiting are marked *planned*. A k6 scaling chart (Figure 16) and a measured results table were added. Limitations AIS-03 and AIS-07–AIS-09 were updated.
 - Measured values: 690 + 101 backend tests, 188 + 16 front-end tests, 77.87% coverage, k6 50/150 users on 1–3 replicas, 0 failed requests in rolling updates and failover, ZAP production 0/5/62 and local 0/2/60.
