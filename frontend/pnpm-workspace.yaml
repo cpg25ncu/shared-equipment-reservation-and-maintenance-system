@@ -1,3 +1,10 @@
 allowBuilds:
   esbuild: true
   msw: false
+
+# GHSA-g3hv-75wg-m249 (Dependabot alert #14): every minimatch release before 11.0.1 is affected and
+# the 3.x, 5.x and 10.x lines have no fix. eslint, @eslint/*, @typescript-eslint and
+# @redocly/openapi-core use the named Minimatch API or a code path this project never calls
+# (see docs/devlog/2026-11-04-minimatch-alert.md). Remove this override once they require 11.x.
+overrides:
+  minimatch: ^11.0.1
