@@ -3,17 +3,63 @@ services:
   db:
     image: postgres:18-alpine
     restart: unless-stopped
+    # Primary (report AD-18/AD-19): streaming replication for db-replica and continuous WAL
+    # archiving for point-in-time recovery. hba_file applies to the existing data volume too.
+    entrypoint: [/etc/serms/postgres/primary-entrypoint.sh]
+    command:
+      - postgres
+      - -c
+      - hba_file=/etc/serms/postgres/pg_hba.conf
+      - -c
+      - wal_level=replica
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_replication_slots=10
+      - -c
+      - max_slot_wal_keep_size=2GB
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=/etc/serms/postgres/archive-wal.sh %p %f
+      - -c
+      - archive_timeout=300
     environment:
       POSTGRES_DB: ${SERMS_DB_NAME:?Set the inventoried database name}
       POSTGRES_USER: ${SERMS_DB_USER:?Set the inventoried database user}
       POSTGRES_PASSWORD: ${SERMS_DB_PASSWORD:?Set the server-only database password}
     volumes:
       - database:/var/lib/postgresql
+      - wal-archive:/wal-archive
+      - ./postgres:/etc/serms/postgres:ro
+    networks: [backend]
     healthcheck:
       test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 5s
       timeout: 3s
       retries: 12
+  db-replica:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    # Hot-standby streaming replica: report queries and nightly dumps read here.
+    entrypoint: [/etc/serms/postgres/replica-entrypoint.sh]
+    environment:
+      POSTGRES_DB: ${SERMS_DB_NAME:?Set the inventoried database name}
+      POSTGRES_USER: ${SERMS_DB_USER:?Set the inventoried database user}
+      POSTGRES_PASSWORD: ${SERMS_DB_PASSWORD:?Set the server-only database password}
+    volumes:
+      - replica-data:/var/lib/postgresql
+      - ./postgres:/etc/serms/postgres:ro
+    networks: [backend]
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, /etc/serms/postgres/replica-health.sh]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 180s
   app:
     build:
       context: .
@@ -22,16 +68,28 @@ services:
         RELEASE_SHA: ${RELEASE_SHA:-local}
     image: serms-app:${RELEASE_SHA:-local}
     restart: unless-stopped
+    # Horizontal scaling (report AD-02/AD-07): identical stateless replicas behind web's nginx
+    # upstream. scripts/deploy.sh replaces them one set at a time (rolling update).
+    deploy:
+      replicas: ${SERMS_APP_REPLICAS:-2}
+    stop_grace_period: 30s
+    networks: [backend]
     environment:
       SERVER_ADDRESS: 0.0.0.0
       SERVER_PORT: 8081
       SPRING_PROFILES_ACTIVE: serms-postgres
       SERMS_DB_URL: jdbc:postgresql://db:5432/${SERMS_DB_NAME:?Set the database name}?currentSchema=serms,public
+      # Report aggregations read from the streaming replica; the app falls back to the primary
+      # while the replica is unavailable or lagging (shared/persistence/ReadReplica).
+      SERMS_DB_REPLICA_URL: jdbc:postgresql://db-replica:5432/${SERMS_DB_NAME:?Set the database name}?currentSchema=serms,public
       SERMS_DB_USER: ${SERMS_DB_USER:?Set the database user}
       SERMS_DB_PASSWORD: ${SERMS_DB_PASSWORD:?Set the database password}
       SERMS_APPROVAL_ENABLED: 'true'
       SERMS_SECURITY_SECURE_COOKIES: 'true'
       SERVER_SERVLET_SESSION_COOKIE_SECURE: 'true'
+      # Each replica keeps a small pool; replicas x pool stays well below PostgreSQL max_connections.
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: ${SERMS_DB_POOL_SIZE:-10}
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError
       # First-admin bootstrap: blank unless set for one start (docs/server-release.md).
       SERMS_BOOTSTRAP_ADMIN_EMAIL: ${SERMS_BOOTSTRAP_ADMIN_EMAIL:-}
       SERMS_BOOTSTRAP_ADMIN_DISPLAY_NAME: ${SERMS_BOOTSTRAP_ADMIN_DISPLAY_NAME:-}
@@ -49,6 +107,7 @@ services:
     restart: unless-stopped
     ports:
       - '127.0.0.1:${HOST_PORT:-8789}:8080'
+    networks: [frontend, backend]
     depends_on:
       app:
         condition: service_healthy
@@ -56,3 +115,14 @@ volumes:
   database:
     external: true
     name: ${SERMS_DB_VOLUME:?Set the confirmed existing PostgreSQL 18 volume}
+  # Continuous WAL archive for point-in-time recovery; copied off-host by scripts/offsite-backup.sh.
+  wal-archive:
+    name: ${SERMS_WAL_ARCHIVE_VOLUME:-serms-wal-archive}
+  # Rebuildable: a fresh replica volume is cloned again from the primary.
+  replica-data:
+    name: ${SERMS_REPLICA_VOLUME:-serms-replica-data}
+networks:
+  # Only web publishes a port (loopback, for host nginx). app and db have no route to the Internet.
+  frontend: {}
+  backend:
+    internal: true

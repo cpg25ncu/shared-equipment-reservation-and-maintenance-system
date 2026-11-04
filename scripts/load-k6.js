@@ -4,9 +4,11 @@ import { check } from 'k6';
 // Supply 50 distinct borrower/equipment fixtures through a local JSON file. Never commit credentials.
 const base = __ENV.SERMS_K6_BASE_URL || 'http://127.0.0.1:8789';
 const fixtures = JSON.parse(open(__ENV.SERMS_K6_USERS_FILE || './k6-users.local.json'));
-if (!Array.isArray(fixtures) || fixtures.length < 50) throw new Error('50 borrower fixtures are required');
+// 50 concurrent users is the Proposal target; SERMS_K6_VUS raises it for scaling experiments.
+const vus = Number(__ENV.SERMS_K6_VUS || 50);
+if (!Array.isArray(fixtures) || fixtures.length < vus) throw new Error(`${vus} borrower fixtures are required`);
 export const options = {
-  scenarios: { reservation: { executor: 'per-vu-iterations', vus: 50, iterations: 1, maxDuration: '3m' } },
+  scenarios: { reservation: { executor: 'per-vu-iterations', vus, iterations: 1, maxDuration: '3m' } },
   thresholds: {
     http_req_failed: ['rate<0.01'], http_req_duration: ['p(95)<2000'], checks: ['rate>0.99'],
     'http_req_duration{operation:login}': ['p(95)<2000'],

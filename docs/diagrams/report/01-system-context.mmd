@@ -1,0 +1,34 @@
+%% C4 Level 1 - System context (target architecture)
+flowchart TB
+  classDef person fill:#EAF1FB,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef sys fill:#023E7C,stroke:#023E7C,color:#FFFFFF,font-weight:bold
+  classDef ext fill:#F2F2F2,stroke:#7A7A7A,color:#333333,stroke-dasharray:4 3
+  subgraph USERS[" "]
+    direction LR
+    B["👤 Borrower<br/><small>student / staff</small>"]:::person
+    AP["👤 Approver<br/><small>lab manager</small>"]:::person
+    C["👤 Custodian<br/><small>equipment desk</small>"]:::person
+    T["👤 Maintainer<br/><small>technician</small>"]:::person
+    AD["👤 Administrator"]:::person
+  end
+  S["<b>SERMS</b><br/>Shared Equipment Reservation and Maintenance System<br/><small>search · reserve · approve · check out · return · repair · notify · report · audit</small>"]:::sys
+  subgraph EXT[" "]
+    direction LR
+    CLK["⏱ Scheduler / clock<br/><small>overdue and reminder scans</small>"]:::ext
+    MAIL["✉ Email / SMTP gateway<br/><small>future channel</small>"]:::ext
+    IDP["🔑 Campus SSO (OIDC)<br/><small>future identity provider</small>"]:::ext
+    MON["📈 Monitoring and alerting"]:::ext
+    GH["GitHub<br/><small>source · CI/CD · release gate</small>"]:::ext
+  end
+  B -- "search, reserve, report faults" --> S
+  AP -- "approve / reject" --> S
+  C -- "check out / receive" --> S
+  T -- "diagnose / repair" --> S
+  AD -- "administer, report, audit" --> S
+  CLK -. "time trigger" .-> S
+  S -. "notify" .-> MAIL
+  S -. "federated login" .-> IDP
+  S -- "metrics, logs" --> MON
+  GH -- "gated deploy" --> S
+  style USERS fill:#FFFFFF,stroke:#FFFFFF
+  style EXT fill:#FFFFFF,stroke:#FFFFFF

@@ -1,0 +1,18 @@
+== 1. backups
+Dumping from db-replica
+Backup verified: <work-dir>/recovery/backups/serms-nightly-20261104T090530Z.dump
+NOTICE:  all required WAL segments have been archived
+Base backup verified: <work-dir>/recovery/backups/serms-base-20261104T090530Z.tar.gz (starts at WAL 000000010000000000000008); 1 kept; WAL archive cleaned before 000000010000000000000008
+== 2. drill rows around a recovery target
+target time 2026-11-04 09:05:35.550999+00; batch 2 written after it; WAL archived through 000000010000000000000009
+== 3. encrypted off-host copy
+Verified decrypt + checksum + pg_restore --list: serms-nightly-20261104T090530Z.dump
+Off-host copy complete: 7 new encrypted file(s) -> <work-dir>/recovery/offsite
+== 4. restore from the off-host copy only
+Extracting base.tar.gz into volume serms-pitr-rehearsal-20261104090530
+Replaying WAL in serms-pitr-rehearsal-20261104090530 up to: 2026-11-04 09:05:35.550999+00
+Recovered and promoted: serms-pitr-rehearsal-20261104090530 (volume serms-pitr-rehearsal-20261104090530). Inspect with: docker exec -it serms-pitr-rehearsal-20261104090530 psql -U serms_local -d <db name>
+2026-11-04 09:05:41.649 UTC [37] LOG:  recovery stopping before commit of transaction 28609, time 2026-11-04 09:05:37.691508+00
+2026-11-04 09:05:41.649 UTC [37] LOG:  redo done at 0/9023B40 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.08 s
+2026-11-04 09:05:41.649 UTC [37] LOG:  last completed transaction was at log time 2026-11-04 09:05:33.406209+00
+PASS point-in-time restore from the encrypted off-host copy: batch1/batch2 = 25/0 at 2026-11-04 09:05:35.550999+00; 2451 users restored

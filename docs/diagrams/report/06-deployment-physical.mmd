@@ -1,0 +1,51 @@
+%% Physical deployment view (production target)
+flowchart TB
+  classDef node fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef hot fill:#FFF4E6,stroke:#F17D00,stroke-width:2px,color:#0B2545
+  classDef db fill:#EAF1FB,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef ext fill:#F2F2F2,stroke:#7A7A7A,color:#333333,stroke-dasharray:4 3
+  INET["Internet · users"]:::ext
+  DNS["DNS serms.midas.cyou"]:::ext
+  subgraph HOST["«node» Linux VM · Hong Kong · Docker Engine + Compose v2"]
+    FW["«host firewall» only SSH, 80 and 443 reachable"]:::node
+    HNG["«process» host nginx :443 / :80<br/><small>TLS (Let's Encrypt, auto-renew) · HSTS · X-Forwarded-For</small>"]:::node
+    subgraph NETF["«docker network» frontend"]
+      WEB["«container» web · nginx:alpine (non-root)<br/><small>127.0.0.1:8789 → 8080 · SPA + upstream app_pool (least_conn) · limit_req</small>"]:::hot
+    end
+    subgraph NETB["«docker network» backend (internal: true)"]
+      direction LR
+      A1["«container» app-1<br/><small>eclipse-temurin 17 JRE · :8081<br/>Hikari 10 · graceful shutdown</small>"]:::node
+      A2["«container» app-2<br/><small>eclipse-temurin 17 JRE · :8081<br/>Hikari 10 · graceful shutdown</small>"]:::node
+      AN["«container» app-n<br/><small>SERMS_APP_REPLICAS=n</small>"]:::node
+      DB[("«container» db · postgres:18-alpine primary<br/><small>:5432 not published · archive_mode=on</small>")]:::db
+      DBR[("«container» db-replica · hot standby<br/><small>streaming via slot serms_replica</small>")]:::db
+    end
+    subgraph OPS["«docker network» ops"]
+      direction LR
+      PR["«container» prometheus<br/><small>127.0.0.1:9090 · DNS discovery · alerts</small>"]:::node
+      GF["«container» grafana<br/><small>127.0.0.1:3000 · SERMS dashboard</small>"]:::node
+      BKJ["«cron» backup.sh · base-backup.sh ·<br/>offsite-backup.sh<br/><small>pg_dump · base backup · AES-256 copy</small>"]:::node
+    end
+    VOL[("«volume» serms-pgdata")]:::db
+    WAL[("«volume» serms-wal-archive")]:::db
+    BKV[("«volume» /var/backups/serms")]:::db
+  end
+  OFF[("Off-host storage<br/><small>encrypted dumps · base backups · WAL</small>")]:::ext
+  GHA["GitHub Actions · Deploy workflow<br/><small>SSH with production approval</small>"]:::ext
+
+  INET --> DNS --> FW --> HNG -- "proxy_pass 127.0.0.1:8789" --> WEB
+  WEB -- "upstream least_conn" --> A1
+  WEB --> A2
+  WEB --> AN
+  A1 -- "JDBC 5432" --> DB
+  A2 --> DB
+  AN --> DB
+  DB --- VOL
+  BKJ -- "pg_dump" --> DBR
+  BKJ --> BKV -- "rsync (encrypted)" --> OFF
+  DB -- "streaming replication" --> DBR
+  DB --- WAL
+  WAL -.-> BKJ
+  PR -. "scrape /api/v1/prometheus" .-> NETB
+  GF --> PR
+  GHA -- "ssh deploy.sh: backup → build → rolling-update.sh → health" --> HOST

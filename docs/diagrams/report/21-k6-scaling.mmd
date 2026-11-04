@@ -1,0 +1,17 @@
+---
+config:
+  xyChart:
+    width: 900
+    height: 420
+  themeVariables:
+    xyChart:
+      plotColorPalette: '#023E7C, #F17D00, #7FA7D6'
+---
+%% k6, 150 concurrent users, one vCPU per app replica (docs/evidence/scaling-20261104). Lines: p95 seconds.
+xychart-beta
+  title "p95 latency vs app replicas (150 users, 1 vCPU each)"
+  x-axis "App replicas behind nginx" ["1 replica", "2 replicas", "3 replicas"]
+  y-axis "p95 (seconds)" 0 --> 12
+  bar [10.33, 5.47, 3.87]
+  line [3.86, 1.43, 0.65]
+  line [2.97, 1.40, 0.82]

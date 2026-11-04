@@ -1,0 +1,2 @@
+Rolling update took 29s; 450 of 450 signed-in requests returned 200
+PASS zero failed requests; every replica runs serms-app:v2-next

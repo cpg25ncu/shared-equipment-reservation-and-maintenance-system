@@ -1,0 +1,12 @@
+stateDiagram-v2
+  direction LR
+  [*] --> PENDING_APPROVAL: submit (category requires approval)
+  [*] --> CONFIRMED: submit (no approval needed)
+  PENDING_APPROVAL --> CONFIRMED: approver approves
+  PENDING_APPROVAL --> REJECTED: approver rejects (comment required)
+  PENDING_APPROVAL --> CANCELLED: borrower cancels
+  CONFIRMED --> CANCELLED: borrower cancels before checkout
+  CONFIRMED --> FULFILLED: custodian checks out (loan created)
+  REJECTED --> [*]
+  CANCELLED --> [*]
+  FULFILLED --> [*]

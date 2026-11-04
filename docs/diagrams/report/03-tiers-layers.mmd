@@ -1,0 +1,23 @@
+%% Tiers and layers
+flowchart TB
+  classDef tier fill:#FFFFFF,stroke:#023E7C,stroke-width:2px,color:#0B2545
+  classDef hot fill:#FFF4E6,stroke:#F17D00,stroke-width:2px,color:#0B2545
+  subgraph T1["① Client tier: browser"]
+    direction LR
+    P1["Pages and routes<br/><small>features/*</small>"]:::tier --> P2["Hooks and forms<br/><small>TanStack Query, RHF + Zod</small>"]:::tier --> P3["API client<br/><small>openapi-fetch, CSRF, 401 redirect</small>"]:::tier
+  end
+  subgraph T2["② Web tier: nginx"]
+    direction LR
+    W1["TLS termination<br/>security headers, CSP"]:::tier --> W2["Static SPA hosting<br/>immutable asset cache"]:::tier --> W3["Reverse proxy and<br/>load balancer /api/*"]:::hot
+  end
+  subgraph T3["③ Application tier: Spring Boot modular monolith (x N)"]
+    direction LR
+    L1["<b>API layer</b><br/><small>@RestController, DTO records,<br/>Bean Validation, ProblemDetail</small>"]:::tier --> L2["<b>Service layer</b><br/><small>@Transactional use cases,<br/>@PreAuthorize, event publishing</small>"]:::tier --> L3["<b>Domain layer</b><br/><small>aggregates, value objects, policies,<br/>state machines, domain events</small>"]:::tier
+    L2 --> L4["<b>Repository layer</b><br/><small>Spring Data JPA,<br/>JdbcTemplate (locks, SQL)</small>"]:::tier
+    X["Cross-cutting: Spring Security, Spring Session JDBC,<br/>ShedLock schedulers, Actuator, Micrometer"]:::hot
+  end
+  subgraph T4["④ Data tier: PostgreSQL 18"]
+    direction LR
+    D1["Tables, constraints,<br/>EXCLUDE gist, triggers"]:::tier --- D2["Flyway migrations<br/>V001-V009"]:::tier --- D3["Streaming replica · WAL archive (PITR)<br/>encrypted off-host backups"]:::tier
+  end
+  T1 -- "HTTPS JSON /api/v1" --> T2 -- "HTTP, X-Forwarded-*" --> T3 -- "JDBC (HikariCP)" --> T4

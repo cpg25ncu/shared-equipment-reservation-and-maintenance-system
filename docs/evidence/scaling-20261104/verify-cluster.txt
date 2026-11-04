@@ -1,0 +1,11 @@
+PASS 2 healthy app replicas
+PASS metrics endpoint hidden from the edge (HTTP 404)
+PASS login through nginx issued the session cookie (JSESSIONID, Spring Session)
+PASS 40 authenticated requests through the load balancer all returned 200
+      replica 7eda333e052e served 20 of 40
+      replica 24f2da184f09 served 20 of 40
+PASS nginx distributed one session's requests over every replica
+PASS session stored in serms.spring_session
+PASS scheduled jobs coordinate through serms.shedlock (serms-collection-reminder-scan,serms-loan-reminder-scan,serms-notification-delivery)
+PASS logout ended the session on every replica
+Cluster verification passed

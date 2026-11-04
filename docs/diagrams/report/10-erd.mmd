@@ -1,0 +1,149 @@
+%% Logical data model: PostgreSQL 18, schema serms (V001-V009 target)
+erDiagram
+  ROLE ||--o{ USER_ROLE : grants
+  APP_USER ||--o{ USER_ROLE : holds
+  EQUIPMENT_CATEGORY ||--o{ EQUIPMENT : classifies
+  EQUIPMENT ||--o{ RESERVATION : "is booked by"
+  APP_USER ||--o{ RESERVATION : requests
+  RESERVATION ||--o| APPROVAL_DECISION : "decided by"
+  APP_USER ||--o{ APPROVAL_DECISION : approves
+  RESERVATION ||--o| LOAN : "fulfilled by"
+  APP_USER ||--o{ LOAN : "checks out / receives"
+  EQUIPMENT ||--o{ MAINTENANCE_CASE : has
+  LOAN |o--o{ MAINTENANCE_CASE : "damage opens"
+  APP_USER ||--o{ MAINTENANCE_CASE : "reports / repairs"
+  APP_USER ||--o{ NOTIFICATION_REQUEST : receives
+  LOAN |o--o{ NOTIFICATION_REQUEST : "reminds about"
+  NOTIFICATION_REQUEST ||--o{ NOTIFICATION_ATTEMPT : "delivered via"
+  APP_USER |o--o{ AUDIT_LOG : "acts in"
+  APP_USER |o--o{ SPRING_SESSION : "signed in as"
+  SPRING_SESSION ||--o{ SPRING_SESSION_ATTRIBUTES : stores
+
+  APP_USER {
+    uuid user_id PK
+    text email UK
+    text display_name
+    text password_hash "BCrypt"
+    text account_status "ACTIVE|DISABLED"
+    varchar notification_principal UK
+    bigint session_version
+    timestamptz created_at
+  }
+  ROLE {
+    uuid role_id PK
+    text code UK "BORROWER|APPROVER|CUSTODIAN|MAINTAINER|ADMIN"
+    text name
+  }
+  USER_ROLE {
+    uuid user_id PK,FK
+    uuid role_id PK,FK
+  }
+  EQUIPMENT_CATEGORY {
+    text name PK
+    timestamptz created_at
+  }
+  EQUIPMENT {
+    uuid equipment_id PK
+    text asset_tag UK
+    text serial_number UK
+    text name
+    text category FK
+    text location
+    text status "AVAILABLE|ON_LOAN|UNDER_MAINTENANCE|RETIRED"
+    text condition
+    boolean requires_approval
+    interval max_borrow_duration
+    int version
+  }
+  RESERVATION {
+    uuid reservation_id PK
+    uuid requester_id FK
+    uuid equipment_id FK
+    timestamptz start_at
+    timestamptz end_at "EXCLUDE gist tstzrange"
+    text status
+    text purpose
+    int version
+    timestamptz created_at
+  }
+  APPROVAL_DECISION {
+    uuid approval_id PK
+    uuid reservation_id FK,UK
+    uuid approver_id FK
+    text decision "APPROVED|REJECTED"
+    text comment
+    timestamptz decided_at
+  }
+  LOAN {
+    uuid loan_id PK
+    uuid reservation_id FK,UK
+    bigint reminder_id UK
+    uuid checkout_by FK
+    timestamptz checked_out_at
+    timestamptz due_at
+    uuid return_by FK
+    timestamptz returned_at
+    text return_condition "GOOD|DAMAGED"
+    text status "ACTIVE|RETURNED"
+    int version
+  }
+  MAINTENANCE_CASE {
+    uuid maintenance_case_id PK
+    uuid equipment_id FK
+    uuid loan_id FK
+    uuid reported_by FK
+    uuid assigned_to FK
+    text fault_category
+    text priority
+    text status "OPEN|ASSIGNED|IN_PROGRESS|RESOLVED|UNREPAIRABLE"
+    text fault_description
+    text resolution_note
+    int version
+  }
+  NOTIFICATION_REQUEST {
+    varchar id PK
+    varchar dedup_key UK
+    varchar recipient FK
+    varchar type
+    bigint loan_id FK
+    varchar status "PENDING|RETRY|DELIVERED|CANCELLED|FAILED"
+    int attempts
+    timestamptz next_attempt_at
+    timestamptz read_at
+  }
+  NOTIFICATION_ATTEMPT {
+    varchar id PK
+    varchar notification_id FK
+    timestamptz attempted_at
+    varchar outcome
+  }
+  AUDIT_LOG {
+    uuid audit_id PK
+    uuid actor_id FK
+    text action
+    text entity_type
+    uuid entity_id "polymorphic"
+    text outcome
+    text change_summary
+    timestamptz occurred_at "append-only trigger"
+  }
+  SPRING_SESSION {
+    char primary_id PK
+    char session_id UK "cookie JSESSIONID"
+    bigint creation_time
+    bigint last_access_time
+    int max_inactive_interval
+    bigint expiry_time "indexed, cleanup job"
+    varchar principal_name "indexed"
+  }
+  SPRING_SESSION_ATTRIBUTES {
+    char session_primary_id PK,FK
+    varchar attribute_name PK
+    bytea attribute_bytes
+  }
+  SHEDLOCK {
+    varchar name PK
+    timestamptz lock_until "database clock"
+    timestamptz locked_at
+    varchar locked_by
+  }

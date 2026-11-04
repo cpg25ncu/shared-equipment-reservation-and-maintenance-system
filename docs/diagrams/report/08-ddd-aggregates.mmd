@@ -1,0 +1,103 @@
+%% DDD tactical design: aggregates, entities, value objects, domain events
+classDiagram
+  direction LR
+  namespace Reservation_BC {
+    class Reservation {
+      <<AggregateRoot>>
+      ReservationId id
+      UserId requesterId
+      EquipmentId equipmentId
+      TimeSlot slot
+      ReservationStatus status
+      Purpose purpose
+      long version
+      +submit(rules, ctx) ReservationSubmitted
+      +cancel(now) ReservationCancelled
+      +confirm() / reject()
+      +fulfil()
+    }
+    class TimeSlot {
+      <<ValueObject>>
+      Instant startAt
+      Instant endAt
+      +overlaps(TimeSlot) boolean
+      +duration() Duration
+    }
+    class ReservationStatus {
+      <<enumeration>>
+      PENDING_APPROVAL
+      CONFIRMED
+      REJECTED
+      CANCELLED
+      FULFILLED
+    }
+  }
+  namespace Approval_BC {
+    class ApprovalDecision {
+      <<AggregateRoot · immutable>>
+      ApprovalId id
+      ReservationId reservationId
+      UserId approverId
+      DecisionType decision
+      Comment comment
+      Instant decidedAt
+    }
+  }
+  namespace Loan_BC {
+    class Loan {
+      <<AggregateRoot>>
+      LoanId id
+      ReservationId reservationId
+      UserId checkoutBy
+      Instant checkedOutAt
+      Instant dueAt
+      ReturnRecord returnRecord
+      LoanStatus status
+      long version
+      +receive(condition, note, now) LoanReturned
+      +isOverdue(now) boolean
+    }
+    class ReturnRecord {
+      <<ValueObject>>
+      UserId returnBy
+      Instant returnedAt
+      Condition condition
+      String note
+    }
+  }
+  namespace Catalogue_BC {
+    class Equipment {
+      <<AggregateRoot>>
+      EquipmentId id
+      AssetTag assetTag
+      SerialNumber serial
+      CategoryName category
+      Location location
+      EquipmentStatus status
+      boolean requiresApproval
+      Duration maxBorrowDuration
+      long version
+    }
+  }
+  namespace Maintenance_BC {
+    class MaintenanceCase {
+      <<AggregateRoot>>
+      CaseId id
+      EquipmentId equipmentId
+      LoanId loanId
+      FaultCategory category
+      Priority priority
+      CaseStatus status
+      UserId assignedTo
+      +assign(technician)
+      +diagnose() / resolve() / markUnrepairable()
+    }
+  }
+  Reservation *-- TimeSlot
+  Reservation --> ReservationStatus
+  Loan *-- ReturnRecord
+  ApprovalDecision ..> Reservation : references by id
+  Loan ..> Reservation : references by id
+  Reservation ..> Equipment : references by id
+  MaintenanceCase ..> Equipment : references by id
+  MaintenanceCase ..> Loan : optional id

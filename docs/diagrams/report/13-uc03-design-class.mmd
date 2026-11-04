@@ -1,0 +1,94 @@
+%% UC03 Check out and return equipment - design class diagram
+classDiagram
+  direction TB
+  class LoanController {
+    <<RestController /api/v1/loans>>
+    +checkout(CheckoutRequest) ResponseEntity~LoanView~
+    +checkoutQueue(page, size, q) List~CheckoutCandidate~
+    +receive(UUID loanId, ReturnRequest) LoanView
+    +list(activeOnly, page, size, q) List~LoanView~
+  }
+  class CheckoutRequest {
+    <<record DTO>>
+    UUID reservationId
+    UUID borrowerId
+    Long expectedVersion
+  }
+  class ReturnRequest {
+    <<record DTO>>
+    Long expectedVersion
+    String condition
+    String note
+  }
+  class LoanService {
+    <<Service · Transactional>>
+    -LoanRepository repository
+    -MaintenanceService maintenance
+    -ApplicationEventPublisher events
+    -Clock clock
+    +checkout(reservationId, borrowerId, expectedVersion, ...) LoanView
+    +receive(loanId, expectedVersion, condition, note) LoanView
+    -requireActor() UUID
+    -setEquipment(id, before, after)
+  }
+  class EquipmentLoanState {
+    <<enum · State pattern>>
+    AVAILABLE
+    ON_LOAN
+    UNDER_MAINTENANCE
+    RETIRED
+    +permitsCheckout() boolean
+    +afterReturn(activeMaintenance, activeLoan) EquipmentLoanState
+  }
+  class LoanRepository {
+    <<Repository · JdbcTemplate>>
+    +lockEquipment(UUID) EquipmentLoanState
+    +lockReservation(UUID) List
+    +lockLoan(UUID)
+    +insertLoan(loanId, reservationId, actor, now, due)
+    +fulfillReservation(reservationId, version) int
+    +returnLoan(actor, now, condition, note, loanId, version) int
+    +activeMaintenance(UUID) boolean
+    +setEquipment(UUID, EquipmentLoanState)
+    +audit(...)
+  }
+  class MaintenanceService {
+    <<Service · maintenance module>>
+    +reportFault(equipmentId, reportedBy, faultDescription, loanId, FaultCategory, MaintenancePriority) MaintenanceCase
+  }
+  class LoanView {
+    <<record>>
+    UUID loanId
+    UUID reservationId
+    String assetTag
+    Instant checkedOutAt
+    Instant dueAt
+    String status
+    long version
+  }
+  class LoanEvent {
+    <<DomainEvent>>
+    String kind  CHECKED_OUT | RETURNED
+    UUID loanId
+    UUID equipmentId
+    boolean late
+    String condition
+    UUID maintenanceCaseId
+  }
+  class LoanConflictException {
+    <<409 ProblemDetail>>
+  }
+  class LoanNotificationListener {
+    <<EventListener>>
+    +on(LoanEvent)
+  }
+  LoanController --> LoanService
+  LoanController ..> CheckoutRequest
+  LoanController ..> ReturnRequest
+  LoanService --> LoanRepository
+  LoanService --> MaintenanceService : damaged return
+  LoanService ..> EquipmentLoanState : transitions
+  LoanService ..> LoanEvent : publishes
+  LoanService ..> LoanConflictException : throws
+  LoanRepository ..> LoanView : maps
+  LoanNotificationListener ..> LoanEvent : consumes

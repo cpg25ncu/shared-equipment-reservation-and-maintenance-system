@@ -261,8 +261,8 @@ class NotificationContractTest {
             .defaultSchema("public").table("serms_flyway_history").baselineVersion("2")
             .locations("classpath:db/migration").load();
         flyway.baseline(); flyway.migrate(); flyway.validate();
-        assertEquals(7,upgrade.queryForObject("SELECT max(version) FROM serms.schema_version",Integer.class));
-        assertEquals(org.flywaydb.core.api.MigrationVersion.fromVersion("7"),flyway.info().current().getVersion());
+        assertEquals(9,upgrade.queryForObject("SELECT max(version) FROM serms.schema_version",Integer.class));
+        assertEquals(org.flywaydb.core.api.MigrationVersion.fromVersion("9"),flyway.info().current().getVersion());
         // V007 must safely backfill pre-existing V002 users without changing notification history.
         assertEquals("bigint",upgrade.queryForObject("""
             SELECT data_type FROM information_schema.columns
