@@ -2,6 +2,7 @@
 -- serve any request. Layout follows Spring Session JDBC's schema-postgresql.sql; the application
 -- never creates it (spring.session.jdbc.initialize-schema=never). Expired rows are deleted by
 -- Spring Session's cleanup job; the DELETE is idempotent, so every replica may run it.
+BEGIN;
 CREATE TABLE serms.spring_session (
     primary_id char(36) NOT NULL,
     session_id char(36) NOT NULL,
@@ -24,3 +25,6 @@ CREATE TABLE serms.spring_session_attributes (
     CONSTRAINT spring_session_attributes_fk FOREIGN KEY (session_primary_id)
         REFERENCES serms.spring_session (primary_id) ON DELETE CASCADE
 );
+INSERT INTO serms.schema_version(version, description)
+VALUES (8, 'Spring Session JDBC tables for horizontally scaled app replicas');
+COMMIT;
