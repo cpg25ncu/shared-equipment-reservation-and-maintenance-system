@@ -27,11 +27,18 @@ EXPOSE 8081
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD wget -qO- http://127.0.0.1:8081/api/v1/health >/dev/null || exit 1
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
-FROM nginxinc/nginx-unprivileged:stable-alpine AS web
+# Official image: nginx ships from nginx.org's package repository, so `apk upgrade` cannot patch it,
+# and nginxinc/nginx-unprivileged lagged behind the 1.30.7 security release. Run it unprivileged the
+# same way that image does: no `user` directive, pid file in /tmp, cache directory owned by nginx.
+FROM nginx:stable-alpine AS web
 ARG RELEASE_SHA=local
 LABEL org.opencontainers.image.revision=$RELEASE_SHA
-USER root
-RUN apk upgrade --no-cache
+RUN apk upgrade --no-cache \
+    && sed -i '/^user /d' /etc/nginx/nginx.conf \
+    && sed -i 's,\(/var\)\{0\,1\}/run/nginx.pid,/tmp/nginx.pid,' /etc/nginx/nginx.conf \
+    && grep -q '/tmp/nginx.pid;' /etc/nginx/nginx.conf \
+    && ! grep -q '^user ' /etc/nginx/nginx.conf \
+    && chown -R nginx:nginx /var/cache/nginx
 COPY --chown=nginx:nginx web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=frontend-build --chown=nginx:nginx /build/frontend/dist/ /usr/share/nginx/html/
 USER nginx

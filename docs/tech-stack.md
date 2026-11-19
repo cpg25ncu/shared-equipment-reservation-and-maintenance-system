@@ -276,7 +276,7 @@ flowchart LR
 | Static code analysis | CodeQL (Java + TypeScript) and ESLint; SpotBugs/FindSecBugs, Spotless and ArchUnit were dropped by D-009 |
 | Dependency vulnerability checking | Dependency Review on PRs + Trivy fs; Dependabot alerts/security updates enabled by the 2026-10-24 decision, while version-update PRs remain paused until after the final project report/presentation |
 | Application packaging | Executable Spring Boot JAR; frontend static files |
-| Docker image creation | Two multi-stage images: `app` (`eclipse-temurin:17-jre`) and `web` (`nginx-unprivileged`), both running as non-root |
+| Docker image creation | Two multi-stage images: `app` (`eclipse-temurin:17-jre`) and `web` (official `nginx` Alpine image, reconfigured to run as its `nginx` user), both running as non-root |
 | Container vulnerability checking | Trivy image; HIGH / CRITICAL vulnerabilities fail the check |
 | Deployment to the hosted environment | After the release gate and `production` approval, SSH runs `scripts/deploy.sh`: backup, server-side `docker compose build`, then `docker compose up -d --wait`; no registry push/pull. Flyway migrates on backend startup |
 | Basic post-deployment verification | The deployment script checks `/api/v1/health` for UP. Public HTTPS, login and role workflows are separate acceptance checks; ZAP is manual and outside the pipeline. k6 is also manual on isolated local data |
