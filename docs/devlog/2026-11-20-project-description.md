@@ -29,6 +29,13 @@ The owner asked for GitHub topics and a rewritten repository description that pr
 
 `node scripts/check-collaboration.mjs` on the branch; result is recorded in the PR.
 
+## 2026-11-20 CI blocked by the web image
+
+- On `756f494`, 15 of 16 checks passed. `release-images` failed on six nginx CVEs in the web base image, unrelated to this change (run 44609785600).
+- The owner chose a separate fix: #122 moved the web stage to the official nginx 1.30.7 image. See [the nginx devlog](2026-11-20-nginx-image-cves.md).
+- #122 passed all 16 checks; its `database-test` needed one rerun after a transient Maven Central `403`. The owner merged it as `82dd44f`.
+- `main` was then merged into this branch so `release-images` runs on the fixed web stage.
+
 ## Authorship
 
 Agent-assisted (Claude Code) at the owner's request: description, topics, README wording and this entry. No reviews or approvals are recorded here.
