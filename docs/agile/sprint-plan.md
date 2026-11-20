@@ -4,13 +4,15 @@ Core principle (team ownership description): each member owns one business featu
 
 ## 1. Cadence and Ceremonies
 
+Scrum Master: **Liu Tongyao (Member 4)**, who chairs the ceremonies below. Member numbers and shared responsibilities follow the [team table](backlog.md#1-ownership) ([D-017](../collaboration/decisions.md#d-017-scrum-master-and-shared-responsibilities)).
+
 | Activity | Timing | Chair | Output |
 | --- | --- | --- | --- |
-| Sprint planning | First day of each Sprint | Member 1 | Sprint goal, board tasks, owners, completion criteria |
-| Weekly meeting / stand-up | Weekly | Member 1 | Each member reports completed work, next steps, problems; Member 1 updates [sprint-status.md](sprint-status.md) |
+| Sprint planning | First day of each Sprint | Liu Tongyao (Member 4, Scrum Master) | Sprint goal, board tasks, owners, completion criteria |
+| Weekly meeting / stand-up | Weekly | Liu Tongyao (Member 4, Scrum Master) | Each member reports completed work, next steps, problems; the Scrum Master updates [sprint-status.md](sprint-status.md) |
 | PR review / team check | As needed | Designated by PR author | At least one member check before task Done; Write collaborators may self-merge after green CI, without a new mandatory GitHub approval gate |
-| Sprint Review | Last day of each Sprint | Member 1 | Demonstrate completed features; save screenshots/reports in `docs/evidence/` |
-| Retrospective | After review | Member 1 | What worked, improvements, next-Sprint actions in sprint-status.md |
+| Sprint Review | Last day of each Sprint | Liu Tongyao (Member 4, Scrum Master) | Demonstrate completed features; save screenshots/reports in `docs/evidence/` |
+| Retrospective | After review | Liu Tongyao (Member 4, Scrum Master) | What worked, improvements, next-Sprint actions in sprint-status.md |
 
 GitHub Projects columns: To Do → In Progress → Review → Testing → Done. Each card records requirement ID ([backlog.md](backlog.md)), owner, and completion criteria; PR descriptions reference cards.
 
@@ -34,13 +36,13 @@ A task moves to Done only when all items are satisfied:
 
 | Member | Task |
 | --- | --- |
-| Member 1 | Organize requirements/tasks; explain search/reservation |
-| Member 2 | Define layering, frontend structure, styling; explain approval |
+| Member 1 | Establish repository, branches, builds/deployment; explain search/reservation |
+| Member 2 | Define testing, security, quality; explain approval |
 | Member 3 | Design database, business objects, states; explain checkout/return |
-| Member 4 | Define testing, security, quality; explain faults/maintenance |
-| Member 5 | Establish repository, branches, builds/deployment; explain overdue notifications |
+| Member 4 | Organize requirements/tasks; explain faults/maintenance |
+| Member 5 | Define layering, frontend structure, styling; explain overdue notifications |
 
-Coordination: agree requirements as a team; each member diagrams their flow, Member 2 checks architecture, Member 3 checks database support.
+Coordination: agree requirements as a team; each member diagrams their flow, Member 5 checks architecture, Member 3 checks database support.
 
 ### Sprint 1 — Reservation Main Flow
 
@@ -48,13 +50,13 @@ Coordination: agree requirements as a team; each member diagrams their flow, Mem
 
 | Member | Task |
 | --- | --- |
-| Member 1 | Search equipment, view availability, submit reservations |
-| Member 2 | Authentication, authorization, shared page templates |
+| Member 1 | Search equipment, view availability, submit reservations; automatic builds, tests, security, deployment after submission |
+| Member 2 | Login, search, authorization, reservation conflict tests |
 | Member 3 | User/equipment/reservation tables and data access |
-| Member 4 | Login, search, authorization, reservation conflict tests |
-| Member 5 | Automatic builds, tests, security, deployment after submission |
+| Member 4 | Sprint board, tasks and progress tracking |
+| Member 5 | Authentication, authorization, shared page templates |
 
-Coordination: Member 2 provides shared templates, Member 3 schema, Member 1 connects reservations, Member 4 tests, Member 5 ensures build/deployment.
+Coordination: Member 5 provides shared templates, Member 3 schema, Member 1 connects reservations and ensures build/deployment, Member 2 tests, Member 4 tracks the board.
 
 ### Sprint 2 — Other Core Features
 
@@ -77,22 +79,22 @@ Coordination: shared architecture, database rules, templates, and standards. Ope
 | Member | Task |
 | --- | --- |
 | Everyone | Fix their features; complete tests, diagrams, pattern explanations |
-| Member 1 | Organize completion status/demo |
-| Member 2 | Check all layouts, styles, interactions |
+| Member 1 | Final deployment, release, fallback demo environment |
+| Member 2 | Full functionality/security (ZAP), load (k6), quality checks |
 | Member 3 | Check relationships, business data, states |
-| Member 4 | Full functionality/security (ZAP), load (k6), quality checks |
-| Member 5 | Final deployment, release, fallback demo environment |
+| Member 4 | Organize completion status/demo |
+| Member 5 | Check all layouts, styles, interactions |
 
 ### Sprint 4 — Report and Submission
 
 | Member | Task |
 | --- | --- |
 | Each member | Own use case, diagrams, code, tests, contribution record |
-| Member 1 | Consolidate tasks, Sprints, agile evidence |
-| Member 2 | Consolidate architecture, design transformations, UI evidence |
+| Member 1 | Consolidate CI/CD, deployment, releases, operation |
+| Member 2 | Consolidate testing, security, quality |
 | Member 3 | Consolidate database, domain model, state design |
-| Member 4 | Consolidate testing, security, quality |
-| Member 5 | Consolidate CI/CD, deployment, releases, operation |
+| Member 4 | Consolidate tasks, Sprints, agile evidence |
+| Member 5 | Consolidate architecture, design transformations, UI evidence |
 
 Coordination: finish individual sections, then cross-check; unify terminology, figure numbering, data, and formatting so the report matches the system.
 

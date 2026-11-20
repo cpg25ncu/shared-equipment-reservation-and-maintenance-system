@@ -1,6 +1,6 @@
 # SERMS Agile Development Evidence Index
 
-Sources for the Sprint 4 report's agile-development chapter. Member 1 maintains this index and adds an entry after each Sprint.
+Sources for the Sprint 4 report's agile-development chapter. The Scrum Master, Liu Tongyao (Member 4), maintains this index and adds an entry after each Sprint.
 
 First report mention uses **Shared Equipment Reservation and Maintenance System (SERMS)**; subsequent mentions use **SERMS**.
 
