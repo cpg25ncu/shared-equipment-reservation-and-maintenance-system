@@ -1,6 +1,6 @@
 # Shared Equipment Reservation and Maintenance System (SERMS)
 
-SWE5006 Team 07 · A web application for managing shared equipment from reservation and approval through checkout, return and maintenance.
+A web platform for managing shared equipment across its full lifecycle: availability search, reservation and approval, checkout and return, fault reporting and maintenance.
 
 [Hosted application](https://serms.midas.cyou) · [Documentation](docs/README.md) · [Local demo](docs/local-demo.md)
 
