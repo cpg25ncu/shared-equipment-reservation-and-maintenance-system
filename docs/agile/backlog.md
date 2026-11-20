@@ -13,7 +13,7 @@ Each member owns one full-stack feature (queries, backend, frontend, test bench)
 | Member 1 Shi Wenqi | UC01 Search/reserve equipment | GitHub, CI/CD, deployment/release evidence |
 | Member 2 Zhang Hanming | UC02 Review/approve reservations | Test strategy, security, quality |
 | Member 3 Zhou Fanhao | UC03 Equipment checkout/return | Database, domain model, integration |
-| Member 4 Liu Tongyao | UC04 Fault reports/maintenance | Product Backlog, Sprint management, progress consolidation |
+| Member 4 Liu Tongyao | UC04 Fault reports/maintenance | Scrum Master: Product Backlog, Sprint management, progress consolidation |
 | Member 5 Wang Yuanmeng | UC05 Overdue detection/notifications | Architecture, design rules, page consistency |
 
 2026-10-07: long-term supporting duties corrected against the provided Team 07 plan. Historical task Member numbers/authorship below remain for traceability; subsequent supporting tasks follow this table.

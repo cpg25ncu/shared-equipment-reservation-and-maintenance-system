@@ -1,6 +1,6 @@
 # Sprint Status and Risks
 
-Member 1 updates after weekly meetings. Preserve snapshots, newest first, as Sprint evidence.
+The Scrum Master, Liu Tongyao (Member 4), updates after weekly meetings. Preserve snapshots, newest first, as Sprint evidence.
 
 ---
 

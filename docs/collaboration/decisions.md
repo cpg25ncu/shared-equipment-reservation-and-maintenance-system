@@ -32,7 +32,7 @@ Documentation location update (2026-10-17): the user requested a concise README 
 
 See [Ownership](ownership.md#sources-of-shared-responsibilities-and-specific-deliveries): Sprint long-term responsibilities differ from platform, shared-testing, and CI/deployment delivery assignments in the technology stack and UC02 contract.
 
-Status: **Settled for the completion work by [D-007](#d-007-completion-task-ownership) on 2026-10-14**. It was originally awaiting user confirmation: a decision was requested in that conversation, and this index did not reallocate responsibilities.
+Status: **Resolved by [D-017](#d-017-scrum-master-and-shared-responsibilities) on 2026-11-21**, which aligns the long-term responsibilities with the named team table. Earlier, it was **settled for the completion work by [D-007](#d-007-completion-task-ownership) on 2026-10-14**. It was originally awaiting user confirmation: a decision was requested in that conversation, and this index did not reallocate responsibilities.
 
 Options: retain sources while distinguishing long-term responsibility/specific delivery; unify according to the Sprint plan; or unify according to the technology stack and confirmed contracts. The latter two require identifying affected contracts/tasks before deciding changes. Until confirmed, keep all sources and continue independent collaboration improvements.
 
@@ -317,3 +317,34 @@ Decision:
 Unchanged: both courses use the same code and the same production release. One backend, one frontend, the contracts, the 15 required checks, the gated `Deploy` workflow and the [affected-owner confirmation rule](../../.github/CONTRIBUTING.md#prs-and-team-acceptance) apply to changes made for either course.
 
 Open items, their owners and the release plan for #118 are in the [2026-11-04 two-course devlog](../devlog/2026-11-04-two-course-record.md).
+
+## D-017 Scrum Master and Shared Responsibilities
+
+Status: **Confirmed by the user (repository owner Liu Tongyao, @cpg25ncu) in conversation on 2026-11-21 (Asia/Singapore)**, on main `f612846`. The owner stated:
+
+- Liu Tongyao owns UC04 fault reports and maintenance end to end;
+- Liu Tongyao later took over integration and the production release ([D-004](#d-004-local-first-integration-and-wenqi-task-execution));
+- Liu Tongyao is the team's Scrum Master and chairs the Sprint meetings; the Sprint plan, which named Member 1 as chair, had to be changed back.
+
+Sources:
+
+- **2026-10-07, #11 (Shi Wenqi).** The first backlog and Sprint plan used unnamed members. Member 1 held requirements, tasks and Sprints and chaired every ceremony; Member 4 held testing, security and quality.
+- **2026-10-07, `5559503` (Zhou Fanhao).** The backlog's member table gained names, with Member 4 Liu Tongyao on Product Backlog, Sprint management and progress consolidation. Zhou Fanhao's [work summary](../zhoufanhao-work-summary.md) also lists "Liu Tongyao, UC04/Sprints".
+- **2026-10-15, #73 (Shi Wenqi).** It moved Sprint management in that table to Member 1. The owner did not accept the change to the team's division of work, and #76 restored `main` ([devlog](../devlog/2026-10-15-member-1-return-and-integration.md)).
+- The Sprint plan's ceremony chairs, the agile README, the evidence index, the status header and the ownership table kept the unnamed mapping. [D-002](#d-002-shared-responsibility-source-differences) recorded the difference.
+
+Decision: long-term shared responsibilities follow the named table in the [backlog](../agile/backlog.md#1-ownership). The table also matches the specific deliveries in the [technology stack §5.2](../tech-stack.md#52-each-members-test-bench-scope) (shared testing: Zhang Hanming) and the [UC02 contract](../contracts/auth-and-approval.md#1-development-sequence) (login and React scaffolding: Wang Yuanmeng; CI/deployment: Shi Wenqi).
+
+| Member | Use case | Long-term shared responsibility |
+| --- | --- | --- |
+| Member 1 · Shi Wenqi | UC01 | GitHub, CI/CD, deployment and release evidence |
+| Member 2 · Zhang Hanming | UC02 | Test strategy, security, quality |
+| Member 3 · Zhou Fanhao | UC03 | Database, domain model, integration |
+| Member 4 · Liu Tongyao | UC04 | Scrum Master: Product Backlog, Sprint management, progress consolidation; chairs Sprint planning, weekly meetings, reviews and retrospectives |
+| Member 5 · Wang Yuanmeng | UC05 | Architecture, design rules, page consistency |
+
+Changes: the [Sprint plan](../agile/sprint-plan.md) (ceremony chairs and the shared-duty parts of the Sprint tables), the [agile README](../agile/README.md), the [evidence index](../agile/agile-evidence.md), the [status](../agile/sprint-status.md) header, the backlog's Member 4 row, and the [ownership](ownership.md#sources-of-shared-responsibilities-and-specific-deliveries) table. D-002 is resolved.
+
+Unchanged: use-case ownership; the execution assignments in D-004 and D-007; dated Sprint status snapshots, the backlog's per-Sprint delivery rows, the demo script and the devlogs, which stay as history; Shi Wenqi's authorship of the first backlog and Sprint plan.
+
+Pending: confirmations from Shi Wenqi, Zhang Hanming, Zhou Fanhao and Wang Yuanmeng are not recorded.
